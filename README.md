@@ -6,6 +6,12 @@ dat.GUI magically generates a graphical user interface (sliders, color selector,
 
 dat.gui's niche is in listening to and controlling data such that it can be visualized into charts or other graphics. Creating a new DAT.GUI instance provides a new sliding pane for which to add controls to:
 
+## Use cases
+
+* To visually debug the various variables in your scripts during development
+* To create a rich interface for your auxiliary tools (map editors, effects editors, etc.)
+* For the construction of fast administrative interfaces
+
 ## Demo
 
 Try out the [live demo](https://www.roblox.com/games/5801132990/dat-GUI), you can edit source code too.
