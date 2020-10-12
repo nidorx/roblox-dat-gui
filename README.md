@@ -22,13 +22,13 @@ Try out the [live demo](https://www.roblox.com/games/5801132990/dat-GUI), you ca
 
 2. In Roblox Studio, right click `StarterPlayer -> StarterCharacterScripts`, select "Insert from File...", and open the downloaded release
 
-## Build
+## Build (on Windows)
 
-1. Make sure Rojo is installed 0.5.x or later is installed
+1. Make sure Rojo 0.5.x or later is installed
 
 2. Clone this repository to your computer
 
-3. Set the location to this repo's root directory and run this command in the shell:
+3. Set the location to this repo's root directory and run this command in PoeerShell:
 
 ```powershell
 rojo build -o $env:USERPROFILE/Downloads/dat.GUI.rbxmx default.project.json
