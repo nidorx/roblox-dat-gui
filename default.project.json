@@ -1,6 +1,19 @@
 {
 	"name": "dat.GUI",
 	"tree": {
-		"$path": "src"
+      "$className": "DataModel",
+       "StarterPlayer": {
+         "$className": "StarterPlayer",
+         "StarterCharacterScripts": {
+           "$className": "StarterCharacterScripts",
+            "dat.GUI": {
+               "$path": "src"
+            }
+         },
+         "StarterPlayerScripts": {
+           "$className": "StarterPlayerScripts",
+           "$path": "test"
+         }
+       }
 	}
 }
