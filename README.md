@@ -1,4 +1,3 @@
-# datGUI
 <div align="center">
     <h1>Roblox dat.GUI</h1>
     <img src="./logo.png" width="350" />
