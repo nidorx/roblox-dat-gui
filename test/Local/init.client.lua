@@ -258,10 +258,13 @@ local Object = {
    Text = 'Lorem ipsum dolor',
    Number = 25,
    NumberDouble = 25,
+   NumberSlider = 0.5,
    OptionsEnum = 0,
    OptionsEnumItem = Enum.ScaleType.Slice,
    OptionsArray = 2,
-   OptionsObject = 'ONE'
+   OptionsObject = 'ONE',
+   Vector3 = Vector3.new(10, 11, 12),
+   Vector3Slider = Vector3.new(10, 11, 12)
 }
 
 guiOthers.add(Object, 'Text').listen().onChange(function(value)
@@ -274,6 +277,10 @@ end)
 
 guiOthers.add(Object, 'NumberDouble').step(0.001).listen().onChange(function(value)
    print('NumberDouble = ', value)
+end)
+
+guiOthers.add(Object, 'NumberSlider', 0, 1).listen().onChange(function(value)
+   print('NumberSlider = ', value)
 end)
 
 guiOthers.add(Object, 'OptionsEnum', Enum.ScaleType).listen().onChange(function(value, text)
@@ -290,5 +297,13 @@ end)
 
 guiOthers.add(Object, 'OptionsObject', {ONE = 'One', TWO = 'Two', THREE = 'Three'}).listen().onChange(function(value, text)
    print('OptionsObject = ', value, text)
+end)
+
+guiOthers.add(Object, 'Vector3').step(1).listen().onChange(function(value)
+   print('Vector3 = ', value)
+end)
+
+guiOthers.add(Object, 'Vector3Slider', 0, 100).listen().onChange(function(value)
+   print('Vector3Slider = ', value)
 end)
 

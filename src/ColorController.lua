@@ -68,10 +68,10 @@ local function CreateGUI()
    LabelText.LineHeight             = 1
    LabelText.RichText               = false
    LabelText.Text                   = 'Color Label'
-   LabelText.TextColor3 			   = Color3.new(238, 238, 238)
+   LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
    LabelText.TextScaled             = false
    LabelText.TextSize               = 14
-   LabelText.TextStrokeColor3 		= Color3.new(0, 0, 0)
+   LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
    LabelText.TextStrokeTransparency = 1
    LabelText.TextTransparency       = 0
    LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
@@ -182,10 +182,10 @@ local function CreateGUI()
    Text.PlaceholderColor3        = Color3.fromRGB(47, 161, 214)
    Text.RichText                 = false
    Text.Text                     = 'text'
-   Text.TextColor3 			      = Color3.new(255, 255, 255)
+   Text.TextColor3 			      = Color3.fromRGB(255, 255, 255)
    Text.TextScaled               = false
    Text.TextSize                 = 14
-   Text.TextStrokeColor3 		   = Color3.new(0, 0, 0)
+   Text.TextStrokeColor3 		   = Color3.fromRGB(0, 0, 0)
    Text.TextStrokeTransparency   = 1
    Text.TextTransparency         = 0
    Text.TextTruncate             = Enum.TextTruncate.None

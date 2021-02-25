@@ -124,10 +124,10 @@ local function CreateGUIFolder(connections)
    LabelText.LineHeight             = 1
    LabelText.RichText               = false
    LabelText.Text                   = 'Folder Title'
-   LabelText.TextColor3 			   = Color3.new(238, 238, 238)
+   LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
    LabelText.TextScaled             = false
    LabelText.TextSize               = 14
-   LabelText.TextStrokeColor3 		= Color3.new(0, 0, 0)
+   LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
    LabelText.TextStrokeTransparency = 1
    LabelText.TextTransparency       = 0
    LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
@@ -365,10 +365,10 @@ local function CreateGUICloseButton(connections)
    LabelText.LineHeight             = 1
    LabelText.RichText               = false
    LabelText.Text                   = 'Close Controls'
-   LabelText.TextColor3 			   = Color3.new(238, 238, 238)
+   LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
    LabelText.TextScaled             = false
    LabelText.TextSize               = 14
-   LabelText.TextStrokeColor3 		= Color3.new(0, 0, 0)
+   LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
    LabelText.TextStrokeTransparency = 1
    LabelText.TextTransparency       = 0
    LabelText.TextTruncate           = Enum.TextTruncate.AtEnd

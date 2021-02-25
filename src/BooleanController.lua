@@ -58,10 +58,10 @@ local function CreateGUI()
    LabelText.LineHeight             = 1
    LabelText.RichText               = false
    LabelText.Text                   = 'Boolean Label'
-   LabelText.TextColor3 			   = Color3.new(238, 238, 238)
+   LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
    LabelText.TextScaled             = false
    LabelText.TextSize               = 14
-   LabelText.TextStrokeColor3 		= Color3.new(0, 0, 0)
+   LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
    LabelText.TextStrokeTransparency = 1
    LabelText.TextTransparency       = 0
    LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
