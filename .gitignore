@@ -3,11 +3,8 @@
 .vscode
 
 # Roblox Studio
-place-dev.rbxl
-**/*.rbxl.lock
-
-# blender
-**/*.blend1
+# place-dev.rbxl
+# **/*.rbxl.lock
 
 # misc
 build

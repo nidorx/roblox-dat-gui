@@ -16,7 +16,7 @@ local Camera 	= workspace.CurrentCamera
 local TweenService = game:GetService("TweenService")
 
 -- lib
-local DatGUI = require(Character:WaitForChild("dat.GUI"))
+local DatGUI = require(game.ReplicatedStorage:WaitForChild("dat.GUI"))
 
 -- Environment
 local Lighting			   = game.Lighting

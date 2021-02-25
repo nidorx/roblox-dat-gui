@@ -402,7 +402,7 @@ local function CreateGUI()
          local Text = item:WaitForChild("text")
          Text.Text = label
          
-         size += Text.AbsoluteSize.Y
+         size = size + Text.AbsoluteSize.Y
          
          Text.MouseButton1Click:Connect(function()
             if selectListIsOpen then				

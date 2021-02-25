@@ -1,0 +1,9 @@
+{
+   "minify": true,
+   "maxSize": 153600,
+   "entries": [
+      "src/Shared/dat.GUI.lua"
+   ],
+   "dontIgnoreVarDir": [
+   ]
+}

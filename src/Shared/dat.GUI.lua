@@ -1,13 +1,64 @@
+--[[
+   Roblox-datGUI v1.0.0 [2021-02-25 06:00]
 
+   A lightweight graphical user interface and controller library. 
+   
+   Roblox dat.GUI allows you to easily manipulate variables and fire functions on 
+   the fly, inspired by the venerable dat-gui.
+
+   dat.GUI magically generates a graphical user interface (sliders, 
+   color selector, etc) for each of your variables.
+
+   https://github.com/nidorx/roblox-dat-gui
+
+   Discussions about this script are at https://devforum.roblox.com/t/817209
+
+   ------------------------------------------------------------------------------
+
+   MIT License
+
+   Copyright (c) 2021 Alex Rodin
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+]]
 local Mouse 	            = game.Players.LocalPlayer:GetMouse()
+local Camera 	            = workspace.CurrentCamera
+local Players 	            = game:GetService("Players")
 local TweenService 		   = game:GetService("TweenService")
 local UserInputService     = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
 
-local Players 	= game:GetService("Players")
-local Player 	= Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
-local Camera 	= workspace.CurrentCamera
+local Player 	   = Players.LocalPlayer
+local PlayerGui   = Player:WaitForChild("PlayerGui")
+
+-- controllers
+local Controllers             = game.ReplicatedStorage:WaitForChild("Controllers")
+local ColorController			= require(Controllers:WaitForChild("ColorController"))
+local OptionController 			= require(Controllers:WaitForChild("OptionController"))
+local StringController 			= require(Controllers:WaitForChild("StringController"))
+local BooleanController 		= require(Controllers:WaitForChild("BooleanController"))
+local NumberController 			= require(Controllers:WaitForChild("NumberController"))
+local FunctionController 		= require(Controllers:WaitForChild("FunctionController"))
+local NumberSliderController	= require(Controllers:WaitForChild("NumberSliderController"))
+local Vector3Controller			= require(Controllers:WaitForChild("Vector3Controller"))
+local Vector3SliderController	= require(Controllers:WaitForChild("Vector3SliderController"))
+
 
 local BG_COLOR_ON 			= Color3.fromRGB(17, 17, 17)
 local BG_COLOR_OFF 			= Color3.fromRGB(26, 26, 26)
@@ -410,16 +461,7 @@ local function CreateGUICloseButton(connections)
    return Button
 end
 
--- controllers
-local ColorController			= require(script:WaitForChild("ColorController"))
-local OptionController 			= require(script:WaitForChild("OptionController"))
-local StringController 			= require(script:WaitForChild("StringController"))
-local BooleanController 		= require(script:WaitForChild("BooleanController"))
-local NumberController 			= require(script:WaitForChild("NumberController"))
-local FunctionController 		= require(script:WaitForChild("FunctionController"))
-local NumberSliderController	= require(script:WaitForChild("NumberSliderController"))
-local Vector3Controller			= require(script:WaitForChild("Vector3Controller"))
-local Vector3SliderController	= require(script:WaitForChild("Vector3SliderController"))
+
 
 -- detach (remove template from UI)
 
@@ -572,9 +614,9 @@ local function resize(gui)
 				
 				if child.isGui then
 					local childHeight = iterate(child, 0)
-					pos += childHeight
+					pos = pos + childHeight
 				else
-					pos += child.height
+					pos = pos + child.height
 				end
 			end
 		end
@@ -583,7 +625,7 @@ local function resize(gui)
 			gui.frame.Size = UDim2.new(0, gui.width, 0, pos)
 		else
 			-- title height
-			pos += gui.frameTitle.Size.Y.Offset
+			pos = pos + gui.frameTitle.Size.Y.Offset
 		end	
 		
 		return pos
