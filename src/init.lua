@@ -14,10 +14,209 @@ local BG_COLOR_OFF 			= Color3.fromRGB(26, 26, 26)
 local LABEL_COLOR_ENABLED	= Color3.fromRGB(238, 238, 238)
 local LABEL_COLOR_DISABLED	= Color3.fromRGB(136, 136, 136)
 
--- Frame templates
-local TPL = script:WaitForChild("TEMPLATE"):WaitForChild("MAIN")
+local function CreateGUIFolder(connections)
 
-local TPLFolder 				= TPL:WaitForChild("Folder")
+   local Folder = Instance.new("Frame")
+   Folder.Name 			         = "Folder"
+   Folder.AnchorPoint	         = Vector2.new(0, 0)
+   Folder.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
+   Folder.BackgroundTransparency = 1
+   Folder.BorderColor3           = Color3.fromRGB(27, 42, 53)
+   Folder.BorderMode 			   = Enum.BorderMode.Outline
+   Folder.BorderSizePixel 			= 0
+   Folder.Draggable 			      = false
+   Folder.Position 			      = UDim2.new(0, 0, 0, 0)
+   Folder.Selectable             = false
+   Folder.Size 			         = UDim2.new(1, 0, 0, 30)
+   Folder.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   Folder.Style 			         = Enum.FrameStyle.Custom
+   Folder.Visible                = true
+   Folder.ZIndex                 = 1
+   Folder.Archivable             = true
+
+   local LabelValue = Instance.new('StringValue')
+   LabelValue.Name = 'Label'
+   LabelValue.Parent = Folder
+
+   local UILocked = Instance.new('StringValue')
+   UILocked.Name = 'UILocked'
+   UILocked.Parent = Folder
+
+   local Closed = Instance.new('BoolValue')
+   Closed.Name     = 'Closed'
+   Closed.Value    = false
+   Closed.Parent   = Folder
+
+   local borderBottom = Instance.new("Frame")
+   borderBottom.Name 			         = "border-bottom"
+   borderBottom.AnchorPoint	         = Vector2.new(0, 0)
+   borderBottom.BackgroundColor3       = Color3.fromRGB(44, 44, 44)
+   borderBottom.BackgroundTransparency = 0
+   borderBottom.BorderColor3           = Color3.fromRGB(44, 44, 44)
+   borderBottom.BorderMode 			   = Enum.BorderMode.Outline
+   borderBottom.BorderSizePixel 			= 0
+   borderBottom.Draggable 			      = false
+   borderBottom.Position 			      = UDim2.new(0, 0, 1, -1)
+   borderBottom.Selectable             = false
+   borderBottom.Size 			         = UDim2.new(1, 0, 0, 1)
+   borderBottom.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   borderBottom.Style 			         = Enum.FrameStyle.Custom
+   borderBottom.Visible                = true
+   borderBottom.ZIndex                 = 2
+   borderBottom.Archivable             = true
+   borderBottom.Parent = Folder
+
+   local content = Instance.new("Frame")
+   content.Name 			            = "content"
+   content.AnchorPoint	            = Vector2.new(0, 0)
+   content.BackgroundColor3         = Color3.fromRGB(255, 255, 255)
+   content.BackgroundTransparency   = 1
+   content.BorderColor3             = Color3.fromRGB(27, 42, 53)
+   content.BorderMode 			      = Enum.BorderMode.Outline
+   content.BorderSizePixel 			= 0
+   content.Draggable 			      = false
+   content.Position 			         = UDim2.new(0, 5, 1, 0)
+   content.Selectable               = false
+   content.Size 			            = UDim2.new(1, -5, 0, 100)
+   content.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
+   content.Style 			            = Enum.FrameStyle.Custom
+   content.Visible                  = true
+   content.ZIndex                   = 1
+   content.Archivable               = true
+   content.Parent = Folder
+
+   local Title = Instance.new("Frame")
+   Title.Name 			            = "title"
+   Title.AnchorPoint	            = Vector2.new(0, 0)
+   Title.BackgroundColor3        = Color3.fromRGB(0, 0, 0)
+   Title.BackgroundTransparency  = 0
+   Title.BorderColor3            = Color3.fromRGB(27, 42, 53)
+   Title.BorderMode 			      = Enum.BorderMode.Outline
+   Title.BorderSizePixel 			= 0
+   Title.Draggable 			      = false
+   Title.Position 			      = UDim2.new(0, 0, 0, 0)
+   Title.Selectable              = false
+   Title.Size 			            = UDim2.new(1, 0, 0, 30)
+   Title.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   Title.Style 			         = Enum.FrameStyle.Custom
+   Title.Visible                 = true
+   Title.ZIndex                  = 1
+   Title.Archivable              = true
+   Title.Parent = Folder
+
+   local LabelText = Instance.new('TextLabel')
+   LabelText.Name 			         = "LabelText"
+   LabelText.AnchorPoint	         = Vector2.new(0, 0)
+   LabelText.AutomaticSize	         = Enum.AutomaticSize.None
+   LabelText.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
+   LabelText.BackgroundTransparency = 1
+   LabelText.BorderColor3           = Color3.fromRGB(27, 42, 53)
+   LabelText.BorderMode 			   = Enum.BorderMode.Outline
+   LabelText.BorderSizePixel 			= 0
+   LabelText.Position 			      = UDim2.new(0, 15, 0, 0)
+   LabelText.Selectable             = false
+   LabelText.Size 			         = UDim2.new(1, -15, 1, -1)
+   LabelText.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   LabelText.Visible                = true
+   LabelText.ZIndex                 = 1
+   LabelText.Archivable             = true
+   LabelText.Font                   = Enum.Font.SourceSans
+   LabelText.LineHeight             = 1
+   LabelText.RichText               = false
+   LabelText.Text                   = 'Folder Title'
+   LabelText.TextColor3 			   = Color3.new(238, 238, 238)
+   LabelText.TextScaled             = false
+   LabelText.TextSize               = 14
+   LabelText.TextStrokeColor3 		= Color3.new(0, 0, 0)
+   LabelText.TextStrokeTransparency = 1
+   LabelText.TextTransparency       = 0
+   LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
+   LabelText.TextWrapped            = false
+   LabelText.TextXAlignment         = Enum.TextXAlignment.Left
+   LabelText.TextYAlignment         = Enum.TextYAlignment.Center
+   LabelText.Parent = Title
+
+   local Chevron = Instance.new("Frame")
+   Chevron.Name 			            = "chevron"
+   Chevron.AnchorPoint	            = Vector2.new(0, 0)
+   Chevron.BackgroundColor3         = Color3.fromRGB(214, 214, 214)
+   Chevron.BackgroundTransparency   = 1
+   Chevron.BorderColor3             = Color3.fromRGB(27, 42, 53)
+   Chevron.BorderMode 			      = Enum.BorderMode.Outline
+   Chevron.BorderSizePixel 			= 0
+   Chevron.Draggable 			      = false
+   Chevron.Position 			         = UDim2.new(0, 5, 0, 0)
+   Chevron.Selectable               = false
+   Chevron.Size 			            = UDim2.new(0, 10, 1, 0)
+   Chevron.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
+   Chevron.Style 			            = Enum.FrameStyle.Custom
+   Chevron.Visible                  = true
+   Chevron.ZIndex                   = 2
+   Chevron.Archivable               = true
+   Chevron.Parent = Title
+
+   local ChevronImage = Instance.new("ImageLabel")
+   ChevronImage.Name 			         = "image"
+   ChevronImage.AnchorPoint	         = Vector2.new(0, 0)
+   ChevronImage.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
+   ChevronImage.BackgroundTransparency = 1
+   ChevronImage.BorderColor3           = Color3.fromRGB(27, 42, 53)
+   ChevronImage.BorderMode 			   = Enum.BorderMode.Outline
+   ChevronImage.BorderSizePixel 			= 0
+   ChevronImage.Position 			      = UDim2.new(0, 0, 0, 12)
+   ChevronImage.Selectable             = false
+   ChevronImage.Size 			         = UDim2.new(0, 6, 1, -24)
+   ChevronImage.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   ChevronImage.Visible                = true
+   ChevronImage.ZIndex                 = 1
+   ChevronImage.Archivable             = true
+   ChevronImage.Image                  = 'rbxassetid://5780747753'
+   ChevronImage.ImageColor3            = Color3.fromRGB(255, 255, 255)
+   ChevronImage.ImageTransparency 	   = 0
+   ChevronImage.ScaleType              = Enum.ScaleType.Stretch
+   ChevronImage.SliceScale             = 1
+   ChevronImage.Parent = Chevron
+
+   -- SCRIPTS ----------------------------------------------------------------------------------------------------------
+
+   -- variables
+   local hover = false
+
+   table.insert(connections, Title.MouseEnter:Connect(function()
+      hover = true
+   end))
+
+   table.insert(connections, Title.MouseMoved:Connect(function()
+      hover = true
+   end))
+
+   table.insert(connections, Title.MouseLeave:Connect(function()
+      hover = false
+   end))
+
+   table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+      if gameProcessed then
+         return
+      end
+      if hover and UILocked.Value == "ACTIVE"  and input.UserInputType == Enum.UserInputType.MouseButton1 then
+         Closed.Value = not Closed.Value
+      end
+   end))
+
+   table.insert(connections, Closed.Changed:connect(function()
+      if Closed.Value then
+         ChevronImage.Rotation = -90
+      else
+         ChevronImage.Rotation = 0
+      end
+   end))
+
+   table.insert(connections, LabelValue.Changed:connect(function()
+      LabelText.Text = LabelValue.Value
+   end))
+
+   return Folder
+end
 
 local function CreateGUIScrollbar(connections)
    local Scrollbar = Instance.new("Frame")
@@ -226,8 +425,6 @@ local Vector3SliderController	= require(script:WaitForChild("Vector3SliderContro
 -- detach (remove template from UI)
 
 script:WaitForChild("TEMPLATE").Enabled = false
-TPL.Parent = nil
-TPL = nil
 
 -- @TODO: create controllers for the most used classes
 -- https://developer.roblox.com/en-us/api-reference/data-types
@@ -563,17 +760,15 @@ function GUI.new(params)
 		table.insert(gui.connections, onResize)
 		
 	else	
-		
-		gui.frame = TPLFolder:Clone();
-		gui.frame.Name 						= "folder_"..gui._name
-		gui.frameTitle 						= gui.frame:WaitForChild("title")
+		gui.frame = CreateGUIFolder(gui.connections)
+		gui.frame.Name 						   = "folder_"..gui._name
+		gui.frameTitle 						   = gui.frame:WaitForChild("title")
 		gui.frame.BackgroundTransparency 	= 1	
 		gui.frame.Parent = gui.parent.content
 		
-		gui.content  = gui.frame:WaitForChild("content")		
-		gui.closed 	= gui.frame:WaitForChild("Closed")
-		
-		gui.UILocked = gui.frame:WaitForChild("UILocked")
+		gui.content    = gui.frame:WaitForChild("content")		
+		gui.closed 	   = gui.frame:WaitForChild("Closed")
+		gui.UILocked   = gui.frame:WaitForChild("UILocked")
 		
 		local Label = gui.frame:WaitForChild("Label")
 		Label.Value = gui._name
