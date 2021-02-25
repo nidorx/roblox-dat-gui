@@ -410,7 +410,6 @@ local function CreateGUICloseButton(connections)
    return Button
 end
 
-
 -- controllers
 local ColorController			= require(script:WaitForChild("ColorController"))
 local OptionController 			= require(script:WaitForChild("OptionController"))
@@ -423,8 +422,6 @@ local Vector3Controller			= require(script:WaitForChild("Vector3Controller"))
 local Vector3SliderController	= require(script:WaitForChild("Vector3SliderController"))
 
 -- detach (remove template from UI)
-
-script:WaitForChild("TEMPLATE").Enabled = false
 
 -- @TODO: create controllers for the most used classes
 -- https://developer.roblox.com/en-us/api-reference/data-types
