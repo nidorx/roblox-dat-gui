@@ -18,7 +18,109 @@ local LABEL_COLOR_DISABLED	= Color3.fromRGB(136, 136, 136)
 local TPL = script:WaitForChild("TEMPLATE"):WaitForChild("MAIN")
 
 local TPLFolder 				= TPL:WaitForChild("Folder")
-local TPLScrollbar 				= TPL:WaitForChild("Scrollbar")
+
+local function CreateGUIScrollbar(connections)
+   local Scrollbar = Instance.new("Frame")
+   Scrollbar.Name 			            = "Scrollbar"
+   Scrollbar.AnchorPoint	            = Vector2.new(0, 0)
+   Scrollbar.BackgroundColor3        = Color3.fromRGB(0, 0, 0)
+   Scrollbar.BackgroundTransparency  = 0
+   Scrollbar.BorderColor3            = Color3.fromRGB(27, 42, 53)
+   Scrollbar.BorderMode 			      = Enum.BorderMode.Outline
+   Scrollbar.BorderSizePixel 			= 0
+   Scrollbar.Draggable 			      = false
+   Scrollbar.Position 			      = UDim2.new(1, 0, 0, 0)
+   Scrollbar.Selectable              = false
+   Scrollbar.Size 			            = UDim2.new(0, 5, 1, 0)
+   Scrollbar.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   Scrollbar.Style 			         = Enum.FrameStyle.Custom
+   Scrollbar.Visible                 = true
+   Scrollbar.ZIndex                  = 1
+   Scrollbar.Archivable              = true
+
+   local Thumb = Instance.new("Frame")
+   Thumb.Name 			            = "thumb"
+   Thumb.AnchorPoint	            = Vector2.new(0, 0)
+   Thumb.BackgroundColor3        = Color3.fromRGB(103, 103, 103)
+   Thumb.BackgroundTransparency  = 0
+   Thumb.BorderColor3            = Color3.fromRGB(27, 42, 53)
+   Thumb.BorderMode 			      = Enum.BorderMode.Outline
+   Thumb.BorderSizePixel 			= 0
+   Thumb.Draggable 			      = false
+   Thumb.Position 			      = UDim2.new(0, 0, 0.24, 0)
+   Thumb.Selectable              = false
+   Thumb.Size 			            = UDim2.new(1, 0, 0.2, 0)
+   Thumb.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   Thumb.Style 			         = Enum.FrameStyle.Custom
+   Thumb.Visible                 = true
+   Thumb.ZIndex                  = 1
+   Thumb.Archivable              = true
+   Thumb.Parent = Scrollbar
+
+   local ContentPosition = Instance.new('NumberValue')
+   ContentPosition.Name    = 'ContentPosition'
+   ContentPosition.Value   = 0
+   ContentPosition.Parent  = Scrollbar
+
+   local ContentSize = Instance.new('NumberValue')
+   ContentSize.Name    = 'ContentSize'
+   ContentSize.Value   = 0
+   ContentSize.Parent  = Scrollbar
+
+   local FrameSize = Instance.new('IntValue')
+   FrameSize.Name    = 'FrameSize'
+   FrameSize.Value   = 0
+   FrameSize.Parent  = Scrollbar
+
+   -- SCRIPTS ----------------------------------------------------------------------------------------------------------   
+
+   local visible = false
+   local ScrollTween, SizeTween 
+
+   local function updatePosition()
+      if Scrollbar.Visible == false then
+         return
+      end
+
+      if ScrollTween ~= nil then
+         ScrollTween:Cancel()
+      end		
+      ScrollTween = TweenService:Create(Thumb, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
+         Position = UDim2.new(0.3, 0, ContentPosition.Value/ContentSize.Value, 0)
+      })		
+      ScrollTween:Play()
+   end
+
+   local function updateSize()
+      local contentSize 	= ContentSize.Value
+      local scrollSize 	= Scrollbar.AbsoluteSize.Y
+
+      local thumbSize = scrollSize/contentSize
+
+      if thumbSize >= 1 then
+         Scrollbar.Visible = false
+         
+      else
+         Scrollbar.Visible = true
+         
+         if SizeTween ~= nil then
+            SizeTween:Cancel()
+         end		
+         SizeTween = TweenService:Create(Thumb, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
+            Size = UDim2.new(0.7, 0, thumbSize, 0)
+         })		
+         SizeTween:Play()
+         
+         updatePosition()
+      end
+   end
+
+   table.insert(connections, FrameSize.Changed:connect(updateSize))
+   table.insert(connections, ContentSize.Changed:connect(updateSize))
+   table.insert(connections, ContentPosition.Changed:connect(updatePosition))
+
+   return Scrollbar
+end
 
 local function CreateGUICloseButton(connections)
    local Button = Instance.new("Frame")
@@ -432,11 +534,11 @@ function GUI.new(params)
 		gui.content.Parent 					= gui.frame
 		
 		-- scrollbar
-		local scrollbar = TPLScrollbar:Clone()		
-		gui.ScrollFrameSize 		= scrollbar:WaitForChild("FrameSize")	
+		local scrollbar            = CreateGUIScrollbar(gui.connections)	
+		gui.ScrollFrameSize 		   = scrollbar:WaitForChild("FrameSize")	
 		gui.ScrollContentSize 		= scrollbar:WaitForChild("ContentSize")	
 		gui.ScrollContentPosition 	= scrollbar:WaitForChild("ContentPosition")			
-		scrollbar.Parent 			= gui.frame
+		scrollbar.Parent = gui.frame
 		
 		-- Global close button
 		gui.closeButton = CreateGUICloseButton(gui.connections);
