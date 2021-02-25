@@ -1,5 +1,7 @@
 
-local TweenService 		= game:GetService("TweenService")
+local Mouse 	            = game.Players.LocalPlayer:GetMouse()
+local TweenService 		   = game:GetService("TweenService")
+local UserInputService     = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
 
 local Players 	= game:GetService("Players")
@@ -17,7 +19,96 @@ local TPL = script:WaitForChild("TEMPLATE"):WaitForChild("MAIN")
 
 local TPLFolder 				= TPL:WaitForChild("Folder")
 local TPLScrollbar 				= TPL:WaitForChild("Scrollbar")
-local TPLCloseButton 			= TPL:WaitForChild("CloseButton")
+
+local function CreateGUICloseButton(connections)
+   local Button = Instance.new("Frame")
+   Button.Name 			            = "CloseButton"
+   Button.AnchorPoint	            = Vector2.new(0, 0)
+   Button.BackgroundColor3        = Color3.fromRGB(0, 0, 0)
+   Button.BackgroundTransparency  = 0
+   Button.BorderColor3            = Color3.fromRGB(27, 42, 53)
+   Button.BorderMode 			      = Enum.BorderMode.Outline
+   Button.BorderSizePixel 			= 0
+   Button.Draggable 			      = false
+   Button.Position 			      = UDim2.new(0, 0, 1, 0)
+   Button.Selectable              = false
+   Button.Size 			            = UDim2.new(1, 0, 0, 20)
+   Button.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   Button.Style 			         = Enum.FrameStyle.Custom
+   Button.Visible                 = true
+   Button.ZIndex                  = 1
+   Button.Archivable              = true
+
+   local ClosedValue = Instance.new('BoolValue')
+   ClosedValue.Name     = 'Closed'
+   ClosedValue.Value    = false
+   ClosedValue.Parent   = Button
+
+   local LabelText = Instance.new('TextLabel')
+   LabelText.Name 			         = "LabelText"
+   LabelText.AnchorPoint	         = Vector2.new(0, 0)
+   LabelText.AutomaticSize	         = Enum.AutomaticSize.None
+   LabelText.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
+   LabelText.BackgroundTransparency = 1
+   LabelText.BorderColor3           = Color3.fromRGB(27, 42, 53)
+   LabelText.BorderMode 			   = Enum.BorderMode.Outline
+   LabelText.BorderSizePixel 			= 0
+   LabelText.Position 			      = UDim2.new(0, 0, 0, 0)
+   LabelText.Selectable             = false
+   LabelText.Size 			         = UDim2.new(1, 0, 1, 0)
+   LabelText.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   LabelText.Visible                = true
+   LabelText.ZIndex                 = 1
+   LabelText.Archivable             = true
+   LabelText.Font                   = Enum.Font.SourceSans
+   LabelText.LineHeight             = 1
+   LabelText.RichText               = false
+   LabelText.Text                   = 'Close Controls'
+   LabelText.TextColor3 			   = Color3.new(238, 238, 238)
+   LabelText.TextScaled             = false
+   LabelText.TextSize               = 14
+   LabelText.TextStrokeColor3 		= Color3.new(0, 0, 0)
+   LabelText.TextStrokeTransparency = 1
+   LabelText.TextTransparency       = 0
+   LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
+   LabelText.TextWrapped            = false
+   LabelText.TextXAlignment         = Enum.TextXAlignment.Center
+   LabelText.TextYAlignment         = Enum.TextYAlignment.Center
+   LabelText.Parent = Button
+
+   -- SCRIPTS ----------------------------------------------------------------------------------------------------------   
+
+   local hover = false
+
+   table.insert(connections, Button.MouseEnter:Connect(function()
+      hover = true
+   end))
+
+   table.insert(connections, Button.MouseMoved:Connect(function()
+      hover = true
+   end))
+
+   table.insert(connections, Button.MouseLeave:Connect(function()
+      hover = false
+   end))
+
+   table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+      if hover and input.UserInputType == Enum.UserInputType.MouseButton1 then
+         ClosedValue.Value = not ClosedValue.Value
+      end
+   end))
+
+   table.insert(connections, ClosedValue.Changed:connect(function()
+      if ClosedValue.Value then
+         LabelText.Text = "Open Controls"
+      else
+         LabelText.Text = "Close Controls"
+      end
+   end))
+
+   return Button
+end
+
 
 -- controllers
 local ColorController			= require(script:WaitForChild("ColorController"))
@@ -348,7 +439,7 @@ function GUI.new(params)
 		scrollbar.Parent 			= gui.frame
 		
 		-- Global close button
-		gui.closeButton = TPLCloseButton:Clone();
+		gui.closeButton = CreateGUICloseButton(gui.connections);
 		gui.closeButton.Parent = gui.frame
 		
 		gui.closed = gui.closeButton:WaitForChild("Closed")	

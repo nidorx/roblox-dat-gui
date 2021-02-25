@@ -6,7 +6,7 @@ local BG_COLOR_ON 			= Color3.fromRGB(47, 161, 214)
 local BG_COLOR_OFF 			= Color3.fromRGB(60, 60, 60)
 local BG_COLOR_HOVER 		= Color3.fromRGB(48, 48, 48)
 
-local CreateGUI = function()
+local function CreateGUI()
    local Controller = Instance.new("Frame")
    Controller.Name 			            = "BooleanController"
    Controller.AnchorPoint	            = Vector2.new(0, 0)
