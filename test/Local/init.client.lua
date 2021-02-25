@@ -252,13 +252,22 @@ guiPresets.add(presets, 'SaharaSunset', 'Sahara Sunset')
 guiPresets.add(presets, 'NightCove', 'Night Cove')
 guiPresets.add(presets, 'Tranquil')
 
-
 --- Other tests
 local guiOthers 			= gui.addFolder('Other')
 local Object = {
-   Text = 'Lorem ipsum dolor'
+   Text = 'Lorem ipsum dolor',
+   Number = 25,
+   NumberDouble = 25
 }
 
 guiOthers.add(Object, 'Text').listen().onChange(function(value)
    print('New text = '..value)
+end)
+
+guiOthers.add(Object, 'Number').step(1).listen().onChange(function(value)
+   print('Number = ', value)
+end)
+
+guiOthers.add(Object, 'NumberDouble').step(0.001).listen().onChange(function(value)
+   print('NumberDouble = ', value)
 end)
