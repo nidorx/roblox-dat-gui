@@ -220,22 +220,22 @@ end
 
 local function CreateGUIScrollbar(connections)
    local Scrollbar = Instance.new("Frame")
-   Scrollbar.Name 			            = "Scrollbar"
-   Scrollbar.AnchorPoint	            = Vector2.new(0, 0)
-   Scrollbar.BackgroundColor3        = Color3.fromRGB(0, 0, 0)
-   Scrollbar.BackgroundTransparency  = 0
-   Scrollbar.BorderColor3            = Color3.fromRGB(27, 42, 53)
-   Scrollbar.BorderMode 			      = Enum.BorderMode.Outline
+   Scrollbar.Name 			         = "Scrollbar"
+   Scrollbar.AnchorPoint	         = Vector2.new(0, 0)
+   Scrollbar.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
+   Scrollbar.BackgroundTransparency = 0
+   Scrollbar.BorderColor3           = Color3.fromRGB(27, 42, 53)
+   Scrollbar.BorderMode 			   = Enum.BorderMode.Outline
    Scrollbar.BorderSizePixel 			= 0
    Scrollbar.Draggable 			      = false
    Scrollbar.Position 			      = UDim2.new(1, 0, 0, 0)
-   Scrollbar.Selectable              = false
-   Scrollbar.Size 			            = UDim2.new(0, 5, 1, 0)
+   Scrollbar.Selectable             = false
+   Scrollbar.Size 			         = UDim2.new(0, 5, 1, 0)
    Scrollbar.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
    Scrollbar.Style 			         = Enum.FrameStyle.Custom
-   Scrollbar.Visible                 = true
-   Scrollbar.ZIndex                  = 1
-   Scrollbar.Archivable              = true
+   Scrollbar.Visible                = true
+   Scrollbar.ZIndex                 = 1
+   Scrollbar.Archivable             = true
 
    local Thumb = Instance.new("Frame")
    Thumb.Name 			            = "thumb"
@@ -323,22 +323,22 @@ end
 
 local function CreateGUICloseButton(connections)
    local Button = Instance.new("Frame")
-   Button.Name 			            = "CloseButton"
-   Button.AnchorPoint	            = Vector2.new(0, 0)
-   Button.BackgroundColor3        = Color3.fromRGB(0, 0, 0)
-   Button.BackgroundTransparency  = 0
-   Button.BorderColor3            = Color3.fromRGB(27, 42, 53)
-   Button.BorderMode 			      = Enum.BorderMode.Outline
+   Button.Name 			         = "CloseButton"
+   Button.AnchorPoint	         = Vector2.new(0, 0)
+   Button.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
+   Button.BackgroundTransparency = 0
+   Button.BorderColor3           = Color3.fromRGB(27, 42, 53)
+   Button.BorderMode 			   = Enum.BorderMode.Outline
    Button.BorderSizePixel 			= 0
    Button.Draggable 			      = false
-   Button.Position 			      = UDim2.new(0, 0, 1, 0)
-   Button.Selectable              = false
-   Button.Size 			            = UDim2.new(1, 0, 0, 20)
+   Button.Position 			      = UDim2.new(0, 0, 0, 0)
+   Button.Selectable             = false
+   Button.Size 			         = UDim2.new(1, 0, 0, 20)
    Button.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
    Button.Style 			         = Enum.FrameStyle.Custom
-   Button.Visible                 = true
-   Button.ZIndex                  = 1
-   Button.Archivable              = true
+   Button.Visible                = true
+   Button.ZIndex                 = 1
+   Button.Archivable             = true
 
    local ClosedValue = Instance.new('BoolValue')
    ClosedValue.Name     = 'Closed'
@@ -487,7 +487,7 @@ local function lockUI(gui, controller)
 					end
 				end
 			end
-			
+
 			return locked
 		end
 		
@@ -566,8 +566,7 @@ local function resize(gui)
 	
 	lockAllUI(root)
 	
-	local function iterate(gui)	
-		local pos = 0
+	local function iterate(gui, pos)
 		
 		if gui.closed.Value == false then
 			for index = 1, #gui.children do
@@ -575,7 +574,7 @@ local function resize(gui)
 				child.frame.Position = UDim2.new(0, 0, 0, pos)
 				
 				if child.isGui then
-					local childHeight = iterate(child)
+					local childHeight = iterate(child, 0)
 					pos += childHeight
 				else
 					pos += child.height
@@ -593,21 +592,20 @@ local function resize(gui)
 		return pos
 	end
 	
-	iterate(root, 0)
+	iterate(root, 20)
 	
 	-- scroll	
 	
 	local contentSize 		= root.frame.AbsoluteSize.Y
-	local screenSize 		= Camera.ViewportSize.Y
-	local closeButtonSize 	= root.closeButton.AbsoluteSize.Y
+	local screenSize 		   = Camera.ViewportSize.Y
+	local closeButtonSize   = root.closeButton.AbsoluteSize.Y
 	if contentSize > screenSize - closeButtonSize then
 		
 		-- scroll
-		local totalContentSize 		= root.frame.Size.Y.Offset + closeButtonSize
+		local totalContentSize 		= root.frame.Size.Y.Offset
 		root.content.Size 			= UDim2.new(1, 0, 0, totalContentSize)		
-		root.frame.Size 			= UDim2.new(0, root.width, 0, screenSize)
-		root.closeButton.Position 	= UDim2.new(0, 0, 1, -closeButtonSize)		
-		local maxPosition			 = -(totalContentSize - screenSize)	
+		root.frame.Size 			   = UDim2.new(0, root.width, 0, screenSize)
+		local maxPosition			   = -(totalContentSize - screenSize)	
 		
 		-- animate to new position, if needed
 		if root.content.Position.Y.Offset ~= 0 then
@@ -650,9 +648,9 @@ local function resize(gui)
 			return Enum.ContextActionResult.Pass
 		end,  false,  Enum.UserInputType.MouseWheel)
 	else
-		root.ScrollContentPosition.Value 	= 0
+		root.ScrollContentPosition.Value = 0
 		root.content.Size 					= UDim2.new(1, 0, 1, 0)
-		root.closeButton.Position 			= UDim2.new(0, 0, 1, 0)
+		root.closeButton.Position 			= UDim2.new(0, 0, 0, 0)
 		
 		if root.content.Position.Y.Offset ~= 0 then
 			-- scroll to top
@@ -670,7 +668,7 @@ local function resize(gui)
 	end
 	
 	root.ScrollContentSize.Value	= contentSize
-	root.ScrollFrameSize.Value 		= root.frame.AbsoluteSize.Y
+	root.ScrollFrameSize.Value    = root.frame.AbsoluteSize.Y
 end
 
 
@@ -720,15 +718,15 @@ function GUI.new(params)
 		gui.frame.Name 						= "root"		
 		gui.frame.Size 						= UDim2.new(0, gui.width, 0, 0)		
 		gui.frame.Position					= UDim2.new(1, -(gui.width +15), 0, 0)
-		gui.frame.BackgroundTransparency 	= 1
-		gui.frame.Parent 					= gui.GUI
+		gui.frame.BackgroundTransparency = 1
+		gui.frame.Parent = gui.GUI
 		
 		gui.content   = Instance.new("Frame")
-		gui.content.Name 					= "content"		
-		gui.content.Size 					= UDim2.new(1, 0, 1, 0)		
-		gui.content.Position 				= UDim2.new(0, 0, 0, 0)
-		gui.content.BackgroundTransparency 	= 1
-		gui.content.Parent 					= gui.frame
+		gui.content.Name 					      = "content"		
+		gui.content.Size 					      = UDim2.new(1, 0, 1, 0)
+		gui.content.Position 				   = UDim2.new(0, 0, 0, 20)
+		gui.content.BackgroundTransparency  = 1
+		gui.content.Parent = gui.frame
 		
 		-- scrollbar
 		local scrollbar            = CreateGUIScrollbar(gui.connections)	

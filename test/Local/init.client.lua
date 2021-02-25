@@ -257,7 +257,11 @@ local guiOthers 			= gui.addFolder('Other')
 local Object = {
    Text = 'Lorem ipsum dolor',
    Number = 25,
-   NumberDouble = 25
+   NumberDouble = 25,
+   OptionsEnum = 0,
+   OptionsEnumItem = Enum.ScaleType.Slice,
+   OptionsArray = 2,
+   OptionsObject = 'ONE'
 }
 
 guiOthers.add(Object, 'Text').listen().onChange(function(value)
@@ -271,3 +275,20 @@ end)
 guiOthers.add(Object, 'NumberDouble').step(0.001).listen().onChange(function(value)
    print('NumberDouble = ', value)
 end)
+
+guiOthers.add(Object, 'OptionsEnum', Enum.ScaleType).listen().onChange(function(value, text)
+   print('OptionsEnum = ', value, text)
+end)
+
+guiOthers.add(Object, 'OptionsEnumItem').listen().onChange(function(value, text)
+   print('OptionsEnum = ', value, text)
+end)
+
+guiOthers.add(Object, 'OptionsArray', {'One', 'Two', 'Three'}).listen().onChange(function(value, text)
+   print('OptionsEnum = ', value, text)
+end)
+
+guiOthers.add(Object, 'OptionsObject', {ONE = 'One', TWO = 'Two', THREE = 'Three'}).listen().onChange(function(value, text)
+   print('OptionsObject = ', value, text)
+end)
+
