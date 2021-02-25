@@ -65,6 +65,8 @@ local BG_COLOR_OFF 			= Color3.fromRGB(26, 26, 26)
 local LABEL_COLOR_ENABLED	= Color3.fromRGB(238, 238, 238)
 local LABEL_COLOR_DISABLED	= Color3.fromRGB(136, 136, 136)
 
+
+
 local function CreateGUIFolder(connections)
 
    local Folder = Instance.new("Frame")
