@@ -247,9 +247,18 @@ local presets = {
 }
 
 
-
 guiPresets.add(presets, 'Default')
 guiPresets.add(presets, 'SaharaSunset', 'Sahara Sunset')
 guiPresets.add(presets, 'NightCove', 'Night Cove')
 guiPresets.add(presets, 'Tranquil')
--- asd  d  d
+
+
+--- Other tests
+local guiOthers 			= gui.addFolder('Other')
+local Object = {
+   Text = 'Lorem ipsum dolor'
+}
+
+guiOthers.add(Object, 'Text').listen().onChange(function(value)
+   print('New text = '..value)
+end)
