@@ -319,7 +319,6 @@ local function CreateGUI()
       Text.Archivable               = true
       Text.Font                     = Enum.Font.SourceSans
       Text.LineHeight               = 1
-      Text.PlaceholderColor3        = Color3.fromRGB(47, 161, 214)
       Text.RichText                 = false
       Text.Text                     = 'text'
       Text.TextColor3 			      = Color3.fromRGB(47, 161, 214)
@@ -385,14 +384,12 @@ local function CreateGUI()
          
          textFocused = true
          Text.TextColor3 = COLOR_TEXT_ON
-         Text.PlaceholderColor3 = COLOR_TEXT_ON
          TextFrame.BackgroundColor3 = COLOR_TEXT_BG_ON	
       end))
 
       table.insert(connections, Text.FocusLost:Connect(function(enterPressed, inputObject)
          textFocused = false
          Text.TextColor3 = COLOR_TEXT_OFF
-         Text.PlaceholderColor3 = COLOR_TEXT_OFF
          TextFrame.BackgroundColor3 = COLOR_TEXT_BG_OFF
       end))
 
@@ -401,7 +398,6 @@ local function CreateGUI()
          if UILocked.Value == "LOCKED" then
             textFocused = false
             Text.TextColor3 = COLOR_TEXT_OFF
-            Text.PlaceholderColor3 = COLOR_TEXT_OFF
             TextFrame.BackgroundColor3 = COLOR_TEXT_BG_OFF
          end
       end))

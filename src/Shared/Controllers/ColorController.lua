@@ -179,7 +179,6 @@ local function CreateGUI()
    Text.Archivable               = true
    Text.Font                     = Enum.Font.SourceSans
    Text.LineHeight               = 1
-   Text.PlaceholderColor3        = Color3.fromRGB(47, 161, 214)
    Text.RichText                 = false
    Text.Text                     = 'text'
    Text.TextColor3 			      = Color3.fromRGB(255, 255, 255)

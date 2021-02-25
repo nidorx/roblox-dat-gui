@@ -13,12 +13,26 @@
 -- input-color: lighten($background-color, 8.5%);
 
 
+
 return {
    -- boolean
-   BOOLEAN_COLOR 			= Color3.fromRGB(128, 103, 135),
-   CHECKBOX_COLOR_ON 	= Color3.fromRGB(47, 161, 214),
-   CHECKBOX_COLOR_OFF 	= Color3.fromRGB(60, 60, 60),
-   CHECKBOX_COLOR_HOVER = Color3.fromRGB(48, 48, 48),
-   CHECKBOX_COLOR_IMAGE = Color3.fromRGB(255, 255, 255),
+   BOOLEAN_COLOR 			   = Color3.fromRGB(128, 103, 135),
+   CHECKBOX_COLOR_ON 	   = Color3.fromRGB(47, 161, 214),
+   CHECKBOX_COLOR_OFF 	   = Color3.fromRGB(60, 60, 60),
+   CHECKBOX_COLOR_HOVER    = Color3.fromRGB(48, 48, 48),
+   CHECKBOX_COLOR_IMAGE    = Color3.fromRGB(255, 255, 255),
+   -- string
+   STRING_COLOR            = Color3.fromRGB(30, 211, 111),
+   -- number
+   NUMBER_COLOR		      = Color3.fromRGB(47, 161, 214),
+   -- input
+   INPUT_COLOR 	         = Color3.fromRGB(48, 48, 48),
+   INPUT_COLOR_HOVER	      = Color3.fromRGB(60, 60, 60),
+   INPUT_COLOR_FOCUS       = Color3.fromRGB(73, 73, 73),
+   INPUT_COLOR_FOCUS_TXT   = Color3.fromRGB(255, 255, 255),
+
 }
+
+
+
 

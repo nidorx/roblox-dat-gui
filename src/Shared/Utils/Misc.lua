@@ -3,11 +3,14 @@ local Misc = {}
 --[[
    Create an event disconnect function, a pattern used on all controllers
 ]]
-function Misc.DisconnectFn(connections, disconnectParent)
+function Misc.DisconnectFn(connections, ...)
+
+   local disconnectFns = {...}
+
    return function()
 
-      if disconnectParent ~= nil then
-         disconnectParent()
+      for _, disconnect in ipairs(disconnectFns) do
+         disconnect()
       end
 
       for _, conn in ipairs(connections) do
@@ -17,7 +20,6 @@ function Misc.DisconnectFn(connections, disconnectParent)
       table.clear(connections)
    end
 end
-
 
 return Misc
 

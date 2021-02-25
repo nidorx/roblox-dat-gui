@@ -1,10 +1,5 @@
-local RunService = game:GetService("RunService")
-
-local COLOR_TEXT_ON 		   = Color3.fromRGB(255, 255, 255)
-local COLOR_TEXT_OFF		   = Color3.fromRGB(47, 161, 214)
-local COLOR_TEXT_BG_ON 		= Color3.fromRGB(73, 73, 73)
-local COLOR_TEXT_BG_OFF 	= Color3.fromRGB(48, 48, 48)
-local COLOR_TEXT_BG_HOVER	= Color3.fromRGB(60, 60, 60)
+local RunService  = game:GetService("RunService")
+local Constants   = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 
 local function CreateGUI()
    local Controller = Instance.new("Frame")
@@ -211,7 +206,6 @@ local function CreateGUI()
    Text.Archivable               = true
    Text.Font                     = Enum.Font.SourceSans
    Text.LineHeight               = 1
-   Text.PlaceholderColor3        = Color3.fromRGB(47, 161, 214)
    Text.RichText                 = false
    Text.Text                     = 'text'
    Text.TextColor3 			      = Color3.fromRGB(47, 161, 214)
@@ -362,7 +356,7 @@ local function CreateGUI()
       end
       
       if textFocused == false then
-         TextFrame.BackgroundColor3 = COLOR_TEXT_BG_HOVER
+         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
       end
    end))
    
@@ -372,13 +366,13 @@ local function CreateGUI()
       end
       
       if textFocused == false then
-         TextFrame.BackgroundColor3 = COLOR_TEXT_BG_HOVER
+         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
       end
    end))
    
    table.insert(connections, Text.MouseLeave:Connect(function()
       if textFocused == false then
-         TextFrame.BackgroundColor3 = COLOR_TEXT_BG_OFF
+         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
       end
    end))
    
@@ -388,25 +382,22 @@ local function CreateGUI()
       end
       
       textFocused = true
-      Text.TextColor3 = COLOR_TEXT_ON
-      Text.PlaceholderColor3 = COLOR_TEXT_ON
-      TextFrame.BackgroundColor3 = COLOR_TEXT_BG_ON	
+      Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
+      TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS	
    end))
    
    table.insert(connections, Text.FocusLost:Connect(function(enterPressed, inputObject)
       textFocused = false
-      Text.TextColor3 = COLOR_TEXT_OFF
-      Text.PlaceholderColor3 = COLOR_TEXT_OFF
-      TextFrame.BackgroundColor3 = COLOR_TEXT_BG_OFF
+      Text.TextColor3 = Constants.NUMBER_COLOR
+      TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
    end))
    
    -- reset when external lock (eg close folder)
    table.insert(connections, UILocked.Changed:connect(function()
       if UILocked.Value == "LOCKED" then
          textFocused = false
-         Text.TextColor3 = COLOR_TEXT_OFF
-         Text.PlaceholderColor3 = COLOR_TEXT_OFF
-         TextFrame.BackgroundColor3 = COLOR_TEXT_BG_OFF
+         Text.TextColor3 = Constants.NUMBER_COLOR
+         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
       end
    end))
    
