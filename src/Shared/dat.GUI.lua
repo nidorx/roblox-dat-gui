@@ -1152,6 +1152,9 @@ function GUI.new(params)
 		end
 		return g;
 	end
+
+
+   unlockUI(gui, nil)
 	
 	return gui
 end
