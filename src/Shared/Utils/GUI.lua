@@ -89,7 +89,7 @@ function GUIUtils.CreateControllerWrapper(config)
    LabelText.Font                   = Enum.Font.SourceSans
    LabelText.LineHeight             = 1
    LabelText.RichText               = false
-   LabelText.Text                   = 'Boolean Label'
+   LabelText.Text                   = 'Label'
    LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
    LabelText.TextScaled             = false
    LabelText.TextSize               = 14

@@ -25,6 +25,8 @@ return {
    STRING_COLOR            = Color3.fromRGB(30, 211, 111),
    -- number
    NUMBER_COLOR		      = Color3.fromRGB(47, 161, 214),
+   -- function
+   FUNCTION_COLOR		      = Color3.fromRGB(230, 29, 95),
    -- input
    INPUT_COLOR 	         = Color3.fromRGB(48, 48, 48),
    INPUT_COLOR_HOVER	      = Color3.fromRGB(60, 60, 60),
