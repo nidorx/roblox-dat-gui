@@ -1,6 +1,8 @@
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local Misc        = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+
 local STEP  = 0.01
 local MIN   = -9007199254740992
 local MAX   = 9007199254740992
@@ -461,10 +463,6 @@ local function CreateGUI()
       return 0
    end
 
-   local function map(x, inMin, inMax, outMin, outMax)
-      return (x - inMin)*(outMax - outMin)/(inMax - inMin) + outMin
-   end
-
    local function checkUnlock()		
       for i, v in pairs(KEYS) do
          if controllerHover or textHover[v] or textFocused[v] or sliderHover[v] or sliderMouseDown[v] then
@@ -622,9 +620,9 @@ local function CreateGUI()
          -- Change input
          ignorePercent = true
          ValueIn.Value = Vector3.new(
-            map(Percent.Value.X, 0, 1, Min.Value.X, Max.Value.X),
-            map(Percent.Value.Y, 0, 1, Min.Value.Y, Max.Value.Y),
-            map(Percent.Value.Z, 0, 1, Min.Value.Z, Max.Value.Z)
+            Misc.MapRange(Percent.Value.X, 0, 1, Min.Value.X, Max.Value.X),
+            Misc.MapRange(Percent.Value.Y, 0, 1, Min.Value.Y, Max.Value.Y),
+            Misc.MapRange(Percent.Value.Z, 0, 1, Min.Value.Z, Max.Value.Z)
          )
       end
       
@@ -661,9 +659,9 @@ local function CreateGUI()
       else
          ignoreValueIn = true
          Percent.Value = Vector3.new(
-            map(x, Min.Value.X, Max.Value.X, 0, 1),
-            map(y, Min.Value.Y, Max.Value.Y, 0, 1),
-            map(z, Min.Value.Z, Max.Value.Z, 0, 1)
+            Misc.MapRange(x, Min.Value.X, Max.Value.X, 0, 1),
+            Misc.MapRange(y, Min.Value.Y, Max.Value.Y, 0, 1),
+            Misc.MapRange(z, Min.Value.Z, Max.Value.Z, 0, 1)
          )
       end
    end))

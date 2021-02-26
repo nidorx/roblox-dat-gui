@@ -39,41 +39,21 @@ local function CreateGUI()
       Active   = IsTextActive
    })
 
-   Value.Parent      = Controller
-   TextFrame.Parent  = TextContainer
+   Value.Parent         = Controller
+   TextFrame.Parent     = TextContainer
+   IsTextActive.Value   = false
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
    local connections = {}
-   local hover	      = false
-   local locked      = true
-   local focused     = false
-
-   IsTextActive.Value = false
 
    table.insert(connections, OnLock:Connect(function()
-      hover             = false
-      locked            = true
-      
-      IsTextActive.Value      = false
+      IsTextActive.Value         = false
       UnlockOnMouseLeave.Value   = true
    end))
 
    table.insert(connections, OnUnLock:Connect(function()
-      locked            = false
       IsTextActive.Value = true
-   end))
-   
-   table.insert(connections, OnMouseEnter:Connect(function()
-      hover = true
-   end))
-   
-   table.insert(connections, OnMouseMoved:Connect(function()
-      hover = true
-   end))
-   
-   table.insert(connections, OnMouseLeave:Connect(function()
-      hover = false
    end))
    
    table.insert(connections, OnFocused:Connect(function()

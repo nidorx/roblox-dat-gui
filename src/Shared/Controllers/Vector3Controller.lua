@@ -363,10 +363,6 @@ local function CreateGUI()
       return 0;
    end
    
-   local function map(x, inMin, inMax, outMin, outMax)
-      return (x - inMin)*(outMax - outMin)/(inMax - inMin) + outMin
-   end
-   
    local function renderText()
       local precision = Precision.Value
       for i, v in pairs(KEYS) do

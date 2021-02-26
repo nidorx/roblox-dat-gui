@@ -2,6 +2,8 @@ local Mouse 	         = game.Players.LocalPlayer:GetMouse()
 local RunService        = game:GetService("RunService")
 local UserInputService  = game:GetService("UserInputService")
 
+local Misc        = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+
 local SLIDER_FG_COLOR_ON 	= Color3.fromRGB(68, 171, 218)
 local SLIDER_FG_COLOR_OFF	= Color3.fromRGB(47, 161, 214)
 local SLIDER_BG_COLOR_ON 	= Color3.fromRGB(60, 60, 60)
@@ -370,10 +372,6 @@ local function CreateGUI()
       return 0;
    end
 
-   local function map(x, inMin, inMax, outMin, outMax)
-      return (x - inMin)*(outMax - outMin)/(inMax - inMin) + outMin
-   end
-
    local function renderText()
       local precision = Precision.Value
       Text.Text = string.format("%."..precision.."f", Value.Value)
@@ -506,7 +504,7 @@ local function CreateGUI()
       else
          -- Change input
          ignorePercent = true
-         ValueIn.Value = map(Percent.Value, 0, 1, Min.Value, Max.Value)
+         ValueIn.Value = Misc.MapRange(Percent.Value, 0, 1, Min.Value, Max.Value)
       end
    end))
 
@@ -524,7 +522,7 @@ local function CreateGUI()
          ignorePercent = false
       else
          ignoreValueIn = true
-         Percent.Value = map(value, Min.Value, Max.Value, 0, 1)
+         Percent.Value = Misc.MapRange(value, Min.Value, Max.Value, 0, 1)
       end
    end))
 

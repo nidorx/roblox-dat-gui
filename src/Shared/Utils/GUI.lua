@@ -352,7 +352,7 @@ function GUIUtils.CreateInput(config)
       end
    end))
 
-   table.insert(connections, Value.Changed:connect(function()
+   table.insert(connections, Value.Changed:Connect(function()
       Text.Text = config.Render(Value.Value)
    end))
 
@@ -380,7 +380,8 @@ function GUIUtils.CreateInput(config)
       Text.TextColor3            = config.Color
       TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
       
-      Value.Value    = config.Parse(Text.Text, enterPressed, inputObject)
+      Value.Value = config.Parse(Text.Text, Value)
+      Text.Text = config.Render(Value.Value)
 
       OnFocusLost:Fire()
    end))
