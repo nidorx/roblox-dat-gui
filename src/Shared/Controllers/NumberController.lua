@@ -136,8 +136,9 @@ local function CreateGUI()
    table.insert(connections, ValueIn.Changed:connect(function()
       local value = math.max(math.min(ValueIn.Value, Max.Value), Min.Value)
       
-      if value % Step.Value ~= 0 then
-         value = math.round(value/Step.Value) * Step.Value
+      local step = Step.Value
+      if value % step ~= 0 then
+         value = math.round(value/step) * step
       end
       
       Value.Value = RenderText(tostring(value))

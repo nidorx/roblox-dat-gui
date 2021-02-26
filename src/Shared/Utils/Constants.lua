@@ -30,6 +30,7 @@ return {
    INPUT_COLOR_HOVER	      = Color3.fromRGB(60, 60, 60),
    INPUT_COLOR_FOCUS       = Color3.fromRGB(73, 73, 73),
    INPUT_COLOR_FOCUS_TXT   = Color3.fromRGB(255, 255, 255),
+   INPUT_COLOR_PLACEHOLDER = Color3.fromRGB(117, 117, 117),
 
 }
 
