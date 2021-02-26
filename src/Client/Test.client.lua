@@ -259,10 +259,10 @@ local Object = {
    Number = 25,
    NumberDouble = 33,
    NumberSlider = 0.5,
-   OptionsEnum = 0,
+   OptionsEnum = 2,
    OptionsEnumItem = Enum.ScaleType.Slice,
-   OptionsArray = 2,
-   OptionsObject = 'ONE',
+   OptionsArray = 1,
+   OptionsObject = 'THREE',
    Vector3 = Vector3.new(10, 11, 12),
    Vector3Slider = Vector3.new(10, 11, 12)
 }

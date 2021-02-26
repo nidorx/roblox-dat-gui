@@ -31,7 +31,6 @@ local function CreateGUI()
    SelectContainer.Name 			         = "items-container"
    SelectContainer.AnchorPoint	         = Vector2.new(0, 0)
    SelectContainer.BackgroundTransparency = 1
-   SelectContainer.BorderColor3           = Color3.fromRGB(27, 42, 53)
    SelectContainer.BorderMode 			   = Enum.BorderMode.Outline
    SelectContainer.BorderSizePixel 			= 0
    SelectContainer.Draggable 			      = false
@@ -48,8 +47,7 @@ local function CreateGUI()
    local SelectList = Instance.new("Frame")
    SelectList.Name 			            = "inner"
    SelectList.AnchorPoint	            = Vector2.new(0, 0)
-   SelectList.BackgroundColor3         = Color3.fromRGB(255, 255, 255)
-   SelectList.BackgroundTransparency   = 0
+   SelectList.BackgroundTransparency   = 1
    SelectList.BorderColor3             = Color3.fromRGB(27, 42, 53)
    SelectList.BorderMode 			      = Enum.BorderMode.Outline
    SelectList.BorderSizePixel 			= 0
@@ -346,6 +344,7 @@ local function OptionController(gui, object, property,  options)
 	local keyLabel = {}
 	local currentIndex = 1
 	local isEnum = typeof(object[property]) == "EnumItem" or typeof(options) == "Enum"
+   
 	local enumItems
 	
 	if isEnum then
@@ -366,25 +365,40 @@ local function OptionController(gui, object, property,  options)
 		keyValue = {}
 		
 		if isEnum then
+         local enumUseIndex = typeof(object[property]) == "number"
 			for index, enumItem in ipairs(enumItems) do
 				table.insert(keyValue, enumItem)
 				table.insert(keyLabel, enumItem.Name)
 				
-				if object[property] == enumItem then
-					currentIndex = index
-				end
+            if enumUseIndex then 
+               if object[property] == (index - 1) then
+                  currentIndex = index
+               end
+            else
+               if object[property] == enumItem then
+                  currentIndex = index
+               end
+            end
 			end
 		elseif isArray(options) then
          local index = 1
+         local useIndex = typeof(object[property]) == "number"
 			for index, value in ipairs(options) do
 				if type(value) == 'string' then
 					-- Only string values
 					table.insert(keyValue, value)
 					table.insert(keyLabel, value)
 					
-					if object[property] == value then
-						currentIndex = index
-					end
+               if useIndex then
+                  if object[property] == index then
+                     currentIndex = index
+                  end
+               else
+                  if object[property] == value then
+                     currentIndex = index
+                  end
+               end
+					
                index = index + 1
 				end
 			end			
