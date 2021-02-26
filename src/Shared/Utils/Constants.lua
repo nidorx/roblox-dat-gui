@@ -15,6 +15,10 @@
 
 
 return {
+   -- general
+   BACKGROUND_COLOR        = Color3.fromRGB(26, 26, 26),
+   LABEL_COLOR             = Color3.fromRGB(238, 238, 238),
+   LABEL_COLOR_DISABLED	   = Color3.fromRGB(136, 136, 136),
    -- boolean
    BOOLEAN_COLOR 			   = Color3.fromRGB(128, 103, 135),
    CHECKBOX_COLOR_ON 	   = Color3.fromRGB(47, 161, 214),

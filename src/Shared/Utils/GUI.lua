@@ -47,9 +47,8 @@ function GUIUtils.CreateControllerWrapper(config)
    local Controller = Instance.new("Frame")
    Controller.Name 			            = config.Name
    Controller.AnchorPoint	            = Vector2.new(0, 0)
-   Controller.BackgroundColor3         = Color3.fromRGB(26, 26, 26)
+   Controller.BackgroundColor3         = Constants.BACKGROUND_COLOR
    Controller.BackgroundTransparency   = 0
-   Controller.BorderColor3             = Color3.fromRGB(27, 42, 53)
    Controller.BorderMode 			      = Enum.BorderMode.Outline
    Controller.BorderSizePixel 			= 0
    Controller.Draggable 			      = false
@@ -74,9 +73,7 @@ function GUIUtils.CreateControllerWrapper(config)
    LabelText.Name 			         = "LabelText"
    LabelText.AnchorPoint	         = Vector2.new(0, 0)
    LabelText.AutomaticSize	         = Enum.AutomaticSize.None
-   LabelText.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
    LabelText.BackgroundTransparency = 1
-   LabelText.BorderColor3           = Color3.fromRGB(27, 42, 53)
    LabelText.BorderMode 			   = Enum.BorderMode.Outline
    LabelText.BorderSizePixel 			= 0
    LabelText.Position 			      = UDim2.new(0, 10, 0, 0)
@@ -90,7 +87,7 @@ function GUIUtils.CreateControllerWrapper(config)
    LabelText.LineHeight             = 1
    LabelText.RichText               = false
    LabelText.Text                   = 'Label'
-   LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
+   LabelText.TextColor3 			   = Constants.LABEL_COLOR
    LabelText.TextScaled             = false
    LabelText.TextSize               = 14
    LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
@@ -245,6 +242,7 @@ local ParseDummy = RenderDummy
          MultiLine   = Boolean
          Render      = Function(String) : String
          Parse       = Function(String, EnterPressed, InputObject) : Any
+         ChangeColors = Boolean
       }
    Returns 
       Value          = StringValue
@@ -273,6 +271,10 @@ function GUIUtils.CreateInput(config)
 
    if config.Parse == nil then
       config.Parse = ParseDummy
+   end
+
+   if config.ChangeColors == nil then
+      config.ChangeColors = true
    end
 
    local Value = Instance.new('StringValue')
@@ -368,8 +370,10 @@ function GUIUtils.CreateInput(config)
 
       focused = true
 
-      Text.TextColor3            = Constants.INPUT_COLOR_FOCUS_TXT
-      TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS	
+      if config.ChangeColors then
+         Text.TextColor3            = Constants.INPUT_COLOR_FOCUS_TXT
+         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS	
+      end
 
       OnFocused:Fire()
    end))
@@ -377,8 +381,10 @@ function GUIUtils.CreateInput(config)
    table.insert(connections, Text.FocusLost:Connect(function(enterPressed, inputObject)
       focused        = false
       
-      Text.TextColor3            = config.Color
-      TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
+      if config.ChangeColors then
+         Text.TextColor3            = config.Color
+         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
+      end
       
       Value.Value = config.Parse(Text.Text, Value)
       Text.Text = config.Render(Value.Value)
@@ -392,7 +398,9 @@ function GUIUtils.CreateInput(config)
       end
       
       if not focused then
-         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
+         if config.ChangeColors then
+            TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
+         end
       end
    end))
    
@@ -402,13 +410,17 @@ function GUIUtils.CreateInput(config)
       end
       
       if not focused then
-         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
+         if config.ChangeColors then 
+            TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
+         end
       end
    end))
    
    table.insert(connections, Text.MouseLeave:Connect(function()
       if not focused then
-         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
+         if config.ChangeColors then 
+            TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
+         end
       end
    end))
    

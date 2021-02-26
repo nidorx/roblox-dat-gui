@@ -2,6 +2,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Misc        = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 
 local STEP  = 0.01
 local MIN   = -9007199254740992
@@ -22,7 +23,7 @@ local function CreateGUI()
    local Controller = Instance.new("Frame")
    Controller.Name 			            = "Vector3Controller"
    Controller.AnchorPoint	            = Vector2.new(0, 0)
-   Controller.BackgroundColor3         = Color3.fromRGB(26, 26, 26)
+   Controller.BackgroundColor3         = Constants.BACKGROUND_COLOR
    Controller.BackgroundTransparency   = 0
    Controller.BorderColor3             = Color3.fromRGB(27, 42, 53)
    Controller.BorderMode 			      = Enum.BorderMode.Outline
@@ -100,7 +101,7 @@ local function CreateGUI()
    LabelText.LineHeight             = 1
    LabelText.RichText               = false
    LabelText.Text                   = 'String Label'
-   LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
+   LabelText.TextColor3 			   = Constants.LABEL_COLOR
    LabelText.TextScaled             = false
    LabelText.TextSize               = 14
    LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)

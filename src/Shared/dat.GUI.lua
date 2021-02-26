@@ -47,6 +47,7 @@ local ContextActionService = game:GetService("ContextActionService")
 local Player 	   = Players.LocalPlayer
 local PlayerGui   = Player:WaitForChild("PlayerGui")
 
+
 -- controllers
 local Controllers             = game.ReplicatedStorage:WaitForChild("Controllers")
 local ColorController			= require(Controllers:WaitForChild("ColorController"))
@@ -59,10 +60,9 @@ local NumberSliderController	= require(Controllers:WaitForChild("NumberSliderCon
 local Vector3Controller			= require(Controllers:WaitForChild("Vector3Controller"))
 local Vector3SliderController	= require(Controllers:WaitForChild("Vector3SliderController"))
 
+local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 
 local BG_COLOR_ON 			= Color3.fromRGB(17, 17, 17)
-local BG_COLOR_OFF 			= Color3.fromRGB(26, 26, 26)
-local LABEL_COLOR_ENABLED	= Color3.fromRGB(238, 238, 238)
 local LABEL_COLOR_DISABLED	= Color3.fromRGB(136, 136, 136)
 
 
@@ -177,7 +177,7 @@ local function CreateGUIFolder(connections)
    LabelText.LineHeight             = 1
    LabelText.RichText               = false
    LabelText.Text                   = 'Folder Title'
-   LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
+   LabelText.TextColor3 			   = Constants.LABEL_COLOR
    LabelText.TextScaled             = false
    LabelText.TextSize               = 14
    LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
@@ -418,7 +418,7 @@ local function CreateGUICloseButton(connections)
    LabelText.LineHeight             = 1
    LabelText.RichText               = false
    LabelText.Text                   = 'Close Controls'
-   LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
+   LabelText.TextColor3 			   = Constants.LABEL_COLOR
    LabelText.TextScaled             = false
    LabelText.TextSize               = 14
    LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
@@ -957,18 +957,18 @@ function GUI.new(params)
 			end
 			
 			if controller._isReadonly then
-				frame.BackgroundColor3 = BG_COLOR_OFF
+				frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
 				
 			else
 				if UILocked.Value == "ACTIVE" then
 					frame.BackgroundColor3 = BG_COLOR_ON
 				else				
-					frame.BackgroundColor3 = BG_COLOR_OFF
+					frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
 				end
 			end
 		end)
 		
-		frame.BackgroundColor3 = BG_COLOR_OFF
+		frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
 		
 		-------------------------------------------------------------------------------
 		
@@ -995,7 +995,7 @@ function GUI.new(params)
 					
 					controller.label.TextColor3 = LABEL_COLOR_DISABLED					
 				else
-					controller.label.TextColor3 = LABEL_COLOR_ENABLED					
+					controller.label.TextColor3 = Constants.LABEL_COLOR					
 					if controller.label:FindFirstChild("LineThrough") ~= nil then
 						controller.label:FindFirstChild("LineThrough").Parent = nil
 					end
