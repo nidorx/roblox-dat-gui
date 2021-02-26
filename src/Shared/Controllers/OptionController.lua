@@ -2,38 +2,21 @@ local Mouse             = game.Players.LocalPlayer:GetMouse()
 local RunService        = game:GetService("RunService")
 local HttpService       = game:GetService("HttpService")
 local UserInputService  = game:GetService("UserInputService")
-
-local COLOR_TEXT_HOVER 	   = Color3.fromRGB(30, 211, 111)
-local COLOR_TEXT_OFF	      = Color3.fromRGB(255, 255, 255)
-local COLOR_TEXT_BG_OFF    = Color3.fromRGB(48, 48, 48)
-local COLOR_TEXT_BG_HOVER  = Color3.fromRGB(60, 60, 60)
+local GUIUtils          = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
+local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
+local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
 
 local function CreateGUI()
-   local Controller = Instance.new("Frame")
-   Controller.Name 			            = "OptionController"
-   Controller.AnchorPoint	            = Vector2.new(0, 0)
-   Controller.BackgroundColor3         = Color3.fromRGB(26, 26, 26)
-   Controller.BackgroundTransparency   = 0
-   Controller.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   Controller.BorderMode 			      = Enum.BorderMode.Outline
-   Controller.BorderSizePixel 			= 0
-   Controller.Draggable 			      = false
-   Controller.Position 			         = UDim2.new(0, 0, 0, 60)
-   Controller.Selectable               = false
-   Controller.Size 			            = UDim2.new(1, 0, 0, 30)
-   Controller.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Controller.Style 			            = Enum.FrameStyle.Custom
-   Controller.Visible                  = true
-   Controller.ZIndex                   = 1
-   Controller.Archivable               = true
 
-   local LabelValue = Instance.new('StringValue')
-   LabelValue.Name = 'Label'
-   LabelValue.Parent = Controller
+   local UnlockOnMouseLeave = Instance.new('BoolValue')
+   UnlockOnMouseLeave.Value = true
 
-   local UILocked = Instance.new('StringValue')
-   UILocked.Name = 'UILocked'
-   UILocked.Parent = Controller
+   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
+      = GUIUtils.CreateControllerWrapper({
+         Name  = 'OptionController',
+         Color = Constants.STRING_COLOR,
+         UnlockOnMouseLeave = UnlockOnMouseLeave
+      })
 
    local Selected = Instance.new('IntValue')
    Selected.Name     = 'Selected'
@@ -44,99 +27,9 @@ local function CreateGUI()
    Options.Name     = 'Options'
    Options.Parent   = Controller
 
-   local LabelText = Instance.new('TextLabel')
-   LabelText.Name 			         = "LabelText"
-   LabelText.AnchorPoint	         = Vector2.new(0, 0)
-   LabelText.AutomaticSize	         = Enum.AutomaticSize.None
-   LabelText.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
-   LabelText.BackgroundTransparency = 1
-   LabelText.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   LabelText.BorderMode 			   = Enum.BorderMode.Outline
-   LabelText.BorderSizePixel 			= 0
-   LabelText.Position 			      = UDim2.new(0, 10, 0, 0)
-   LabelText.Selectable             = false
-   LabelText.Size 			         = UDim2.new(0.4, -10, 1, -1)
-   LabelText.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   LabelText.Visible                = true
-   LabelText.ZIndex                 = 1
-   LabelText.Archivable             = true
-   LabelText.Font                   = Enum.Font.SourceSans
-   LabelText.LineHeight             = 1
-   LabelText.RichText               = false
-   LabelText.Text                   = 'Option Label'
-   LabelText.TextColor3 			   = Color3.fromRGB(238, 238, 238)
-   LabelText.TextScaled             = false
-   LabelText.TextSize               = 14
-   LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
-   LabelText.TextStrokeTransparency = 1
-   LabelText.TextTransparency       = 0
-   LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
-   LabelText.TextWrapped            = false
-   LabelText.TextXAlignment         = Enum.TextXAlignment.Left
-   LabelText.TextYAlignment         = Enum.TextYAlignment.Center
-   LabelText.Parent = Controller
-
-   local borderBottom = Instance.new("Frame")
-   borderBottom.Name 			         = "border-bottom"
-   borderBottom.AnchorPoint	         = Vector2.new(0, 0)
-   borderBottom.BackgroundColor3       = Color3.fromRGB(44, 44, 44)
-   borderBottom.BackgroundTransparency = 0
-   borderBottom.BorderColor3           = Color3.fromRGB(44, 44, 44)
-   borderBottom.BorderMode 			   = Enum.BorderMode.Outline
-   borderBottom.BorderSizePixel 			= 0
-   borderBottom.Draggable 			      = false
-   borderBottom.Position 			      = UDim2.new(0, 0, 1, -1)
-   borderBottom.Selectable             = false
-   borderBottom.Size 			         = UDim2.new(1, 0, 0, 1)
-   borderBottom.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   borderBottom.Style 			         = Enum.FrameStyle.Custom
-   borderBottom.Visible                = true
-   borderBottom.ZIndex                 = 1
-   borderBottom.Archivable             = true
-   borderBottom.Parent = Controller
-
-   local borderLeft = Instance.new("Frame")
-   borderLeft.Name 			            = "border-left"
-   borderLeft.AnchorPoint	            = Vector2.new(0, 0)
-   borderLeft.BackgroundColor3         = Color3.fromRGB(30, 211, 111)
-   borderLeft.BackgroundTransparency   = 0
-   borderLeft.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   borderLeft.BorderMode 			      = Enum.BorderMode.Outline
-   borderLeft.BorderSizePixel 			= 0
-   borderLeft.Draggable 			      = false
-   borderLeft.Position 			         = UDim2.new(0, 0,0, 0)
-   borderLeft.Selectable               = false
-   borderLeft.Size 			            = UDim2.new(0, 3, 1, 0)
-   borderLeft.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   borderLeft.Style 			            = Enum.FrameStyle.Custom
-   borderLeft.Visible                  = true
-   borderLeft.ZIndex                   = 2
-   borderLeft.Archivable               = true
-   borderLeft.Parent = Controller
-
-   local Control = Instance.new("Frame")
-   Control.Name 			            = "control"
-   Control.AnchorPoint	            = Vector2.new(0, 0)
-   Control.BackgroundColor3         = Color3.fromRGB(255, 255, 255)
-   Control.BackgroundTransparency   = 1
-   Control.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   Control.BorderMode 			      = Enum.BorderMode.Outline
-   Control.BorderSizePixel 			= 0
-   Control.Draggable 			      = false
-   Control.Position 			         = UDim2.new(0.4, 0, 0, 0)
-   Control.Selectable               = false
-   Control.Size 			            = UDim2.new(0.6, 0, 1, -1)
-   Control.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Control.Style 			            = Enum.FrameStyle.Custom
-   Control.Visible                  = true
-   Control.ZIndex                   = 1
-   Control.Archivable               = true
-   Control.Parent = Controller
-
    local SelectContainer = Instance.new("Frame")
    SelectContainer.Name 			         = "items-container"
    SelectContainer.AnchorPoint	         = Vector2.new(0, 0)
-   SelectContainer.BackgroundColor3       = Color3.fromRGB(48, 48, 48)
    SelectContainer.BackgroundTransparency = 1
    SelectContainer.BorderColor3           = Color3.fromRGB(27, 42, 53)
    SelectContainer.BorderMode 			   = Enum.BorderMode.Outline
@@ -183,7 +76,7 @@ local function CreateGUI()
    local ItemTemplate = Instance.new("Frame")
    ItemTemplate.Name 			         = "item"
    ItemTemplate.AnchorPoint	         = Vector2.new(0, 0)
-   ItemTemplate.BackgroundColor3       = Color3.fromRGB(48, 48, 48)
+   ItemTemplate.BackgroundColor3       = Constants.INPUT_COLOR
    ItemTemplate.BackgroundTransparency = 0
    ItemTemplate.BorderColor3           = Color3.fromRGB(27, 42, 53)
    ItemTemplate.BorderMode 			   = Enum.BorderMode.Outline
@@ -219,7 +112,7 @@ local function CreateGUI()
    Text.LineHeight               = 1
    Text.RichText                 = false
    Text.Text                     = 'Option'
-   Text.TextColor3 			      = Color3.fromRGB(30, 211, 111)
+   Text.TextColor3 			      = Constants.STRING_COLOR
    Text.TextScaled               = false
    Text.TextSize                 = 14
    Text.TextStrokeColor3 		   = Color3.fromRGB(0, 0, 0)
@@ -236,24 +129,20 @@ local function CreateGUI()
    local connections          = {}
    local connectionsItems     = {}
    local itemsSize			   = 0
-   local controllerHover 	   = false
-   local selectListHover 	   = false
-   local selectListIsOpen	   = false
-   
-   table.insert(connections, LabelValue.Changed:connect(function()
-      LabelText.Text = LabelValue.Value
-   end))
+   local hover 	            = false
+   local locked               = true
+   local listHover 	         = false
+   local listIsOpen	         = false
    
    local function checkVisibility()
-      if UILocked.Value == "LOCKED" then
-         selectListIsOpen = false
+      if locked then
+         listIsOpen = false
          SelectList.Size = UDim2.new(1, 0, 1, 0)
-         
       else
          SelectList.Size = UDim2.new(1, 0, 0, itemsSize)		
       end
       
-      if UILocked.Value == "ACTIVE" and selectListIsOpen then
+      if not locked and listIsOpen then
          
          SelectContainer.ZIndex = 100
          SelectContainer.ClipsDescendants = false		
@@ -278,65 +167,57 @@ local function CreateGUI()
          end
       end
    end
-   
-   local function checkUnlock()	
-      checkVisibility()
-      
-      if controllerHover or selectListHover then
-         return
-      end
-      
-      spawn(function()		
-         UILocked.Value = "UNLOCK"
-      end)
-   end
-   
-   table.insert(connections, Controller.MouseEnter:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      controllerHover = true
+
+   table.insert(connections, OnLock:Connect(function()
+      hover       = false
+      locked      = true
+      listHover 	= false
+      -- listIsOpen	= false
       checkVisibility()
    end))
-   
-   table.insert(connections, Controller.MouseMoved:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      controllerHover = true
+
+   table.insert(connections, OnUnLock:Connect(function()
+      locked = false
+   end))
+
+   table.insert(connections, OnMouseEnter:Connect(function()
+      hover = true
       checkVisibility()
    end))
-   
-   table.insert(connections, Controller.MouseLeave:Connect(function()
-      controllerHover = false
-      checkUnlock()
+
+   table.insert(connections, OnMouseMoved:Connect(function()
+      hover = true
+      checkVisibility()
+   end))
+
+   table.insert(connections, OnMouseLeave:Connect(function()	
+      hover = false
+      checkVisibility()
    end))
    
    table.insert(connections, SelectList.MouseEnter:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
+      if locked then
          return
       end
       
-      selectListHover = true
+      listHover = true
       checkVisibility()
    end))
    
    table.insert(connections, SelectList.MouseMoved:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
+      if locked then
          return
       end
       
-      selectListHover = true
+      listHover = true
       checkVisibility()
    end))
    
    table.insert(connections, SelectList.MouseLeave:Connect(function()
-      selectListHover = false
-      selectListIsOpen = false
-      
-      checkUnlock()
+      listHover = false
+      listIsOpen = false
+      UnlockOnMouseLeave.Value   = true
+      checkVisibility()
    end))
    
    -- On change value (safe)
@@ -349,34 +230,31 @@ local function CreateGUI()
       local Text = Item:WaitForChild("text")
 
       table.insert(connections, Text.MouseEnter:Connect(function()
-         if UILocked.Value ~= "ACTIVE" then
+         if locked then
             return
          end
          
-         Text.TextColor3 = COLOR_TEXT_HOVER
-         Item.BackgroundColor3 = COLOR_TEXT_BG_HOVER
+         Text.TextColor3 = Constants.STRING_COLOR
+         Item.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
       end))
 
       table.insert(connections, Text.MouseMoved:Connect(function()
-         if UILocked.Value ~= "ACTIVE" then
+         if locked then
             return
          end
          
-         Text.TextColor3 = COLOR_TEXT_HOVER
-         Item.BackgroundColor3 = COLOR_TEXT_BG_HOVER
+         Text.TextColor3 = Constants.STRING_COLOR
+         Item.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
       end))
 
       table.insert(connections, Text.MouseLeave:Connect(function()
-         Text.TextColor3 = COLOR_TEXT_OFF
-         Item.BackgroundColor3 = COLOR_TEXT_BG_OFF
+         Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
+         Item.BackgroundColor3 = Constants.INPUT_COLOR
       end))
 
-      -- reset when external lock (eg close folder)
-      table.insert(connections, UILocked.Changed:connect(function()
-         if UILocked.Value == "LOCKED" then
-            Text.TextColor3 = COLOR_TEXT_OFF
-            Item.BackgroundColor3 = COLOR_TEXT_BG_OFF
-         end
+      table.insert(connections, OnLock:Connect(function()
+         Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
+         Item.BackgroundColor3 = Constants.INPUT_COLOR
       end))
    end
    
@@ -386,7 +264,7 @@ local function CreateGUI()
       for _, conn in ipairs(connectionsItems) do
          conn:Disconnect()
       end
-      connectionsItems = {}
+      table.clear(connectionsItems)
       
       local size = 0
       for index, label in pairs(labels) do
@@ -405,17 +283,19 @@ local function CreateGUI()
          size = size + Text.AbsoluteSize.Y
          
          Text.MouseButton1Click:Connect(function()
-            if selectListIsOpen then				
+            if listIsOpen then				
                Selected.Value = index
-               selectListIsOpen = false
-               checkUnlock()
+               listIsOpen = false
+               UnlockOnMouseLeave.Value   = true
+               checkVisibility()
                
             else
-               if UILocked.Value ~= "ACTIVE" then
+               if locked then
                   return
                end
                
-               selectListIsOpen = true
+               listIsOpen = true
+               UnlockOnMouseLeave.Value   = false
                checkVisibility()
             end
          end)
@@ -425,30 +305,7 @@ local function CreateGUI()
       checkVisibility()
    end))
    
-   table.insert(connections, UILocked.Changed:connect(function()
-      if UILocked.Value == "LOCKED" then
-         -- reset when external lock (eg close folder)
-         controllerHover 	= false
-         selectListHover 	= false
-         selectListIsOpen	= false
-      end
-      
-      checkVisibility()
-   end))  
-
-   local OnRemove = function()
-      for _, conn in ipairs(connections) do
-         conn:Disconnect()
-      end
-      connections = {}
-
-      for _, conn in ipairs(connectionsItems) do
-         conn:Disconnect()
-      end
-      connectionsItems = {}
-   end
-
-   return Controller, OnRemove
+   return Controller, Misc.DisconnectFn(connections, Misc.DisconnectFn(connectionsItems))
 end
 
 ---Checks if a table is used as an array. That is: the keys start with one and are sequential numbers
@@ -474,11 +331,11 @@ end
 -- Provides a select input to alter the property of an object, using a list of accepted values.
 local function OptionController(gui, object, property,  options)
 	
-	local frame, OnRemove = CreateGUI()
+	local frame, DisconnectGUI = CreateGUI()
 	frame.Parent = gui.content
 	
 	local labelValue 		= frame:WaitForChild("Label")	
-	local optionsValue 		= frame:WaitForChild("Options")
+	local optionsValue 	= frame:WaitForChild("Options")
 	local selectedValue 	= frame:WaitForChild("Selected")
 	
 	-- The function to be called on change.
@@ -608,7 +465,7 @@ local function OptionController(gui, object, property,  options)
 	-- Removes the controller from its parent GUI.
 	function controller.remove()
 
-      OnRemove()
+      DisconnectGUI()
 		
 		if listenConnection ~= nil then
 			listenConnection:Disconnect()
