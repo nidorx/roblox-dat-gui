@@ -1,5 +1,5 @@
 --[[
-   Roblox-datGUI v1.0.1 [2021-02-25 12:45]
+   Roblox-dat.GUI v1.1 [2021-02-28 11:00]
 
    A lightweight graphical user interface and controller library. 
    
@@ -814,7 +814,6 @@ function GUI.new(params)
 		frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
 		
 		-------------------------------------------------------------------------------
-		
 		
 		-- adds readonly/disabled method
 		controller._isReadonly = false
