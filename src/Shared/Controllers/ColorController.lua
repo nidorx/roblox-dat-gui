@@ -4,6 +4,8 @@ local GUIUtils          = require(game.ReplicatedStorage:WaitForChild("Utils"):W
 local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
 
+local WHITE = Color3.fromRGB(255, 255, 255)
+
 local function CreateGUI()
 
    local UnlockOnMouseLeave = Instance.new('BoolValue')
@@ -16,7 +18,7 @@ local function CreateGUI()
          UnlockOnMouseLeave   = UnlockOnMouseLeave
       })
 
-   local BorderLeft = Controller:WaitForChild('border-left')
+   local BorderLeft = Controller:WaitForChild('BorderLeft')
 
    local Value = Instance.new('Color3Value')
    Value.Name     = 'Value'
@@ -80,48 +82,32 @@ local function CreateGUI()
    TextFrame.Size 			            = UDim2.new(1, -2, 1, -8)
    TextFrame.Parent = Control
 
-   local Text = TextFrame:WaitForChild('text')
+   local Text = TextFrame:WaitForChild('TextBox')
    Text.Position 			         = UDim2.new(0, 0, 0, 0)
    Text.Size 			            = UDim2.new(1, 0, 1, 0)
    Text.TextXAlignment           = Enum.TextXAlignment.Center
 
-   local Selector = Instance.new("Frame")
-   Selector.Name 			            = "selector"
-   Selector.AnchorPoint	            = Vector2.new(0, 0)
-   Selector.BackgroundColor3        = Color3.fromRGB(34, 34, 34)
-   Selector.BackgroundTransparency  = 0
-   Selector.BorderColor3            = Color3.fromRGB(34, 34, 34)
-   Selector.BorderMode 			      = Enum.BorderMode.Outline
+   local Selector = GUIUtils.CreateFrame()
+   Selector.Name 			            = "Selector"
+   Selector.BackgroundColor3        = Constants.BACKGROUND_COLOR_2
+   Selector.BorderColor3            = Constants.BACKGROUND_COLOR_2
    Selector.BorderSizePixel 			= 3
-   Selector.Draggable 			      = false
    Selector.Position 			      = UDim2.new(0, 0, 1, -6)
-   Selector.Selectable              = false
    Selector.Size 			            = UDim2.new(0, 122, 0, 102)
-   Selector.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Selector.Style 			         = Enum.FrameStyle.Custom
-   Selector.Visible                 = false
-   Selector.ZIndex                  = 1
-   Selector.Archivable              = true
    Selector.Parent = Control
 
-   local HueSelector = Instance.new("Frame")
-   HueSelector.Name 			            = "hue"
-   HueSelector.AnchorPoint	            = Vector2.new(0, 0)
-   HueSelector.BackgroundColor3        = Color3.fromRGB(255, 255, 255)
-   HueSelector.BackgroundTransparency  = 0
-   HueSelector.BorderColor3            = Color3.fromRGB(85, 85, 85)
-   HueSelector.BorderMode 			      = Enum.BorderMode.Outline
+   local HueSelector = GUIUtils.CreateFrame()
+   HueSelector.Name 			            = "Hue"
+   HueSelector.BorderColor3            = Constants.BORDER_COLOR_2
    HueSelector.BorderSizePixel 			= 1
-   HueSelector.Draggable 			      = false
    HueSelector.Position 			      = UDim2.new(1, -16, 0, 1)
-   HueSelector.Selectable              = false
    HueSelector.Size 			            = UDim2.new(0, 15, 0, 100)
-   HueSelector.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   HueSelector.Style 			         = Enum.FrameStyle.Custom
-   HueSelector.Visible                 = true
-   HueSelector.ZIndex                  = 1
-   HueSelector.Archivable              = true
    HueSelector.Parent = Selector
+
+   local HueSaturationContainer = GUIUtils.CreateFrame()
+   HueSaturationContainer.Name 			      = "SaturationContainer"
+   HueSaturationContainer.BackgroundColor3   = WHITE
+   HueSaturationContainer.Parent = HueSelector
 
    local HueSelectorSaturation = Instance.new('UIGradient')
    HueSelectorSaturation.Name          = 'Saturation'
@@ -140,70 +126,32 @@ local function CreateGUI()
       ColorSequenceKeypoint.new(0.84, Color3.fromRGB(255, 255, 0)),
       ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0))
    })  
-   HueSelectorSaturation.Parent   = HueSelector
+   HueSelectorSaturation.Parent   = HueSaturationContainer
 
-   local HueKnob = Instance.new("Frame")
-   HueKnob.Name 			            = "knob"
-   HueKnob.AnchorPoint	            = Vector2.new(0, 0)
-   HueKnob.BackgroundColor3         = Color3.fromRGB(255, 255, 255)
-   HueKnob.BackgroundTransparency   = 0
-   HueKnob.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   HueKnob.BorderMode 			      = Enum.BorderMode.Outline
+   local HueKnob = GUIUtils.CreateFrame()
+   HueKnob.Name 			            = "Knob"
+   HueKnob.BackgroundColor3         = WHITE
+   HueKnob.BorderColor3             = Constants.BORDER_COLOR_2
    HueKnob.BorderSizePixel 			= 1
-   HueKnob.Draggable 			      = false
    HueKnob.Position 			         = UDim2.new(1, -2, 0.1, 0)
-   HueKnob.Selectable               = false
    HueKnob.Size 			            = UDim2.new(0, 4, 0, 2)
-   HueKnob.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   HueKnob.Style 			            = Enum.FrameStyle.Custom
-   HueKnob.Visible                 = true
-   HueKnob.ZIndex                  = 1
-   HueKnob.Archivable              = true
+   HueKnob.ZIndex                   = 2
    HueKnob.Parent = HueSelector
 
-   local SatLumSelector = Instance.new("Frame")
-   SatLumSelector.Name 			            = "saturation"
-   SatLumSelector.AnchorPoint	            = Vector2.new(0, 0)
-   SatLumSelector.BackgroundColor3        = Color3.fromRGB(255, 255, 255)
-   SatLumSelector.BackgroundTransparency  = 0
-   SatLumSelector.BorderColor3            = Color3.fromRGB(85, 85, 85)
-   SatLumSelector.BorderMode 			      = Enum.BorderMode.Outline
+   local SatLumSelector = GUIUtils.CreateFrame()
+   SatLumSelector.Name 			            = "Saturation"
+   SatLumSelector.BackgroundColor3        = WHITE
+   SatLumSelector.BorderColor3            = Constants.BORDER_COLOR_2
    SatLumSelector.BorderSizePixel 			= 1
-   SatLumSelector.Draggable 			      = false
    SatLumSelector.Position 			      = UDim2.new(0, 1, 0, 1)
-   SatLumSelector.Selectable              = false
    SatLumSelector.Size 			            = UDim2.new(0, 100, 0, 100)
-   SatLumSelector.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   SatLumSelector.Style 			         = Enum.FrameStyle.Custom
-   SatLumSelector.Visible                 = true
    SatLumSelector.ZIndex                  = 2
-   SatLumSelector.Archivable              = true
    SatLumSelector.Parent = Selector
 
-   local SatLumKnob = Instance.new("Frame")
-   SatLumKnob.Name 			            = "knob"
-   SatLumKnob.AnchorPoint	            = Vector2.new(0, 0)
-   SatLumKnob.BackgroundColor3         = Color3.fromRGB(255, 3, 7)
-   SatLumKnob.BackgroundTransparency   = 0
-   SatLumKnob.BorderColor3             = Color3.fromRGB(255, 255, 255)
-   SatLumKnob.BorderMode 			      = Enum.BorderMode.Outline
-   SatLumKnob.BorderSizePixel 			= 2
-   SatLumKnob.Draggable 			      = false
-   SatLumKnob.Position 			         = UDim2.new(0.4, 0, 0.1, 0)
-   SatLumKnob.Rotation                 = 45
-   SatLumKnob.Selectable               = false
-   SatLumKnob.Size 			            = UDim2.new(0, 10, 0, 10)
-   SatLumKnob.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   SatLumKnob.Style 			            = Enum.FrameStyle.Custom
-   SatLumKnob.Visible                  = true
-   SatLumKnob.ZIndex                   = 2
-   SatLumKnob.Archivable               = true
-   SatLumKnob.Parent = SatLumSelector
-
    local Brightness = Instance.new("ImageLabel")
-   Brightness.Name 			            = "brightness"
+   Brightness.Name 			            = "Brightness"
    Brightness.AnchorPoint	            = Vector2.new(0, 0)
-   Brightness.BackgroundColor3         = Color3.fromRGB(255, 255, 255)
+   Brightness.BackgroundColor3         = WHITE
    Brightness.BackgroundTransparency   = 1
    Brightness.BorderColor3             = Color3.fromRGB(27, 42, 53)
    Brightness.BorderMode 			      = Enum.BorderMode.Outline
@@ -216,16 +164,16 @@ local function CreateGUI()
    Brightness.ZIndex                   = 2
    Brightness.Archivable               = true
    Brightness.Image                    = 'rbxassetid://5787992121'
-   Brightness.ImageColor3              = Color3.fromRGB(255, 255, 255)
+   Brightness.ImageColor3              = WHITE
    Brightness.ImageTransparency 	      = 0
    Brightness.ScaleType                = Enum.ScaleType.Stretch
    Brightness.SliceScale               = 1
    Brightness.Parent = SatLumSelector
 
    local SaturationImage = Instance.new("ImageLabel")
-   SaturationImage.Name 			         = "saturation"
+   SaturationImage.Name 			         = "Saturation"
    SaturationImage.AnchorPoint	         = Vector2.new(0, 0)
-   SaturationImage.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
+   SaturationImage.BackgroundColor3       = WHITE
    SaturationImage.BackgroundTransparency = 1
    SaturationImage.BorderColor3           = Color3.fromRGB(27, 42, 53)
    SaturationImage.BorderMode 			   = Enum.BorderMode.Outline
@@ -244,6 +192,17 @@ local function CreateGUI()
    SaturationImage.ScaleType              = Enum.ScaleType.Stretch
    SaturationImage.SliceScale             = 1
    SaturationImage.Parent = SatLumSelector
+
+   local SatLumKnob = GUIUtils.CreateFrame()
+   SatLumKnob.Name 			            = "Knob"
+   SatLumKnob.BackgroundColor3         = Color3.fromRGB(255, 3, 7)
+   SatLumKnob.BorderColor3             = WHITE
+   SatLumKnob.BorderSizePixel 			= 2
+   SatLumKnob.Position 			         = UDim2.new(0.4, 0, 0.1, 0)
+   SatLumKnob.Rotation                 = 45
+   SatLumKnob.Size 			            = UDim2.new(0, 10, 0, 10)
+   SatLumKnob.ZIndex                   = 3
+   SatLumKnob.Parent = SatLumSelector
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 

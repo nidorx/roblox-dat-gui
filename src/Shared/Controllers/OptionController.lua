@@ -27,39 +27,16 @@ local function CreateGUI()
    Options.Name     = 'Options'
    Options.Parent   = Controller
 
-   local SelectContainer = Instance.new("Frame")
+   local SelectContainer = GUIUtils.CreateFrame()
    SelectContainer.Name 			         = "items-container"
-   SelectContainer.AnchorPoint	         = Vector2.new(0, 0)
    SelectContainer.BackgroundTransparency = 1
-   SelectContainer.BorderMode 			   = Enum.BorderMode.Outline
-   SelectContainer.BorderSizePixel 			= 0
-   SelectContainer.Draggable 			      = false
    SelectContainer.Position 			      = UDim2.new(0, 0, 0, 4)
-   SelectContainer.Selectable             = false
    SelectContainer.Size 			         = UDim2.new(1, -2, 1, -8)
-   SelectContainer.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   SelectContainer.Style 			         = Enum.FrameStyle.Custom
-   SelectContainer.Visible                = true
-   SelectContainer.ZIndex                 = 1
-   SelectContainer.Archivable             = true
    SelectContainer.Parent = Control
 
-   local SelectList = Instance.new("Frame")
+   local SelectList = GUIUtils.CreateFrame()
    SelectList.Name 			            = "inner"
-   SelectList.AnchorPoint	            = Vector2.new(0, 0)
    SelectList.BackgroundTransparency   = 1
-   SelectList.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   SelectList.BorderMode 			      = Enum.BorderMode.Outline
-   SelectList.BorderSizePixel 			= 0
-   SelectList.Draggable 			      = false
-   SelectList.Position 			         = UDim2.new(0, 0, 0, 0)
-   SelectList.Selectable               = false
-   SelectList.Size 			            = UDim2.new(1, 0, 1, 0)
-   SelectList.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   SelectList.Style 			            = Enum.FrameStyle.Custom
-   SelectList.Visible                  = true
-   SelectList.ZIndex                   = 1
-   SelectList.Archivable               = true
    SelectList.Parent = SelectContainer
 
    local List = Instance.new("UIListLayout")
@@ -71,27 +48,16 @@ local function CreateGUI()
    List.VerticalAlignment     = Enum.VerticalAlignment.Top
    List.Parent = SelectList
 
-   local ItemTemplate = Instance.new("Frame")
+   local ItemTemplate = GUIUtils.CreateFrame()
    ItemTemplate.Name 			         = "item"
-   ItemTemplate.AnchorPoint	         = Vector2.new(0, 0)
    ItemTemplate.BackgroundColor3       = Constants.INPUT_COLOR
    ItemTemplate.BackgroundTransparency = 0
-   ItemTemplate.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   ItemTemplate.BorderMode 			   = Enum.BorderMode.Outline
-   ItemTemplate.BorderSizePixel 			= 0
-   ItemTemplate.Draggable 			      = false
-   ItemTemplate.Position 			      = UDim2.new(0, 0, 0, 0)
-   ItemTemplate.Selectable             = false
    ItemTemplate.Size 			         = UDim2.new(1, 0, 0, 21)
-   ItemTemplate.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   ItemTemplate.Style 			         = Enum.FrameStyle.Custom
    ItemTemplate.Visible                = false
-   ItemTemplate.ZIndex                 = 1
-   ItemTemplate.Archivable             = true
    ItemTemplate.Parent = SelectContainer
 
    local Text = Instance.new("TextButton")
-   Text.Name 			            = "text"
+   Text.Name 			            = "TextButton"
    Text.Active                   = true
    Text.AutoButtonColor          = true
    Text.AnchorPoint	            = Vector2.new(0, 0)
@@ -225,7 +191,7 @@ local function CreateGUI()
 
    local function ItemScript(Item, connections)
       -- controls focus effect
-      local Text = Item:WaitForChild("text")
+      local Text = Item:WaitForChild("TextButton")
 
       table.insert(connections, Text.MouseEnter:Connect(function()
          if locked then
@@ -275,7 +241,7 @@ local function CreateGUI()
          -- enable script
          ItemScript(item, connectionsItems)
          
-         local Text = item:WaitForChild("text")
+         local Text = item:WaitForChild("TextButton")
          Text.Text = label
          
          size = size + Text.AbsoluteSize.Y

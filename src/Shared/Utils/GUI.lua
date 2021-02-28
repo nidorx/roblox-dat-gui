@@ -9,6 +9,35 @@ local function foo()
 end
 
 --[[
+   Instantiating a generic frame
+]]
+function GUIUtils.CreateFrame(params)
+   local frame = Instance.new("Frame")
+   frame.AnchorPoint	            = Vector2.new(0, 0)
+   frame.Position 			      = UDim2.new(0, 0, 0, 0)
+   frame.Size 			            = UDim2.new(1, 0, 1, 0)
+   frame.BackgroundColor3        = Constants.BACKGROUND_COLOR
+   frame.BackgroundTransparency  = 0
+   frame.BorderMode 			      = Enum.BorderMode.Outline
+   frame.BorderSizePixel 			= 0
+   frame.Draggable 			      = false
+   frame.Selectable              = false
+   frame.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   frame.Style 			         = Enum.FrameStyle.Custom
+   frame.ZIndex                  = 1
+   frame.Visible                 = true
+   frame.Archivable              = true
+
+   if params ~= nil then
+      for key, value in pairs(params) do
+         frame[key] = value
+      end
+   end
+
+   return frame
+end
+
+--[[
    Creates the generic controller wrapper
 
    Params
@@ -43,22 +72,9 @@ function GUIUtils.CreateControllerWrapper(config)
       config.UnlockOnMouseLeave.Value = true
    end
 
-   local Controller = Instance.new("Frame")
+   local Controller = GUIUtils.CreateFrame()   
    Controller.Name 			            = config.Name
-   Controller.AnchorPoint	            = Vector2.new(0, 0)
-   Controller.BackgroundColor3         = Constants.BACKGROUND_COLOR
-   Controller.BackgroundTransparency   = 0
-   Controller.BorderMode 			      = Enum.BorderMode.Outline
-   Controller.BorderSizePixel 			= 0
-   Controller.Draggable 			      = false
-   Controller.Position 			         = UDim2.new(0, 0, 0, 60)
-   Controller.Selectable               = false
    Controller.Size 			            = UDim2.new(1, 0, 0, config.Height)
-   Controller.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Controller.Style 			            = Enum.FrameStyle.Custom
-   Controller.Visible                  = true
-   Controller.ZIndex                   = 1
-   Controller.Archivable               = true
 
    local LabelValue = Instance.new('StringValue')
    LabelValue.Name = 'Label'
@@ -98,61 +114,25 @@ function GUIUtils.CreateControllerWrapper(config)
    LabelText.TextYAlignment         = Enum.TextYAlignment.Center
    LabelText.Parent = Controller
 
-   local borderBottom = Instance.new("Frame")
-   borderBottom.Name 			         = "border-bottom"
-   borderBottom.AnchorPoint	         = Vector2.new(0, 0)
-   borderBottom.BackgroundColor3       = Color3.fromRGB(44, 44, 44)
-   borderBottom.BackgroundTransparency = 0
-   borderBottom.BorderColor3           = Color3.fromRGB(44, 44, 44)
-   borderBottom.BorderMode 			   = Enum.BorderMode.Outline
-   borderBottom.BorderSizePixel 			= 0
-   borderBottom.Draggable 			      = false
+   local borderBottom = GUIUtils.CreateFrame()
+   borderBottom.Name 			         = "BorderBottom"
+   borderBottom.BackgroundColor3       = Constants.BORDER_COLOR
    borderBottom.Position 			      = UDim2.new(0, 0, 1, -1)
-   borderBottom.Selectable             = false
    borderBottom.Size 			         = UDim2.new(1, 0, 0, 1)
-   borderBottom.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   borderBottom.Style 			         = Enum.FrameStyle.Custom
-   borderBottom.Visible                = true
-   borderBottom.ZIndex                 = 1
-   borderBottom.Archivable             = true
    borderBottom.Parent = Controller
 
-   local borderLeft = Instance.new("Frame")
-   borderLeft.Name 			            = "border-left"
-   borderLeft.AnchorPoint	            = Vector2.new(0, 0)
+   local borderLeft = GUIUtils.CreateFrame()
+   borderLeft.Name 			            = "BorderLeft"
    borderLeft.BackgroundColor3         = config.Color
-   borderLeft.BackgroundTransparency   = 0
-   borderLeft.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   borderLeft.BorderMode 			      = Enum.BorderMode.Outline
-   borderLeft.BorderSizePixel 			= 0
-   borderLeft.Draggable 			      = false
-   borderLeft.Position 			         = UDim2.new(0, 0,0, 0)
-   borderLeft.Selectable               = false
    borderLeft.Size 			            = UDim2.new(0, 3, 1, 0)
-   borderLeft.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   borderLeft.Style 			            = Enum.FrameStyle.Custom
-   borderLeft.Visible                  = true
    borderLeft.ZIndex                   = 2
-   borderLeft.Archivable               = true
    borderLeft.Parent = Controller
 
-   local Control = Instance.new("Frame")
-   Control.Name 			            = "control"
-   Control.AnchorPoint	            = Vector2.new(0, 0)
-   Control.BackgroundColor3         = Color3.fromRGB(255, 255, 255)
+   local Control = GUIUtils.CreateFrame()
+   Control.Name 			            = "Control"
    Control.BackgroundTransparency   = 1
-   Control.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   Control.BorderMode 			      = Enum.BorderMode.Outline
-   Control.BorderSizePixel 			= 0
-   Control.Draggable 			      = false
    Control.Position 			         = UDim2.new(0.4, 0, 0, 0)
-   Control.Selectable               = false
    Control.Size 			            = UDim2.new(0.6, 0, 1, -1)
-   Control.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Control.Style 			            = Enum.FrameStyle.Custom
-   Control.Visible                  = true
-   Control.ZIndex                   = 1
-   Control.Archivable               = true
    Control.Parent = Controller
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
@@ -279,25 +259,13 @@ function GUIUtils.CreateInput(config)
    local Value = Instance.new('StringValue')
    Value.Name     = 'Value'
 
-   local TextFrame = Instance.new("Frame")
-   TextFrame.Name 			         = 'text'
-   TextFrame.AnchorPoint	         = Vector2.new(0, 0)
+   local TextFrame = GUIUtils.CreateFrame()
+   TextFrame.Name 			         = 'TextFrame'
    TextFrame.BackgroundColor3       = Constants.INPUT_COLOR
-   TextFrame.BackgroundTransparency = 0
-   TextFrame.BorderMode 			   = Enum.BorderMode.Outline
-   TextFrame.BorderSizePixel 			= 0
-   TextFrame.Draggable 			      = false
-   TextFrame.Position 			      = UDim2.new(0, 0, 0, 0)
-   TextFrame.Selectable             = false
    TextFrame.Size 			         = UDim2.new(1, 0, 1, 0)
-   TextFrame.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   TextFrame.Style 			         = Enum.FrameStyle.Custom
-   TextFrame.Visible                = true
-   TextFrame.ZIndex                 = 1
-   TextFrame.Archivable             = true
 
    local Text = Instance.new("TextBox")
-   Text.Name 			            = 'text'
+   Text.Name 			            = 'TextBox'
    Text.Text                     = ''
    Text.AnchorPoint	            = Vector2.new(0, 0)
    Text.BackgroundTransparency   = 1
@@ -475,39 +443,17 @@ function GUIUtils.CreateSlider(config)
    Percent.Name    = 'Percent'
    Percent.Value   = 0
 
-   local Slider = Instance.new("Frame")
-   Slider.Name 			         = "slider"
-   Slider.AnchorPoint	         = Vector2.new(0, 0)
+   local Slider = GUIUtils.CreateFrame()
+   Slider.Name 			         = 'Slider'
    Slider.BackgroundColor3       = Color3.fromRGB(60, 60, 60)
    Slider.BackgroundTransparency = 0
    Slider.BorderMode 			   = Enum.BorderMode.Outline
-   Slider.BorderSizePixel 			= 0
-   Slider.Draggable 			      = false
-   Slider.Position 			      = UDim2.new(0, 0, 0, 0)
-   Slider.Selectable             = false
-   Slider.Size 			         = UDim2.new(1, 0, 1, 0)
-   Slider.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Slider.Style 			         = Enum.FrameStyle.Custom
-   Slider.Visible                = true
-   Slider.ZIndex                 = 1
-   Slider.Archivable             = true
 
-   local SliderFG = Instance.new("Frame")
-   SliderFG.Name 			            = "fg"
-   SliderFG.AnchorPoint	            = Vector2.new(0, 0)
+   local SliderFG = GUIUtils.CreateFrame()
+   SliderFG.Name 			            = 'SliderFG'
    SliderFG.BackgroundColor3        = Constants.NUMBER_COLOR
    SliderFG.BackgroundTransparency  = 0
-   SliderFG.BorderMode 			      = Enum.BorderMode.Outline
-   SliderFG.BorderSizePixel 			= 0
-   SliderFG.Draggable 			      = false
-   SliderFG.Position 			      = UDim2.new(0, 0, 0, 0)
-   SliderFG.Selectable              = false
    SliderFG.Size 			            = UDim2.new(0, 0, 1, 0)
-   SliderFG.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   SliderFG.Style 			         = Enum.FrameStyle.Custom
-   SliderFG.Visible                 = true
-   SliderFG.ZIndex                  = 1
-   SliderFG.Archivable              = true
    SliderFG.Parent = Slider
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------

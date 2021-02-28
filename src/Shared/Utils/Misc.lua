@@ -4,6 +4,7 @@ Misc.NUMBER_MIN         = -9007199254740992
 Misc.NUMBER_MAX         = 9007199254740992
 Misc.NUMBER_STEP        = 0.01
 Misc.NUMBER_PRECISION   = 2
+Misc.AXES   = { 'X', 'Y', 'Z' }
 
 --[[
    Create an event disconnect function, a pattern used on all controllers

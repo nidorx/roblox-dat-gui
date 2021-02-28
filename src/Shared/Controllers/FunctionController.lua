@@ -19,7 +19,7 @@ local function CreateGUI()
    local LabelText = Controller:WaitForChild('LabelText')
    LabelText.Size = UDim2.new(1, -10, 1, -1)
    
-   Controller:WaitForChild('control').Parent = nil
+   Controller:WaitForChild('Control').Parent = nil
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 

@@ -18,23 +18,12 @@ local function CreateGUI()
    Value.Value    = false
    Value.Parent   = Controller
 
-   local Checkbox = Instance.new("Frame")
-   Checkbox.Name 			            = "checkbox"
-   Checkbox.AnchorPoint	            = Vector2.new(0, 0)
+   local Checkbox = GUIUtils.CreateFrame()
+   Checkbox.Name 			            = "Checkbox"
    Checkbox.BackgroundColor3        = Constants.CHECKBOX_COLOR_OFF
    Checkbox.BackgroundTransparency  = 0
-   Checkbox.BorderColor3            = Color3.fromRGB(27, 42, 53)
-   Checkbox.BorderMode 			      = Enum.BorderMode.Outline
-   Checkbox.BorderSizePixel 			= 0
-   Checkbox.Draggable 			      = false
    Checkbox.Position 			      = UDim2.new(0, 0, 0, 4)
-   Checkbox.Selectable              = false
    Checkbox.Size 			            = UDim2.new(0, 21, 1, -8)
-   Checkbox.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Checkbox.Style 			         = Enum.FrameStyle.Custom
-   Checkbox.Visible                 = true
-   Checkbox.ZIndex                  = 1
-   Checkbox.Archivable              = true
    Checkbox.Parent = Control
 
    local Image = Instance.new("ImageLabel")
@@ -42,9 +31,8 @@ local function CreateGUI()
    Image.AnchorPoint	            = Vector2.new(0, 0)
    Image.BackgroundColor3        = Constants.CHECKBOX_COLOR_IMAGE
    Image.BackgroundTransparency  = 1
-   Image.BorderColor3            = Color3.fromRGB(27, 42, 53)
    Image.BorderMode 			      = Enum.BorderMode.Outline
-   Image.BorderSizePixel 			= 1
+   Image.BorderSizePixel 			= 0
    Image.Position 			      = UDim2.new(0, 4, 0, 4)
    Image.Selectable              = false
    Image.Size 			            = UDim2.new(1, -8, 1, -8)
@@ -53,7 +41,7 @@ local function CreateGUI()
    Image.ZIndex                  = 1
    Image.Archivable              = true
    Image.Image                   = 'rbxassetid://5786049629'
-   Image.ImageColor3             = Color3.fromRGB(255, 255, 255)
+   Image.ImageColor3             = Constants.INPUT_COLOR_FOCUS_TXT
    Image.ImageTransparency 	   = 0
    Image.ScaleType               = Enum.ScaleType.Stretch
    Image.SliceScale              = 1
@@ -61,17 +49,27 @@ local function CreateGUI()
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
-   local connections = {}
-   local hover       = false
-   local locked      = true
+   local connections    = {}
+   local hover          = false
+   local locked         = true
+   local checkboxHover  = false
 
    local function updateCheckbox()
       if Value.Value then
-         Checkbox.BackgroundColor3 = Constants.CHECKBOX_COLOR_ON
+         -- checked
+         if checkboxHover then
+            Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
+         else
+            Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR
+         end
       elseif hover then
-         Checkbox.BackgroundColor3 = Constants.CHECKBOX_COLOR_HOVER
+         if checkboxHover then
+            Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS
+         else
+            Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
+         end
       else
-         Checkbox.BackgroundColor3 = Constants.CHECKBOX_COLOR_OFF
+         Checkbox.BackgroundColor3 = Constants.INPUT_COLOR
       end
    end
 
@@ -98,6 +96,26 @@ local function CreateGUI()
    table.insert(connections, OnMouseLeave:Connect(function()	
       hover = false
       updateCheckbox()
+   end))
+
+   table.insert(connections, Checkbox.MouseEnter:Connect(function()
+      if locked then
+         return
+      end
+      
+      checkboxHover = true
+   end))
+
+   table.insert(connections, Checkbox.MouseMoved:Connect(function()
+      if locked then
+         return
+      end
+      
+      checkboxHover = true
+   end))
+
+   table.insert(connections, Checkbox.MouseLeave:Connect(function()
+      checkboxHover = false
    end))
 
    -- On change value (safe)

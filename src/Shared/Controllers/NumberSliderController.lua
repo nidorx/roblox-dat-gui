@@ -12,7 +12,7 @@ local function CreateGUI()
 
    local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, ControllerDisconnect 
       = GUIUtils.CreateControllerWrapper({
-         Name                 = 'NumberController',
+         Name                 = 'NumberSliderController',
          Color                = Constants.NUMBER_COLOR,
          UnlockOnMouseLeave   = UnlockOnMouseLeave
       })
@@ -23,33 +23,21 @@ local function CreateGUI()
 
    local Step = Instance.new('NumberValue')
    Step.Name    = 'Step'
-   Step.Value   = 0.01
+   Step.Value   = Misc.NUMBER_STEP
    Step.Parent  = Controller
 
    local Precision = Instance.new('IntValue')
    Precision.Name    = 'Precision'
-   Precision.Value   = 2
+   Precision.Value   = Misc.NUMBER_PRECISION
    Precision.Parent  = Controller
 
    local RenderText = Misc.CreateTextNumberFn(Precision)
 
-   local TextContainer = Instance.new("Frame")
-   TextContainer.Name 			            = "text-container"
-   TextContainer.AnchorPoint	            = Vector2.new(0, 0)
-   TextContainer.BackgroundColor3         = Color3.fromRGB(48, 48, 48)
+   local TextContainer = GUIUtils.CreateFrame()
+   TextContainer.Name 			            = 'TextContainer'
    TextContainer.BackgroundTransparency   = 1
-   TextContainer.BorderColor3             = Color3.fromRGB(48, 48, 48)
-   TextContainer.BorderMode 			      = Enum.BorderMode.Outline
-   TextContainer.BorderSizePixel 			= 0
-   TextContainer.Draggable 			      = false
    TextContainer.Position 			         = UDim2.new(0.66, 5, 0, 4)
-   TextContainer.Selectable               = false
    TextContainer.Size 			            = UDim2.new(0.33, -6, 1, -8)
-   TextContainer.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   TextContainer.Style 			            = Enum.FrameStyle.Custom
-   TextContainer.Visible                  = true
-   TextContainer.ZIndex                   = 1
-   TextContainer.Archivable               = true
    TextContainer.Parent = Control
 
    local IsControllerActive = Instance.new('BoolValue')
@@ -76,25 +64,15 @@ local function CreateGUI()
    })
    TextFrame.Parent = TextContainer
 
-   local SliderContainer = Instance.new("Frame")
+   local SliderContainer = GUIUtils.CreateFrame()
    SliderContainer.BackgroundTransparency = 1
-   SliderContainer.BorderMode 			   = Enum.BorderMode.Outline
-   SliderContainer.BorderSizePixel 			= 0
-   SliderContainer.Draggable 			      = false
    SliderContainer.Position 			      = UDim2.new(0, 0, 0, 4)
-   SliderContainer.Selectable             = false
    SliderContainer.Size 			         = UDim2.new(0.66, 0, 1, -8)
-   SliderContainer.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   SliderContainer.Style 			         = Enum.FrameStyle.Custom
-   SliderContainer.Visible                = true
-   SliderContainer.ZIndex                 = 1
-   SliderContainer.Archivable             = true
    SliderContainer.Parent = Control
 
    local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.CreateSlider({
       Active   = IsControllerActive
-   });
-
+   })
    SliderFrame.Parent = SliderContainer
 
    IsControllerActive.Value   = false
@@ -158,15 +136,16 @@ local function CreateGUI()
          value = math.round(value/Step.Value) * Step.Value
       end
 
-      if ValueIn.Value ~= value then
-         ValueIn.Value = value
-      else
-         -- change slider value
-         SliderValue.Value = value
-         spawn(function()
-            TextValue.Value = tostring(SliderValue.Value)
-         end)
-      end      
+      SliderValue.Value = value
+      -- if ValueIn.Value ~= value then
+      --    ValueIn.Value = value
+      -- else
+      --    -- change slider value
+      --    SliderValue.Value = value
+      --    spawn(function()
+      --       TextValue.Value = tostring(SliderValue.Value)
+      --    end)
+      -- end      
    end))
 
    return Controller, SliderValue, ValueIn, Min, Max, Step, 

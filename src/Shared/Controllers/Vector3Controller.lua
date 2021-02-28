@@ -3,8 +3,6 @@ local Misc        = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitFor
 local GUIUtils    = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
 local Constants   = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 
-local AXES              = { 'X', 'Y', 'Z' }
-
 local function CreateGUI()
 
    local UnlockOnMouseLeave = Instance.new('BoolValue')
@@ -48,28 +46,18 @@ local function CreateGUI()
    Precision.Value   =  Vector3.new(Misc.NUMBER_PRECISION, Misc.NUMBER_PRECISION, Misc.NUMBER_PRECISION)
    Precision.Parent  = Controller
 
-   local IsTextActive = Instance.new('BoolValue')
+   local IsControllerActive = Instance.new('BoolValue')
 
    -- create X, Y, Z
    local function CreateAxisController(axis, position)
 
       local connections = {}
 
-      local TextContainer = Instance.new("Frame")
+      local TextContainer = GUIUtils.CreateFrame()
       TextContainer.Name 			            = axis
-      TextContainer.AnchorPoint	            = Vector2.new(0, 0)
       TextContainer.BackgroundTransparency   = 1
-      TextContainer.BorderMode 			      = Enum.BorderMode.Outline
-      TextContainer.BorderSizePixel 			= 0
-      TextContainer.Draggable 			      = false
       TextContainer.Position 			         = position
-      TextContainer.Selectable               = false
       TextContainer.Size 			            = UDim2.new(0.333, -4, 1, -28)
-      TextContainer.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-      TextContainer.Style 			            = Enum.FrameStyle.Custom
-      TextContainer.Visible                  = true
-      TextContainer.ZIndex                   = 1
-      TextContainer.Archivable               = true
       TextContainer.Parent = Control
 
       local Label = Instance.new('TextLabel')
@@ -101,24 +89,15 @@ local function CreateGUI()
       Label.TextYAlignment          = Enum.TextYAlignment.Center
       Label.Parent = TextContainer
 
-      local function RenderText(value)
-         if string.len(value) == 0 then
-            value =  ''
-         else
-            value = tonumber(value)
-            if value == nil then
-               value =  ''
-            else
-               value = string.format("%."..Precision.Value[axis].."f", value)
-            end
-         end
-      
-         return value
-      end
+      local AxisPrecision = Instance.new('IntValue')
+      AxisPrecision.Name    = 'Precision'
+      AxisPrecision.Value   = Misc.NUMBER_PRECISION
+
+      local  RenderText = Misc.CreateTextNumberFn(AxisPrecision)
    
-      local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText =  GUIUtils.CreateInput({
+      local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
          Color    = Constants.NUMBER_COLOR,
-         Active   = IsTextActive,
+         Active   = IsControllerActive,
          Render   = RenderText,
          Parse    = function (text, value)
             if string.len(text) == 0 then
@@ -136,40 +115,43 @@ local function CreateGUI()
             end
          end
       })
-
       TextFrame.Parent = TextContainer
 
       -- SCRIPTS -------------------------------------------------------------------------------------------------------
 
-      table.insert(connections, OnFocused:Connect(function()
+      table.insert(connections, TextOnFocus:Connect(function()
          UnlockOnMouseLeave.Value   = false
       end))
       
-      table.insert(connections, OnFocusLost:Connect(function()
+      table.insert(connections, TextOnFocusLost:Connect(function()
          UnlockOnMouseLeave.Value   = true
       end))
 
-      return Value, RenderText, Misc.DisconnectFn(connections, DisconnectText) 
+      table.insert(connections, Precision.Changed:Connect(function()
+         AxisPrecision.Value = Precision.Value[axis]
+      end))
+
+      return TextValue, RenderText, Misc.DisconnectFn(connections, TextDisconnect) 
    end
 
-   IsTextActive.Value   = false
+   IsControllerActive.Value   = false
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
    local connections = {}
    local Axes        = {}
 
-   for i, axis in ipairs(AXES) do
+   for i, axis in ipairs(Misc.AXES) do
       local pos = (i-1)*0.333
       local posOffset = (i-1)*2
-      local StringValue, RenderText, DisconnectText =  CreateAxisController(axis, UDim2.new(pos, posOffset, 0, 4))
+      local TextValue, RenderText, DisconnectText =  CreateAxisController(axis, UDim2.new(pos, posOffset, 0, 4))
       Axes[axis] = {
-         StringValue = StringValue,
+         TextValue = TextValue,
          RenderText  = RenderText,
          Disconnect  = DisconnectText
       }
 
-      table.insert(connections, StringValue.Changed:connect(function()
+      table.insert(connections, TextValue.Changed:connect(function()
          local value = Value.Value
          local values = {
             X = value.X, 
@@ -177,19 +159,19 @@ local function CreateGUI()
             Z = value.Z, 
          }
 
-         values[axis] = tonumber(StringValue.Value)
+         values[axis] = tonumber(TextValue.Value)
 
          Value.Value = Vector3.new(values.X, values.Y, values.Z)
       end))
    end
 
    table.insert(connections, OnLock:Connect(function()
-      IsTextActive.Value         = false
+      IsControllerActive.Value         = false
       UnlockOnMouseLeave.Value   = true
    end))
 
    table.insert(connections, OnUnLock:Connect(function()
-      IsTextActive.Value = true
+      IsControllerActive.Value = true
    end))
 
    -- On change steps
@@ -199,17 +181,19 @@ local function CreateGUI()
          Misc.CountDecimals(Step.Value.Y), 
          Misc.CountDecimals(Step.Value.Z)
       )
-      for _, axis in ipairs(AXES) do
-         local value = Axes[axis].StringValue
-         if value.Value ~= nil and value.Value ~= '' then
-            value.Value = '0'..value.Value
+      for _, axis in ipairs(Misc.AXES) do
+         local TextValue = Axes[axis].TextValue
+         local val = TextValue.Value
+         if val == nil then
+            val = ''
          end
+         TextValue.Value = '0'..val
       end
    end))
 
    -- On change value from outside
    table.insert(connections, ValueIn.Changed:connect(function()
-      for _, axis in ipairs(AXES) do
+      for _, axis in ipairs(Misc.AXES) do
          local value = math.max(math.min(ValueIn.Value[axis], Max.Value[axis]), Min.Value[axis])
       
          local step = Step.Value[axis]
@@ -217,7 +201,7 @@ local function CreateGUI()
             value = math.round(value/step) * step
          end
 
-         Axes[axis].StringValue.Value = Axes[axis].RenderText(tostring(value))
+         Axes[axis].TextValue.Value = Axes[axis].RenderText(tostring(value))
       end
    end))
    

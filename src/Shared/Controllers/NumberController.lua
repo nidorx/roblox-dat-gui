@@ -67,23 +67,11 @@ local function CreateGUI()
       end,
    })
 
-   local TextContainer = Instance.new("Frame")
-   TextContainer.Name 			            = "text-container"
-   TextContainer.AnchorPoint	            = Vector2.new(0, 0)
-   TextContainer.BackgroundColor3         = Color3.fromRGB(48, 48, 48)
+   local TextContainer = GUIUtils.CreateFrame()
+   TextContainer.Name 			            = 'TextContainer'
    TextContainer.BackgroundTransparency   = 1
-   TextContainer.BorderColor3             = Color3.fromRGB(48, 48, 48)
-   TextContainer.BorderMode 			      = Enum.BorderMode.Outline
-   TextContainer.BorderSizePixel 			= 0
-   TextContainer.Draggable 			      = false
    TextContainer.Position 			         = UDim2.new(0, 0, 0, 4)
-   TextContainer.Selectable               = false
    TextContainer.Size 			            = UDim2.new(1, -2, 1, -8)
-   TextContainer.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   TextContainer.Style 			            = Enum.FrameStyle.Custom
-   TextContainer.Visible                  = true
-   TextContainer.ZIndex                   = 1
-   TextContainer.Archivable               = true
    TextContainer.Parent = Control
    TextFrame.Parent     = TextContainer
 

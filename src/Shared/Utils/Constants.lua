@@ -17,6 +17,9 @@
 return {
    -- general
    BACKGROUND_COLOR        = Color3.fromRGB(26, 26, 26),
+   BACKGROUND_COLOR_2      = Color3.fromRGB(34, 34, 34),
+   BORDER_COLOR            = Color3.fromRGB(44, 44, 44),
+   BORDER_COLOR_2          = Color3.fromRGB(85, 85, 85),
    LABEL_COLOR             = Color3.fromRGB(238, 238, 238),
    LABEL_COLOR_DISABLED	   = Color3.fromRGB(136, 136, 136),
    -- boolean
