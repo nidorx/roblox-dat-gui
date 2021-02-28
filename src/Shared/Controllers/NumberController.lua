@@ -42,20 +42,7 @@ local function CreateGUI()
    Step.Parent          = Controller
    Precision.Parent     = Controller
 
-   local function RenderText(value)
-      if string.len(value) == 0 then
-         value =  ''
-      else
-         value = tonumber(value)
-         if value == nil then
-            value =  ''
-         else
-            value = string.format("%."..Precision.Value.."f", value)
-         end
-      end
-   
-      return value
-   end
+   local RenderText = Misc.CreateTextNumberFn(Precision)
 
    local IsTextActive = Instance.new('BoolValue')
 
@@ -127,7 +114,7 @@ local function CreateGUI()
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()	
       Precision.Value = Misc.CountDecimals(Step.Value)
-      if Value.Value ~= nil and Value.Value ~= '' then
+      if Value.Value ~= nil then
          Value.Value = '0'..Value.Value
       end
    end))

@@ -1,6 +1,8 @@
 {
    "minify": true,
    "maxSize": 153600,
+   "compressStrings": true,
+   "compressFields": true,
    "entries": [
       "src/Shared/dat.GUI.lua"
    ],

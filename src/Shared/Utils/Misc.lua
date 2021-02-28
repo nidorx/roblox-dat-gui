@@ -40,6 +40,51 @@ function Misc.CountDecimals(x)
 end
 
 --[[
+   Creating a function allows you to format text as numbers with defined precision
+]]
+function Misc.CreateTextNumberFn(Precision)
+   return function(value)
+      if value == nil then
+         value = ''
+      end
+
+      if string.len(value) == 0 then
+         value =  ''
+      else
+         value = tonumber(value)
+         if value == nil then
+            value =  ''
+         else
+            value = string.format("%."..Precision.Value.."f", value)
+         end
+      end
+   
+      return value
+   end
+end
+
+function Misc.CreateTextNumberFn(Precision)
+   return function(value)
+      if value == nil then
+         value = ''
+      end
+      
+      if string.len(value) == 0 then
+         value =  ''
+      else
+         value = tonumber(value)
+         if value == nil then
+            value =  ''
+         else
+            value = string.format("%."..Precision.Value.."f", value)
+         end
+      end
+   
+      return value
+   end
+end
+
+--[[
    Linearly map a value from an input range to an output range
    https://rosettacode.org/wiki/Map_range#Lua
 ]]

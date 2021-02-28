@@ -1,168 +1,37 @@
 local Mouse 	         = game.Players.LocalPlayer:GetMouse()
 local RunService        = game:GetService("RunService")
 local UserInputService  = game:GetService("UserInputService")
-
-local Misc        = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+local GUIUtils          = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
 local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 
-local SLIDER_FG_COLOR_ON 	= Color3.fromRGB(68, 171, 218)
-local SLIDER_FG_COLOR_OFF	= Color3.fromRGB(47, 161, 214)
-local SLIDER_BG_COLOR_ON 	= Color3.fromRGB(60, 60, 60)
-local SLIDER_BG_COLOR_OFF  = Color3.fromRGB(48, 48, 48)
-local COLOR_TEXT_ON 		   = Color3.fromRGB(255, 255, 255)
-local COLOR_TEXT_OFF		   = Color3.fromRGB(47, 161, 214)
-local COLOR_TEXT_BG_ON 		= Color3.fromRGB(73, 73, 73)
-local COLOR_TEXT_BG_OFF 	= Color3.fromRGB(48, 48, 48)
-local COLOR_TEXT_BG_HOVER	= Color3.fromRGB(60, 60, 60)
-
 local function CreateGUI()
-   local Controller = Instance.new("Frame")
-   Controller.Name 			            = "NumberSliderController"
-   Controller.AnchorPoint	            = Vector2.new(0, 0)
-   Controller.BackgroundColor3         = Constants.BACKGROUND_COLOR
-   Controller.BackgroundTransparency   = 0
-   Controller.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   Controller.BorderMode 			      = Enum.BorderMode.Outline
-   Controller.BorderSizePixel 			= 0
-   Controller.Draggable 			      = false
-   Controller.Position 			         = UDim2.new(0, 0, 0, 150)
-   Controller.Selectable               = false
-   Controller.Size 			            = UDim2.new(1, 0, 0, 30)
-   Controller.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Controller.Style 			            = Enum.FrameStyle.Custom
-   Controller.Visible                  = true
-   Controller.ZIndex                   = 1
-   Controller.Archivable               = true
 
-   local LabelValue = Instance.new('StringValue')
-   LabelValue.Name = 'Label'
-   LabelValue.Parent = Controller
+   local UnlockOnMouseLeave = Instance.new('BoolValue')
+   UnlockOnMouseLeave.Value = true
 
-   local UILocked = Instance.new('StringValue')
-   UILocked.Name = 'UILocked'
-   UILocked.Parent = Controller
-
-   local Value = Instance.new('NumberValue')
-   Value.Name     = 'Value'
-   Value.Parent   = Controller
+   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, ControllerDisconnect 
+      = GUIUtils.CreateControllerWrapper({
+         Name                 = 'NumberController',
+         Color                = Constants.NUMBER_COLOR,
+         UnlockOnMouseLeave   = UnlockOnMouseLeave
+      })
 
    local ValueIn = Instance.new('NumberValue')
    ValueIn.Name     = 'ValueIn'
    ValueIn.Parent   = Controller
-
-   local Min = Instance.new('NumberValue')
-   Min.Name    = 'Min'
-   Min.Value   = -9007199254740992
-   Min.Parent  = Controller
-
-   local Max = Instance.new('NumberValue')
-   Max.Name    = 'Max'
-   Max.Value   = 9007199254740992
-   Max.Parent  = Controller
 
    local Step = Instance.new('NumberValue')
    Step.Name    = 'Step'
    Step.Value   = 0.01
    Step.Parent  = Controller
 
-   local Percent = Instance.new('NumberValue')
-   Percent.Name    = 'Percent'
-   Percent.Value   = 0
-   Percent.Parent  = Controller
-
    local Precision = Instance.new('IntValue')
    Precision.Name    = 'Precision'
    Precision.Value   = 2
    Precision.Parent  = Controller
 
-   local LabelText = Instance.new('TextLabel')
-   LabelText.Name 			         = "LabelText"
-   LabelText.AnchorPoint	         = Vector2.new(0, 0)
-   LabelText.AutomaticSize	         = Enum.AutomaticSize.None
-   LabelText.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
-   LabelText.BackgroundTransparency = 1
-   LabelText.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   LabelText.BorderMode 			   = Enum.BorderMode.Outline
-   LabelText.BorderSizePixel 			= 0
-   LabelText.Position 			      = UDim2.new(0, 10, 0, 0)
-   LabelText.Selectable             = false
-   LabelText.Size 			         = UDim2.new(0.4, -10, 1, -1)
-   LabelText.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   LabelText.Visible                = true
-   LabelText.ZIndex                 = 1
-   LabelText.Archivable             = true
-   LabelText.Font                   = Enum.Font.SourceSans
-   LabelText.LineHeight             = 1
-   LabelText.RichText               = false
-   LabelText.Text                   = 'String Label'
-   LabelText.TextColor3 			   = Constants.LABEL_COLOR
-   LabelText.TextScaled             = false
-   LabelText.TextSize               = 14
-   LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
-   LabelText.TextStrokeTransparency = 1
-   LabelText.TextTransparency       = 0
-   LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
-   LabelText.TextWrapped            = false
-   LabelText.TextXAlignment         = Enum.TextXAlignment.Left
-   LabelText.TextYAlignment         = Enum.TextYAlignment.Center
-   LabelText.Parent = Controller
-
-   local borderBottom = Instance.new("Frame")
-   borderBottom.Name 			         = "border-bottom"
-   borderBottom.AnchorPoint	         = Vector2.new(0, 0)
-   borderBottom.BackgroundColor3       = Color3.fromRGB(44, 44, 44)
-   borderBottom.BackgroundTransparency = 0
-   borderBottom.BorderColor3           = Color3.fromRGB(44, 44, 44)
-   borderBottom.BorderMode 			   = Enum.BorderMode.Outline
-   borderBottom.BorderSizePixel 			= 0
-   borderBottom.Draggable 			      = false
-   borderBottom.Position 			      = UDim2.new(0, 0, 1, -1)
-   borderBottom.Selectable             = false
-   borderBottom.Size 			         = UDim2.new(1, 0, 0, 1)
-   borderBottom.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   borderBottom.Style 			         = Enum.FrameStyle.Custom
-   borderBottom.Visible                = true
-   borderBottom.ZIndex                 = 1
-   borderBottom.Archivable             = true
-   borderBottom.Parent = Controller
-
-   local borderLeft = Instance.new("Frame")
-   borderLeft.Name 			            = "border-left"
-   borderLeft.AnchorPoint	            = Vector2.new(0, 0)
-   borderLeft.BackgroundColor3         = Color3.fromRGB(47, 161, 214)
-   borderLeft.BackgroundTransparency   = 0
-   borderLeft.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   borderLeft.BorderMode 			      = Enum.BorderMode.Outline
-   borderLeft.BorderSizePixel 			= 0
-   borderLeft.Draggable 			      = false
-   borderLeft.Position 			         = UDim2.new(0, 0,0, 0)
-   borderLeft.Selectable               = false
-   borderLeft.Size 			            = UDim2.new(0, 3, 1, 0)
-   borderLeft.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   borderLeft.Style 			            = Enum.FrameStyle.Custom
-   borderLeft.Visible                  = true
-   borderLeft.ZIndex                   = 2
-   borderLeft.Archivable               = true
-   borderLeft.Parent = Controller
-
-   local Control = Instance.new("Frame")
-   Control.Name 			            = "control"
-   Control.AnchorPoint	            = Vector2.new(0, 0)
-   Control.BackgroundColor3         = Color3.fromRGB(255, 255, 255)
-   Control.BackgroundTransparency   = 1
-   Control.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   Control.BorderMode 			      = Enum.BorderMode.Outline
-   Control.BorderSizePixel 			= 0
-   Control.Draggable 			      = false
-   Control.Position 			         = UDim2.new(0.4, 0, 0, 0)
-   Control.Selectable               = false
-   Control.Size 			            = UDim2.new(0.6, 0, 1, -1)
-   Control.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Control.Style 			            = Enum.FrameStyle.Custom
-   Control.Visible                  = true
-   Control.ZIndex                   = 1
-   Control.Archivable               = true
-   Control.Parent = Controller
+   local RenderText = Misc.CreateTextNumberFn(Precision)
 
    local TextContainer = Instance.new("Frame")
    TextContainer.Name 			            = "text-container"
@@ -183,437 +52,134 @@ local function CreateGUI()
    TextContainer.Archivable               = true
    TextContainer.Parent = Control
 
-   local TextFrame = Instance.new("Frame")
-   TextFrame.Name 			         = "text"
-   TextFrame.AnchorPoint	         = Vector2.new(0, 0)
-   TextFrame.BackgroundColor3       = Color3.fromRGB(48, 48, 48)
-   TextFrame.BackgroundTransparency = 0
-   TextFrame.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   TextFrame.BorderMode 			   = Enum.BorderMode.Outline
-   TextFrame.BorderSizePixel 			= 0
-   TextFrame.Draggable 			      = false
-   TextFrame.Position 			      = UDim2.new(0, 0, 0, 0)
-   TextFrame.Selectable             = false
-   TextFrame.Size 			         = UDim2.new(1, 0, 1, 0)
-   TextFrame.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   TextFrame.Style 			         = Enum.FrameStyle.Custom
-   TextFrame.Visible                = true
-   TextFrame.ZIndex                 = 1
-   TextFrame.Archivable             = true
+   local IsControllerActive = Instance.new('BoolValue')
+
+   local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
+      Color    = Constants.NUMBER_COLOR,
+      Active   = IsControllerActive,
+      Render   = RenderText,
+      Parse    = function (text, value)
+         if string.len(text) == 0 then
+            -- no changes
+            return '0'
+         else
+            local text = tonumber(text)
+            if text == nil then
+               -- invalid number
+               return value.Value
+            else
+               -- valid number
+               return RenderText(text)
+            end
+         end
+      end,
+   })
    TextFrame.Parent = TextContainer
 
-   local Text = Instance.new("TextBox")
-   Text.Name 			            = "text"
-   Text.AnchorPoint	            = Vector2.new(0, 0)
-   Text.BackgroundColor3         = Color3.fromRGB(48, 48, 48)
-   Text.BackgroundTransparency   = 1
-   Text.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   Text.BorderMode 			      = Enum.BorderMode.Outline
-   Text.BorderSizePixel 			= 0
-   Text.ClearTextOnFocus 			= false
-   Text.CursorPosition 			   = 1
-   Text.MultiLine 			      = false
-   Text.Position 			         = UDim2.new(0, 2, 0, 0)
-   Text.Selectable               = true
-   Text.SelectionStart           = -1
-   Text.ShowNativeInput          = true
-   Text.Size 			            = UDim2.new(1, -4, 1, 0)
-   Text.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Text.TextEditable 			   = true
-   Text.Visible                  = true
-   Text.ZIndex                   = 1
-   Text.Archivable               = true
-   Text.Font                     = Enum.Font.SourceSans
-   Text.LineHeight               = 1
-   Text.RichText                 = false
-   Text.Text                     = 'text'
-   Text.TextColor3 			      = Color3.fromRGB(47, 161, 214)
-   Text.TextScaled               = false
-   Text.TextSize                 = 14
-   Text.TextStrokeColor3 		   = Color3.fromRGB(0, 0, 0)
-   Text.TextStrokeTransparency   = 1
-   Text.TextTransparency         = 0
-   Text.TextTruncate             = Enum.TextTruncate.None
-   Text.TextWrapped              = false
-   Text.TextXAlignment           = Enum.TextXAlignment.Left
-   Text.TextYAlignment           = Enum.TextYAlignment.Center
-   Text.Parent = TextFrame
+   local SliderContainer = Instance.new("Frame")
+   SliderContainer.BackgroundTransparency = 1
+   SliderContainer.BorderMode 			   = Enum.BorderMode.Outline
+   SliderContainer.BorderSizePixel 			= 0
+   SliderContainer.Draggable 			      = false
+   SliderContainer.Position 			      = UDim2.new(0, 0, 0, 4)
+   SliderContainer.Selectable             = false
+   SliderContainer.Size 			         = UDim2.new(0.66, 0, 1, -8)
+   SliderContainer.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   SliderContainer.Style 			         = Enum.FrameStyle.Custom
+   SliderContainer.Visible                = true
+   SliderContainer.ZIndex                 = 1
+   SliderContainer.Archivable             = true
+   SliderContainer.Parent = Control
 
-   local Slider = Instance.new("Frame")
-   Slider.Name 			         = "slider"
-   Slider.AnchorPoint	         = Vector2.new(0, 0)
-   Slider.BackgroundColor3       = Color3.fromRGB(60, 60, 60)
-   Slider.BackgroundTransparency = 0
-   Slider.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   Slider.BorderMode 			   = Enum.BorderMode.Outline
-   Slider.BorderSizePixel 			= 0
-   Slider.Draggable 			      = false
-   Slider.Position 			      = UDim2.new(0, 0, 0, 4)
-   Slider.Selectable             = false
-   Slider.Size 			         = UDim2.new(0.66, 0, 1, -8)
-   Slider.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Slider.Style 			         = Enum.FrameStyle.Custom
-   Slider.Visible                = true
-   Slider.ZIndex                 = 1
-   Slider.Archivable             = true
-   Slider.Parent = Control
+   local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.CreateSlider({
+      Active   = IsControllerActive
+   });
 
-   local SliderFG = Instance.new("Frame")
-   SliderFG.Name 			            = "fg"
-   SliderFG.AnchorPoint	            = Vector2.new(0, 0)
-   SliderFG.BackgroundColor3        = Color3.fromRGB(47, 161, 214)
-   SliderFG.BackgroundTransparency  = 0
-   SliderFG.BorderColor3            = Color3.fromRGB(27, 42, 53)
-   SliderFG.BorderMode 			      = Enum.BorderMode.Outline
-   SliderFG.BorderSizePixel 			= 0
-   SliderFG.Draggable 			      = false
-   SliderFG.Position 			      = UDim2.new(0, 0, 0, 0)
-   SliderFG.Selectable              = false
-   SliderFG.Size 			            = UDim2.new(0.25, 0, 1, 0)
-   SliderFG.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   SliderFG.Style 			         = Enum.FrameStyle.Custom
-   SliderFG.Visible                 = true
-   SliderFG.ZIndex                  = 1
-   SliderFG.Archivable              = true
-   SliderFG.Parent = Slider
+   SliderFrame.Parent = SliderContainer
+
+   IsControllerActive.Value   = false
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
-   local connections       = {}
-   local controllerHover	= false
-   local textFocused 		= false
-   local isFocused         = false
-   local sliderHover 		= false
-   local sliderMouseDown	= false
-   local controllerHover 	= false
-   local textHover 		   = false
-   local textFocused 		= false
-   local lastValue
-   local absPosX, absPosY, absSizeX, absSizeY, posX, posY
+   local connections = {}
+   local textFocus   = false
 
-   -- mutually exclusive change
-   local ignorePercent = false
-   local ignoreValueIn = false
+   table.insert(connections, OnLock:Connect(function()
+      UnlockOnMouseLeave.Value   = true
+      IsControllerActive.Value   = false
+   end))
+
+   table.insert(connections, OnUnLock:Connect(function()
+      IsControllerActive.Value = true
+   end))
+
+   table.insert(connections, TextOnFocus:Connect(function()
+      UnlockOnMouseLeave.Value   = false
+      textFocus = true
+   end))
    
-   table.insert(connections, LabelValue.Changed:connect(function()
-      LabelText.Text = LabelValue.Value
+   table.insert(connections, TextOnFocusLost:Connect(function()
+      UnlockOnMouseLeave.Value   = true
+      textFocus = false
    end))
-
-   table.insert(connections, Slider.MouseEnter:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      Slider.BackgroundColor3 = SLIDER_BG_COLOR_ON
-      SliderFG.BackgroundColor3 = SLIDER_FG_COLOR_ON
+   
+   table.insert(connections, SliderOnFocus:Connect(function()
+      UnlockOnMouseLeave.Value   = false
    end))
-
-   table.insert(connections, Slider.MouseMoved:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      Slider.BackgroundColor3 = SLIDER_BG_COLOR_ON
-      SliderFG.BackgroundColor3 = SLIDER_FG_COLOR_ON
-   end))
-
-   table.insert(connections, Slider.MouseLeave:Connect(function()
-      Slider.BackgroundColor3 = SLIDER_BG_COLOR_OFF
-      SliderFG.BackgroundColor3 = SLIDER_FG_COLOR_OFF
-   end))
-
-   table.insert(connections, Text.MouseEnter:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      if textFocused == false then
-         TextFrame.BackgroundColor3 = COLOR_TEXT_BG_HOVER
-      end
-   end))
-
-   table.insert(connections, Text.MouseLeave:Connect(function()
-      if textFocused == false then
-         TextFrame.BackgroundColor3 = COLOR_TEXT_BG_OFF
-      end
-   end))
-
-   table.insert(connections, Text.Focused:Connect(function(enterPressed, inputObject)
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      textFocused = true
-      Text.TextColor3 = COLOR_TEXT_ON
-      TextFrame.BackgroundColor3 = COLOR_TEXT_BG_ON	
-   end))
-
-   table.insert(connections, Text.FocusLost:Connect(function(enterPressed, inputObject)
-      textFocused = false
-      Text.TextColor3 = COLOR_TEXT_OFF
-      TextFrame.BackgroundColor3 = COLOR_TEXT_BG_OFF
-   end))
-
-   -- reset when external lock (eg close folder)
-   table.insert(connections, UILocked.Changed:connect(function()
-      if UILocked.Value == "LOCKED" then
-         textFocused = false
-         Text.TextColor3 = COLOR_TEXT_OFF
-         TextFrame.BackgroundColor3 = COLOR_TEXT_BG_OFF
-      end
-   end))
-
-   local function numDecimals(x) 
-      local _x = tostring(x)
-      local idexOf, _ = string.find(_x, ".", 1, true)
-      if idexOf ~= nil then
-         return string.len(_x) - (idexOf -1) - 1;
-      end
-      
-      return 0;
-   end
-
-   local function renderText()
-      local precision = Precision.Value
-      Text.Text = string.format("%."..precision.."f", Value.Value)
-   end
-
-   local function checkUnlock()	
-      
-      if controllerHover or textHover or textFocused or sliderHover or sliderMouseDown then
-         return
-      end
-      
-      spawn(function()
-         UILocked.Value = "UNLOCK"
-      end)
-   end
-
-   table.insert(connections, Controller.MouseEnter:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      controllerHover = true
-   end))
-
-   table.insert(connections, Controller.MouseMoved:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      controllerHover = true
-   end))
-
-   table.insert(connections, Controller.MouseLeave:Connect(function()
-      controllerHover = false
-      checkUnlock()
-   end))
-
-   table.insert(connections, Slider.MouseEnter:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      sliderHover = true
-   end))
-
-   table.insert(connections, Slider.MouseMoved:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      sliderHover = true
-   end))
-
-   table.insert(connections, Slider.MouseLeave:Connect(function()	
-      sliderHover = false
-      checkUnlock()
-   end))
-
-   table.insert(connections, TextContainer.MouseEnter:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end	
-      
-      textHover = true
-   end))
-
-   table.insert(connections, TextContainer.MouseMoved:Connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end	
-      
-      textHover = true
-   end))
-
-   table.insert(connections, TextContainer.MouseLeave:Connect(function()
-      textHover = false
-      checkUnlock()
-   end))
-
-   table.insert(connections, Text.Focused:Connect(function(enterPressed, inputObject)
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      textFocused = true
-   end))
-
-   -- On change text by user
-   table.insert(connections, Text.FocusLost:Connect(function(enterPressed, inputObject)
-      if UILocked.Value ~= "ACTIVE" then
-         Text.Text = Value.Value
-         return
-      end
-      
-      if string.len(Text.Text) == 0 then
-         -- no changes
-         Text.Text = string.format("%."..Precision.Value.."f", Value.Value)
-      else
-         local value = tonumber(Text.Text)
-         if value == nil then
-            -- invalid number
-            Text.Text = string.format("%."..Precision.Value.."f", Value.Value)
-         else
-            -- valid number
-            ValueIn.Value = value
-         end
-      end
-      
-      textFocused = true
-      checkUnlock()
+   
+   table.insert(connections, SliderOnFocusLost:Connect(function()
+      UnlockOnMouseLeave.Value   = true
    end))
 
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()
-      Precision.Value = numDecimals(Step.Value);
-      renderText()
+      Precision.Value = Misc.CountDecimals(Step.Value);
+      if TextValue.Value ~= nil then
+         TextValue.Value = '0'..TextValue.Value
+      end
    end))
 
-   -- On change value (safe)
-   table.insert(connections, Value.Changed:connect(function()
-      renderText()
+    -- On change value (safe)
+   table.insert(connections, SliderValue.Changed:connect(function()
+      TextValue.Value = tostring(SliderValue.Value)
    end))
-   
-   -- Apply 
-   table.insert(connections, Percent.Changed:connect(function()
-      SliderFG.Size = UDim2.new(Percent.Value, 0, 1, 0)
-      
-      if ignoreValueIn then
-         ignoreValueIn = false
-      else
-         -- Change input
-         ignorePercent = true
-         ValueIn.Value = Misc.MapRange(Percent.Value, 0, 1, Min.Value, Max.Value)
+
+   table.insert(connections, TextValue.Changed:connect(function()
+      if textFocus then
+         SliderValue.Value = tonumber(TextValue.Value)
       end
    end))
 
    -- On change value from outside
    table.insert(connections, ValueIn.Changed:connect(function()
-      local value 	= math.max( math.min(ValueIn.Value, Max.Value), Min.Value)
+      local value = math.max(math.min(ValueIn.Value, Max.Value), Min.Value)
       
       if value % Step.Value ~= 0 then
          value = math.round(value/Step.Value) * Step.Value
       end
-      
-      Value.Value = value
-      
-      if ignorePercent then
-         ignorePercent = false
+
+      if ValueIn.Value ~= value then
+         ValueIn.Value = value
       else
-         ignoreValueIn = true
-         Percent.Value = Misc.MapRange(value, Min.Value, Max.Value, 0, 1)
-      end
+         -- change slider value
+         SliderValue.Value = value
+         spawn(function()
+            TextValue.Value = tostring(SliderValue.Value)
+         end)
+      end      
    end))
 
-   table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      if sliderHover and input.UserInputType == Enum.UserInputType.MouseButton1 then
-         sliderMouseDown = true
-      end
-   end))
-
-   table.insert(connections, UserInputService.InputEnded:Connect(function(input, gameProcessed)	
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      if sliderMouseDown and input.UserInputType == Enum.UserInputType.MouseButton1 then
-         sliderMouseDown = false
-         
-         checkUnlock()
-      end
-   end))
-
-   table.insert(connections, UserInputService.InputChanged:connect(function(input, gameProcessed)
-      if UILocked.Value ~= "ACTIVE" then
-         return
-      end
-      
-      if sliderMouseDown and input.UserInputType == Enum.UserInputType.MouseMovement then
-         absPosX = Slider.AbsolutePosition.X
-         absPosY = Slider.AbsolutePosition.Y
-         absSizeX = Slider.AbsoluteSize.X
-         absSizeY = Slider.AbsoluteSize.Y		
-         posX = input.Position.X
-         posY = input.Position.Y
-         
-         if posX < absPosX then			
-            Percent.Value = 0
-            
-         elseif posX > (absPosX + absSizeX) then			
-            Percent.Value = 1
-            
-         else
-            Percent.Value = (posX - absPosX)/absSizeX		
-         end
-      end
-   end))
-
-   table.insert(connections, UILocked.Changed:connect(function()
-      if UILocked.Value ~= "ACTIVE" then
-         -- reset when external lock (eg close folder)
-         sliderHover 	= false
-         sliderMouseDown	= false
-         controllerHover	= false
-         textHover 		= false
-         textFocused 	= false
-         Text.Active = false
-         Text.Selectable = false
-         Text.TextEditable = false
-      else
-         Text.Active = true
-         Text.Selectable = true
-         Text.TextEditable = true
-      end
-   end))
-   
-   local OnRemove = function()
-      for _, conn in ipairs(connections) do
-         conn:Disconnect()
-      end
-      connections = {}
-   end
-
-   return Controller, OnRemove
+   return Controller, SliderValue, ValueIn, Min, Max, Step, 
+      Misc.DisconnectFn(connections, ControllerDisconnect, TextDisconnect, SliderDisconnect)
 end
 
 -- Number slider controller
 local function NumberSliderController(gui, object, property, min, max, step)
 	
-	local frame, OnRemove = CreateGUI()
+	local frame, valueValue, valueInValue, minValue, maxValue, stepValue, DisconnectGUI = CreateGUI()
 	frame.Parent = gui.content
 	
-	local labelValue 	= frame:WaitForChild("Label")	
-	local minValue 		= frame:WaitForChild("Min")
-	local maxValue 		= frame:WaitForChild("Max")
-	local stepValue 	= frame:WaitForChild("Step")
-	local valueValue 	= frame:WaitForChild("Value")		-- Safe value
-	local valueInValue	= frame:WaitForChild("ValueIn")		-- Input value, unsafe
+	local labelValue 	   = frame:WaitForChild("Label")
 	
 	-- The function to be called on change.
 	local onChange
@@ -674,7 +240,7 @@ local function NumberSliderController(gui, object, property, min, max, step)
 	-- Removes the controller from its parent GUI.
 	function controller.remove()
 
-      OnRemove()
+      DisconnectGUI()
 		
 		if listenConnection ~= nil then
 			listenConnection:Disconnect()

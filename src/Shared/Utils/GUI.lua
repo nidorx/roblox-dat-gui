@@ -1,7 +1,6 @@
-
-
-local Misc        = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
-local Constants   = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
+local UserInputService  = game:GetService("UserInputService")
+local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 
 local GUIUtils = {}
 
@@ -299,6 +298,7 @@ function GUIUtils.CreateInput(config)
 
    local Text = Instance.new("TextBox")
    Text.Name 			            = 'text'
+   Text.Text                     = ''
    Text.AnchorPoint	            = Vector2.new(0, 0)
    Text.BackgroundTransparency   = 1
    Text.BorderMode 			      = Enum.BorderMode.Outline
@@ -425,6 +425,221 @@ function GUIUtils.CreateInput(config)
    end))
    
    return Value, TextFrame, OnFocused.Event, OnFocusLost.Event, Misc.DisconnectFn(connections)
+end
+
+--[[
+   Creates a generic slider
+
+   Params
+      config = {
+         Active   = BoolValue,
+         Value    = Number,
+         Min      = Number,
+         Max      = Number
+      }
+
+   Returns 
+      SliderFrame    = Frame
+      Value          = NumberValue
+      Min            = NumberValue
+      Max            = NumberValue
+      Percent        = NumberValue
+      OnFocused      = BindableEvent 
+      OnFocusLost    = BindableEvent
+      Disconnect     = Function Need to be called to Disconnect all events
+]]
+function GUIUtils.CreateSlider(config)
+
+   if config.Active == nil then
+      config.Active = ActiveDummy
+   end
+
+   if config.Min == nil then
+      config.Min = Misc.NUMBER_MIN
+   end
+
+   if config.Max == nil then
+      config.Max = Misc.NUMBER_MAX
+   end
+
+   local Value = Instance.new('NumberValue')
+   Value.Name  = 'Value'
+
+   local Min = Instance.new('NumberValue')
+   Min.Name    = 'Min'
+   
+   local Max = Instance.new('NumberValue')
+   Max.Name    = 'Max'
+   
+   local Percent = Instance.new('NumberValue')
+   Percent.Name    = 'Percent'
+   Percent.Value   = 0
+
+   local Slider = Instance.new("Frame")
+   Slider.Name 			         = "slider"
+   Slider.AnchorPoint	         = Vector2.new(0, 0)
+   Slider.BackgroundColor3       = Color3.fromRGB(60, 60, 60)
+   Slider.BackgroundTransparency = 0
+   Slider.BorderMode 			   = Enum.BorderMode.Outline
+   Slider.BorderSizePixel 			= 0
+   Slider.Draggable 			      = false
+   Slider.Position 			      = UDim2.new(0, 0, 0, 0)
+   Slider.Selectable             = false
+   Slider.Size 			         = UDim2.new(1, 0, 1, 0)
+   Slider.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   Slider.Style 			         = Enum.FrameStyle.Custom
+   Slider.Visible                = true
+   Slider.ZIndex                 = 1
+   Slider.Archivable             = true
+
+   local SliderFG = Instance.new("Frame")
+   SliderFG.Name 			            = "fg"
+   SliderFG.AnchorPoint	            = Vector2.new(0, 0)
+   SliderFG.BackgroundColor3        = Constants.NUMBER_COLOR
+   SliderFG.BackgroundTransparency  = 0
+   SliderFG.BorderMode 			      = Enum.BorderMode.Outline
+   SliderFG.BorderSizePixel 			= 0
+   SliderFG.Draggable 			      = false
+   SliderFG.Position 			      = UDim2.new(0, 0, 0, 0)
+   SliderFG.Selectable              = false
+   SliderFG.Size 			            = UDim2.new(0, 0, 1, 0)
+   SliderFG.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   SliderFG.Style 			         = Enum.FrameStyle.Custom
+   SliderFG.Visible                 = true
+   SliderFG.ZIndex                  = 1
+   SliderFG.Archivable              = true
+   SliderFG.Parent = Slider
+
+   -- SCRIPTS ----------------------------------------------------------------------------------------------------------
+
+   local connections    = {}
+   local sliderHover 		= false
+   local sliderMouseDown	= false
+   local absPosX, absPosY, absSizeX, absSizeY, posX, posY
+   -- mutually exclusive change
+   local ignorePercent = false
+   local ignoreValueIn = false
+
+   local OnFocused      = Instance.new('BindableEvent')
+   local OnFocusLost    = Instance.new('BindableEvent')
+
+   table.insert(connections, Slider.MouseEnter:Connect(function()
+      if not config.Active.Value then
+         return
+      end
+      
+      sliderHover = true
+      Slider.BackgroundColor3    = Constants.INPUT_COLOR_HOVER
+      SliderFG.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
+   end))
+
+   table.insert(connections, Slider.MouseMoved:Connect(function()
+      if not config.Active.Value then
+         return
+      end
+      
+      sliderHover = true
+      Slider.BackgroundColor3    = Constants.INPUT_COLOR_HOVER
+      SliderFG.BackgroundColor3  = Constants.NUMBER_COLOR_HOVER
+   end))
+
+   table.insert(connections, Slider.MouseLeave:Connect(function()
+      sliderHover = false
+      Slider.BackgroundColor3    = Constants.INPUT_COLOR
+      SliderFG.BackgroundColor3  = Constants.NUMBER_COLOR
+   end))
+
+   table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+      if not config.Active.Value then
+         return
+      end
+      
+      if sliderHover and input.UserInputType == Enum.UserInputType.MouseButton1 then
+         sliderMouseDown = true
+         OnFocused:Fire()
+      end
+   end))
+
+   table.insert(connections, UserInputService.InputEnded:Connect(function(input, gameProcessed)	
+      if not config.Active.Value then
+         return
+      end
+      
+      if sliderMouseDown and input.UserInputType == Enum.UserInputType.MouseButton1 then
+         sliderMouseDown = false
+         OnFocusLost:Fire()
+      end
+   end))
+
+   table.insert(connections, UserInputService.InputChanged:Connect(function(input, gameProcessed)
+      if not config.Active.Value then
+         return
+      end
+      
+      if sliderMouseDown and input.UserInputType == Enum.UserInputType.MouseMovement then
+         absPosX  = Slider.AbsolutePosition.X
+         absPosY  = Slider.AbsolutePosition.Y
+         absSizeX = Slider.AbsoluteSize.X
+         absSizeY = Slider.AbsoluteSize.Y
+
+         posX = input.Position.X
+         posY = input.Position.Y
+         
+         if posX < absPosX then			
+            Percent.Value = 0
+            
+         elseif posX > (absPosX + absSizeX) then			
+            Percent.Value = 1
+            
+         else
+            Percent.Value = (posX - absPosX)/absSizeX		
+         end
+      end
+   end))
+  
+   table.insert(connections, Percent.Changed:Connect(function()
+      SliderFG.Size = UDim2.new(Percent.Value, 0, 1, 0)
+
+      spawn(function()
+         Value.Value = Misc.MapRange(Percent.Value, 0, 1, Min.Value, Max.Value)
+      end)
+   end))
+
+   -- On change value from outside
+   table.insert(connections, Value.Changed:Connect(function()
+      local value 	= math.max( math.min(Value.Value, Max.Value), Min.Value)
+      
+      if value ~= Value.Value then
+         spawn(function()
+            Value.Value = math.max(math.min(Value.Value, Max.Value), Min.Value)
+         end)
+      else
+         spawn(function()
+            Percent.Value = Misc.MapRange(Value.Value, Min.Value, Max.Value, 0, 1)
+         end)
+      end
+   end))
+
+   table.insert(connections, Min.Changed:Connect(function()
+      Value.Value = math.max( math.min(Value.Value, Max.Value), Min.Value)
+      spawn(function()
+         Percent.Value = Misc.MapRange(Value.Value, Min.Value, Max.Value, 0, 1)
+      end)
+   end))
+
+   table.insert(connections, Max.Changed:Connect(function()
+      Value.Value = math.max( math.min(Value.Value, Max.Value), Min.Value)
+      spawn(function()
+         Percent.Value = Misc.MapRange(Value.Value, Min.Value, Max.Value, 0, 1)
+      end)
+   end))
+
+   -- Initialize values
+   Min.Value   = config.Min
+   Max.Value   = config.Max
+   Value.Value = config.Value
+
+   return Slider, Value, Min, Max, Percent, OnFocused.Event, OnFocusLost.Event, Misc.DisconnectFn(connections)
 end
 
 

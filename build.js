@@ -70,11 +70,52 @@ var DEFAULT_VARIABLE_PATH = {
 
 var DEPENDENCIES = {};
 var DEPENDECY_SEQ = 1;
+var STRINGS = {};
+var STRINGS_SEQ = 1;
 
 /**
  * All Roblox services, used to define a single global call
  */
 var SERVICES = {};
+
+/**
+ * Number to string
+ * 
+ * @param {*} n 
+ */
+const n2s = (function () {
+   var CHARS = [
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
+      'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D',
+      'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+      'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+   ]
+
+   var charsLen = CHARS.length
+
+   return function (n) {
+      var s = '';
+
+      if (n === undefined) {
+         n = 0;
+      }
+
+      while (n !== undefined) {
+         s = CHARS[n % charsLen] + s;
+         n = Math.floor(n / charsLen);
+         if (n === 0) {
+            n = undefined;
+         } else {
+            n--;
+         }
+      }
+
+      if (['do', 'if', 'in', 'or', 'and', 'end', 'for', 'nil', 'else', 'goto', 'then', 'true'].indexOf(s) >= 0) {
+         return '_' + s
+      }
+      return s;
+   }
+})()
 
 cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, update: true }, function () {
 
@@ -83,7 +124,6 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
       DEPENDENCIES = {};
       DEPENDECY_SEQ = 1;
       SERVICES = {
-
          //'Players': false,
          //'Debris': false,
          //'ServerStorage': false,
@@ -91,6 +131,8 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
          //'UserInputService': false,
          //'ServerScriptService': false
       };
+      STRINGS = {}
+      STRINGS_SEQ = 1;
 
       const rootFile = path.join(__dirname, entry);
 
@@ -98,16 +140,18 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
       DEPENDENCIES[rootFile] = {
          property: null,
          id: '__ROOT',
-         depends: []
+         depends: [],
+         strings: []
       };
       var rootInfo = proccessFile(rootFile);
       DEPENDENCIES[rootFile].depends = rootInfo.depends;
+      DEPENDENCIES[rootFile].strings = rootInfo.strings;
       DEPENDENCIES[rootFile].source = rootInfo.source;
 
 
       // Generate the final code, concatenating the files
-      var modulesSource = [];
       var fileDeps = [];
+      var modulesSource = [];
       for (var dir in DEPENDENCIES) {
          if (!DEPENDENCIES.hasOwnProperty(dir)) {
             continue;
@@ -146,23 +190,10 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
          }
       });
 
-      function byteLength(code) {
-         if (BUILD_CONFIG.minify) {
-            try {
-               return Buffer.byteLength(luamin.minify(code), 'utf8')
-            } catch (e) {
-               console.error('Luamin error on code')
-               console.log(code)
-               throw e
-            }
-         }
-         return Buffer.byteLength(code, 'utf8')
-      }
-
       // Organizes into chunks, Roblox does not allow scripts larger than 200k
-      var sourceSize = 0
-      var chunks = []
       var chunk = []
+      var chunks = []
+      var sourceSize = 0
       modulesSource.forEach(function (source) {
          var moduleSize = byteLength(source)
          if (sourceSize + moduleSize > BUILD_CONFIG.maxSize) {
@@ -193,18 +224,22 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
       chunks.forEach((chunk, index) => {
          let isLast = (index == chunks.length - 1)
 
+         let servicesVars = Object.keys(SERVICES)
+            .filter((k) => SERVICES[k])
+            .map((k) => `local __S_${k} = game:GetService('${k}')`)
+            .join('\n   ');
+
+
+
+         var code, outputFile;
          if (isLast) {
             var others = chunks.concat()
             others.pop()
             // Main file
-            var code = [
+            code = [
                'do',
-               '   ' + (
-                  Object.keys(SERVICES)
-                     .filter((k) => SERVICES[k])
-                     .map((k) => `local __S_${k} = game:GetService('${k}')`)
-                     .join('\n   ')
-               ),
+               '   ___STRING_VARS___',
+               '   ' + servicesVars,
                '   local __M__      = {}',
                '   local __MF__     = {}',
                '   local __MREC__   = function(m)',
@@ -217,7 +252,7 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
                      (
                         others
                            .map((v, i) => {
-                              return `require(script.Parent:WaitForChild('${outputNameBase}${i}'))(__M__, __MF__, __MREC__)`
+                              return `require(script.Parent:WaitForChild('${outputNameBase}${i}'))(__M__, __MF__, __MREC__, __STRINGS__)`
                            })
                            .join('\n   ')
                      ) + '\n'
@@ -227,49 +262,83 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
                'end'
             ].join('\n');
 
-            var outputFile = path.join(__dirname, '/build/', outputDir, outputNameBase + outputExt);
-            if (BUILD_CONFIG.minify) {
-               try {
-                  code = luamin.minify(code)
-               } catch (e) {
-                  console.error('Luamin error on code')
-                  console.log(code)
-                  throw e
-               }
-            }
+            outputFile = path.join(__dirname, '/build/', outputDir, outputNameBase + outputExt);
 
-            fs.writeFileSync(outputFile, code);
          } else {
 
             // Chunk
-            var code = [
+            code = [
                'do',
-               '   ' + (
-                  Object.keys(SERVICES)
-                     .filter((k) => SERVICES[k])
-                     .map((k) => `local __S_${k} = game:GetService('${k}')`)
-                     .join('\n   ')
-               ),
+               '   ' + servicesVars,
                '',
-               '   return function(__M__, __MF__, __MREC__)\n',
+               '   return function(__M__, __MF__, __MREC__, __STRINGS__)\n',
                '      ' + chunk.join('\n').replace(/\n/g, '\n      '),
                '   end',
                'end'
             ].join('\n');
 
-            var outputFile = path.join(__dirname, '/build/', outputDir, outputNameBase + index + '.lua');
-            if (BUILD_CONFIG.minify) {
-               try {
-                  code = luamin.minify(code)
-               } catch (e) {
-                  console.error('Luamin error on code')
-                  console.log(code)
-                  throw e
-               }
-            }
-
-            fs.writeFileSync(outputFile, code);
+            outputFile = path.join(__dirname, '/build/', outputDir, outputNameBase + index + '.lua');
          }
+
+         if (BUILD_CONFIG.compressFields) {
+
+            // "function Misc.CountDecimals" need to be "Misc.DisconnectFn = function"
+            code = code.replace(/(local\s+)?(function\s+)([a-z_$][a-z0-9_$]+)\.([^(]+)/ig, (match, $local, $fn, $var, $comp) => {
+               return `${$var}.${$comp} = function`
+            });
+
+            code = code.replace(/(\.)([a-z_$][a-z0-9_$]+)/ig, (match, $dot, $field, start, source) => {
+               if (match == '.new') {
+                  return match;
+               }
+
+               if (source.substring(start - 1, start + 1) === '..') {
+                  return match
+               }
+
+               if (source.substring(start - '__STRINGS__'.length, start) === '__STRINGS__') {
+                  return match
+               }
+
+               if (STRINGS[$field] === undefined) {
+                  STRINGS[$field] = {
+                     id: n2s(STRINGS_SEQ++),
+                     quote: "'",
+                     value: $field,
+                     using: false
+                  }
+               }
+               let string = STRINGS[$field]
+
+               // If the string is too small, check if it is worth switching
+               // Ex. var.Field < var[a.fd]
+               if (($field.length + 1) < string.id.length + 4) {
+                  return match
+               }
+
+               string.using = true
+
+               return `[__STRINGS__.${string.id}]`
+            });
+         }
+
+         let stringsVars = 'local __STRINGS__ = {\n'
+            + (Object.keys(STRINGS).map((s) => STRINGS[s]).filter(s => s.using).map((s) => `      ${s.id} = ${s.quote}${s.value}${s.quote}`).join(',\n'))
+            + '\n   };\n'
+
+         code = code.replace('___STRING_VARS___', stringsVars)
+
+         if (BUILD_CONFIG.minify) {
+            try {
+               code = luamin.minify(code)
+            } catch (e) {
+               console.error('Luamin error on code')
+               fs.writeFileSync(outputFile, code);
+               throw e
+            }
+         }
+
+         fs.writeFileSync(outputFile, code);
       })
    })
 })
@@ -291,6 +360,7 @@ function proccessFile(filePath) {
    }
 
    var depends = [];
+   var strings = [];
    var source = fs.readFileSync(filePathFinal, 'utf-8').replace(/\t/g, '   ');
 
    // removes all comments (simplifies processing and prevents false positives)
@@ -325,7 +395,7 @@ function proccessFile(filePath) {
 
       sourceNoComments += line.replace(/(\s+)$/, '') + '\n'
    })
-   source = '--[[file:' + filePath.replace(__dirname, '') + ']]\n' + sourceNoComments
+   source = sourceNoComments
 
    // Replaces all game:GetService
    source = source.replace(/game:GetService\(['"]([^'"]*)['"]\)?/g, function ($0, service) {
@@ -338,7 +408,6 @@ function proccessFile(filePath) {
       SERVICES[service] = true;
       return prefix + '__S_' + service
    });
-
 
    var VARIABLE_PATH = JSON.parse(JSON.stringify(DEFAULT_VARIABLE_PATH))
    var SCRIPT_PARENT = 'script.Parent';
@@ -499,10 +568,114 @@ function proccessFile(filePath) {
       newSource += line + '\n'
    })
 
-   source = newSource
+   if (BUILD_CONFIG.compressStrings) {
+      // parse strings
+      let string = null;
+      let sourceChars = []
+
+      let indexString = function () {
+         let value = string.value.join('')
+
+         // If the string is too small, check if it is worth switching
+         if ((value.length + string.quote.length * 2) < string.id.length + 4) {
+            string.value = value
+            return false;
+         }
+
+         if (STRINGS[value] === undefined) {
+            string.value = value
+            STRINGS[value] = string
+         } else {
+            string = STRINGS[value]
+            STRINGS_SEQ--
+         }
+
+         string.using = true
+
+         strings.push(string.id);
+         return true
+      }
+
+      newSource.split('').forEach(function (char, index) {
+         if (string) {
+            let lastChar = string.value[string.value.length - 1]
+            if (char == string.quote && lastChar != '\\') {
+               // ignore C-like escape sequences
+
+               if (indexString()) {
+                  sourceChars = sourceChars.concat(('__STRINGS__.' + string.id).split(''))
+               } else {
+                  sourceChars = sourceChars.concat((`${string.quote}${string.value}${string.quote}`).split(''))
+               }
+               string = null;
+               return;
+            } else if (string.quote == '[[' && char == ']' && lastChar == ']') {
+               string.value.pop()
+               if (indexString()) {
+                  sourceChars = sourceChars.concat(('__STRINGS__.' + string.id).split(''))
+               } else {
+                  sourceChars = sourceChars.concat((`[[${string.value}]]`).split(''))
+               }
+               string = null;
+               return;
+            }
+            string.value.push(char);
+
+         } else {
+            if (char == '"' || char == "'") {
+               string = {
+                  id: n2s(STRINGS_SEQ++),
+                  quote: char,
+                  value: [],
+                  lastChar: ''
+               }
+               return;
+            } else if (char == '[') {
+               // Double bracketed strings
+               if (sourceChars.length > 0 && sourceChars[sourceChars.length - 1] == '[') {
+                  string = {
+                     id: n2s(STRINGS_SEQ++),
+                     quote: '[[',
+                     value: [],
+                     lastChar: ''
+                  }
+                  sourceChars.pop()
+                  return;
+               }
+            }
+
+            sourceChars.push(char);
+         }
+      })
+
+      source = sourceChars.join('');
+   } else {
+      source = newSource;
+   }
+
+
+   source = '-- file:' + filePath.replace(__dirname, '') + '\n' + source
 
    return {
+      source: source,
       depends: depends,
-      source: source
+      strings: strings
    }
 }
+
+function byteLength(code) {
+   if (BUILD_CONFIG.minify) {
+      try {
+         return Buffer.byteLength(luamin.minify(code), 'utf8')
+      } catch (e) {
+         fs.writeFileSync(path.join(__dirname, '/build/__invalid_code.lua'), code);
+         console.error(e);
+         throw 'Luamin error on code'
+      }
+   }
+   return Buffer.byteLength(code, 'utf8')
+}
+
+
+
+
