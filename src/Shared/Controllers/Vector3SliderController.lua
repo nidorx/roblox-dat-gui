@@ -60,33 +60,11 @@ local function CreateGUI()
       Frame.Size 			            = UDim2.new(1, 0, 0.333, -1)
       Frame.Parent = Control
 
-      local Label = Instance.new('TextLabel')
-      Label.Name 			            = "label"
-      Label.AnchorPoint	            = Vector2.new(0, 0)
-      Label.AutomaticSize	         = Enum.AutomaticSize.None
-      Label.BackgroundTransparency  = 1
-      Label.BorderMode 			      =  Enum.BorderMode.Outline
-      Label.BorderSizePixel 			= 0
-      Label.Position 			      = UDim2.new(0, 0, 0, 0)
-      Label.Selectable              = false
+      local Label = GUIUtils.CreateLabel()
       Label.Size 			            = UDim2.new(0, 10, 1, 0)
-      Label.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-      Label.Visible                 = true
-      Label.ZIndex                  = 1
-      Label.Archivable              = true
-      Label.Font                    = Enum.Font.SourceSans
-      Label.LineHeight              = 1
-      Label.RichText                = false
       Label.Text                    = axis:lower()
       Label.TextColor3 			      = Constants.INPUT_COLOR_PLACEHOLDER
-      Label.TextScaled              = false
-      Label.TextSize                = 14
-      Label.TextStrokeTransparency  = 1
-      Label.TextTransparency        = 0
-      Label.TextTruncate            = Enum.TextTruncate.AtEnd
-      Label.TextWrapped             = false
       Label.TextXAlignment          = Enum.TextXAlignment.Center
-      Label.TextYAlignment          = Enum.TextYAlignment.Center
       Label.Parent = Frame
 
       local TextContainer = GUIUtils.CreateFrame()
@@ -272,7 +250,7 @@ end
 local function Vector3SliderController(gui, object, property, min, max, step)
 	
 	local frame, valueValue, valueInValue, minValue, maxValue, stepValue,  DisconnectGUI = CreateGUI()
-	frame.Parent = gui.content
+	frame.Parent = gui.Content
 	
 	local labelValue 	   = frame:WaitForChild("Label")	
 	

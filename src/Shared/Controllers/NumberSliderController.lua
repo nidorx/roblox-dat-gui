@@ -156,7 +156,7 @@ end
 local function NumberSliderController(gui, object, property, min, max, step)
 	
 	local frame, valueValue, valueInValue, minValue, maxValue, stepValue, DisconnectGUI = CreateGUI()
-	frame.Parent = gui.content
+	frame.Parent = gui.Content
 	
 	local labelValue 	   = frame:WaitForChild("Label")
 	

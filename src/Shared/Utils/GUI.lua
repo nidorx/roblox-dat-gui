@@ -9,7 +9,7 @@ local function foo()
 end
 
 --[[
-   Instantiating a generic frame
+   Instantiating a generic Frame
 ]]
 function GUIUtils.CreateFrame(params)
    local frame = Instance.new("Frame")
@@ -35,6 +35,47 @@ function GUIUtils.CreateFrame(params)
    end
 
    return frame
+end
+
+--[[
+   Instantiating a generic TextLabel
+]]
+function GUIUtils.CreateLabel(params)
+   local label = Instance.new('TextLabel')
+   label.Name 			            = "LabelText"
+   label.AnchorPoint	            = Vector2.new(0, 0)
+   label.AutomaticSize	         = Enum.AutomaticSize.None
+   label.BackgroundTransparency  = 1
+   label.BorderMode 			      = Enum.BorderMode.Outline
+   label.BorderSizePixel 			= 0
+   label.Position 			      = UDim2.new(0, 0, 0, 0)
+   label.Selectable              = false
+   label.Size 			            = UDim2.new(1, 0, 1, 0)
+   label.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   label.Visible                 = true
+   label.ZIndex                  = 1
+   label.Archivable              = true
+   label.Font                    = Enum.Font.SourceSans
+   label.LineHeight              = 1
+   label.RichText                = false
+   label.Text                    = 'Label'
+   label.TextColor3 			      = Constants.LABEL_COLOR
+   label.TextScaled              = false
+   label.TextSize                = 14
+   label.TextStrokeTransparency  = 1
+   label.TextTransparency        = 0
+   label.TextTruncate            = Enum.TextTruncate.AtEnd
+   label.TextWrapped             = false
+   label.TextXAlignment          = Enum.TextXAlignment.Left
+   label.TextYAlignment          = Enum.TextYAlignment.Center
+
+   if params ~= nil then
+      for key, value in pairs(params) do
+         label[key] = value
+      end
+   end
+
+   return label
 end
 
 --[[
@@ -84,34 +125,9 @@ function GUIUtils.CreateControllerWrapper(config)
    UILocked.Name = 'UILocked'
    UILocked.Parent = Controller
 
-   local LabelText = Instance.new('TextLabel')
-   LabelText.Name 			         = "LabelText"
-   LabelText.AnchorPoint	         = Vector2.new(0, 0)
-   LabelText.AutomaticSize	         = Enum.AutomaticSize.None
-   LabelText.BackgroundTransparency = 1
-   LabelText.BorderMode 			   = Enum.BorderMode.Outline
-   LabelText.BorderSizePixel 			= 0
+   local LabelText = GUIUtils.CreateLabel()
    LabelText.Position 			      = UDim2.new(0, 10, 0, 0)
-   LabelText.Selectable             = false
    LabelText.Size 			         = UDim2.new(0.4, -10, 1, -1)
-   LabelText.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   LabelText.Visible                = true
-   LabelText.ZIndex                 = 1
-   LabelText.Archivable             = true
-   LabelText.Font                   = Enum.Font.SourceSans
-   LabelText.LineHeight             = 1
-   LabelText.RichText               = false
-   LabelText.Text                   = 'Label'
-   LabelText.TextColor3 			   = Constants.LABEL_COLOR
-   LabelText.TextScaled             = false
-   LabelText.TextSize               = 14
-   LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
-   LabelText.TextStrokeTransparency = 1
-   LabelText.TextTransparency       = 0
-   LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
-   LabelText.TextWrapped            = false
-   LabelText.TextXAlignment         = Enum.TextXAlignment.Left
-   LabelText.TextYAlignment         = Enum.TextYAlignment.Center
    LabelText.Parent = Controller
 
    local borderBottom = GUIUtils.CreateFrame()

@@ -26,26 +26,24 @@ local function CreateGUI()
    Checkbox.Size 			            = UDim2.new(0, 21, 1, -8)
    Checkbox.Parent = Control
 
-   local Image = Instance.new("ImageLabel")
-   Image.Name 			            = "check"
-   Image.AnchorPoint	            = Vector2.new(0, 0)
-   Image.BackgroundColor3        = Constants.CHECKBOX_COLOR_IMAGE
-   Image.BackgroundTransparency  = 1
-   Image.BorderMode 			      = Enum.BorderMode.Outline
-   Image.BorderSizePixel 			= 0
-   Image.Position 			      = UDim2.new(0, 4, 0, 4)
-   Image.Selectable              = false
-   Image.Size 			            = UDim2.new(1, -8, 1, -8)
-   Image.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Image.Visible                 = false
-   Image.ZIndex                  = 1
-   Image.Archivable              = true
-   Image.Image                   = 'rbxassetid://5786049629'
-   Image.ImageColor3             = Constants.INPUT_COLOR_FOCUS_TXT
-   Image.ImageTransparency 	   = 0
-   Image.ScaleType               = Enum.ScaleType.Stretch
-   Image.SliceScale              = 1
-   Image.Parent = Checkbox
+   local Check = GUIUtils.CreateFrame()
+   Check.Name 			            = "Check"
+   Check.BackgroundColor3        = Constants.CHECKBOX_COLOR_IMAGE
+   Check.BackgroundTransparency  = 0
+   Check.Position 			      = UDim2.new(0.5, -3, 0.5, -7)
+   Check.Size 			            = UDim2.new(0, 6, 0, 10)
+   Check.Rotation                = 45
+   Check.ZIndex                  = 2
+   Check.Parent = Checkbox
+
+   local CheckMask = GUIUtils.CreateFrame()
+   CheckMask.Name 			         = "Mask"
+   CheckMask.BackgroundColor3       = Constants.CHECKBOX_COLOR_OFF
+   CheckMask.BackgroundTransparency = 0
+   CheckMask.Position 			      = UDim2.new(0, -3, 0, 0)
+   CheckMask.Size 			         = UDim2.new(0, 7, 0, 8)
+   CheckMask.ZIndex                 = 1
+   CheckMask.Parent = Check
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
@@ -59,17 +57,22 @@ local function CreateGUI()
          -- checked
          if checkboxHover then
             Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
+            CheckMask.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
          else
             Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR
+            CheckMask.BackgroundColor3 = Constants.NUMBER_COLOR
          end
       elseif hover then
          if checkboxHover then
             Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS
+            CheckMask.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS
          else
             Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
+            CheckMask.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
          end
       else
          Checkbox.BackgroundColor3 = Constants.INPUT_COLOR
+         CheckMask.BackgroundColor3 = Constants.INPUT_COLOR
       end
    end
 
@@ -120,7 +123,7 @@ local function CreateGUI()
 
    -- On change value (safe)
    table.insert(connections, Value.Changed:connect(function()
-      Image.Visible = Value.Value
+      Check.Visible = Value.Value
       updateCheckbox()
    end))
 
@@ -137,7 +140,7 @@ end
 local BooleanController = function(gui, object, property)
 	
 	local frame, DisconnectGUI = CreateGUI()
-	frame.Parent = gui.content
+	frame.Parent = gui.Content
 	
 	local boolValue 	= frame:WaitForChild("Value")
 	local labelValue 	= frame:WaitForChild("Label")

@@ -552,7 +552,7 @@ end
 local function ColorController(gui, object, property)
 	
 	local frame, DisconnectGUI = CreateGUI()
-	frame.Parent = gui.content
+	frame.Parent = gui.Content
 	
 	local colorValue 	= frame:WaitForChild("Value")
 	local labelValue 	= frame:WaitForChild("Label")

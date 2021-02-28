@@ -51,7 +51,7 @@ end
 local function FunctionController(gui, object, property, text)
 	
 	local frame, DisconnectGUI =  CreateGUI()
-	frame.Parent = gui.content
+	frame.Parent = gui.Content
 	
 	local onClickEvent 	= frame:WaitForChild("OnClick")
 	local labelValue 	= frame:WaitForChild("Label")	

@@ -43,10 +43,11 @@ local Players 	            = game:GetService("Players")
 local TweenService 		   = game:GetService("TweenService")
 local UserInputService     = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
-
-local Player 	   = Players.LocalPlayer
-local PlayerGui   = Player:WaitForChild("PlayerGui")
-
+local GUIUtils             = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
+local Constants            = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
+local Misc                 = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+local Player 	            = Players.LocalPlayer
+local PlayerGui            = Player:WaitForChild("PlayerGui")
 
 -- controllers
 local Controllers             = game.ReplicatedStorage:WaitForChild("Controllers")
@@ -69,23 +70,10 @@ local LABEL_COLOR_DISABLED	= Color3.fromRGB(136, 136, 136)
 
 local function CreateGUIFolder(connections)
 
-   local Folder = Instance.new("Frame")
+   local Folder = GUIUtils.CreateFrame()
    Folder.Name 			         = "Folder"
-   Folder.AnchorPoint	         = Vector2.new(0, 0)
-   Folder.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
    Folder.BackgroundTransparency = 1
-   Folder.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   Folder.BorderMode 			   = Enum.BorderMode.Outline
-   Folder.BorderSizePixel 			= 0
-   Folder.Draggable 			      = false
-   Folder.Position 			      = UDim2.new(0, 0, 0, 0)
-   Folder.Selectable             = false
    Folder.Size 			         = UDim2.new(1, 0, 0, 30)
-   Folder.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Folder.Style 			         = Enum.FrameStyle.Custom
-   Folder.Visible                = true
-   Folder.ZIndex                 = 1
-   Folder.Archivable             = true
 
    local LabelValue = Instance.new('StringValue')
    LabelValue.Name = 'Label'
@@ -100,135 +88,51 @@ local function CreateGUIFolder(connections)
    Closed.Value    = false
    Closed.Parent   = Folder
 
-   local borderBottom = Instance.new("Frame")
-   borderBottom.Name 			         = "border-bottom"
-   borderBottom.AnchorPoint	         = Vector2.new(0, 0)
-   borderBottom.BackgroundColor3       = Color3.fromRGB(44, 44, 44)
-   borderBottom.BackgroundTransparency = 0
-   borderBottom.BorderColor3           = Color3.fromRGB(44, 44, 44)
-   borderBottom.BorderMode 			   = Enum.BorderMode.Outline
-   borderBottom.BorderSizePixel 			= 0
-   borderBottom.Draggable 			      = false
+   local borderBottom = GUIUtils.CreateFrame()
+   borderBottom.Name 			         = "BorderBottom"
+   borderBottom.BackgroundColor3       = Constants.BORDER_COLOR
    borderBottom.Position 			      = UDim2.new(0, 0, 1, -1)
-   borderBottom.Selectable             = false
    borderBottom.Size 			         = UDim2.new(1, 0, 0, 1)
-   borderBottom.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   borderBottom.Style 			         = Enum.FrameStyle.Custom
-   borderBottom.Visible                = true
    borderBottom.ZIndex                 = 2
-   borderBottom.Archivable             = true
    borderBottom.Parent = Folder
 
-   local content = Instance.new("Frame")
-   content.Name 			            = "content"
-   content.AnchorPoint	            = Vector2.new(0, 0)
-   content.BackgroundColor3         = Color3.fromRGB(255, 255, 255)
-   content.BackgroundTransparency   = 1
-   content.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   content.BorderMode 			      = Enum.BorderMode.Outline
-   content.BorderSizePixel 			= 0
-   content.Draggable 			      = false
-   content.Position 			         = UDim2.new(0, 5, 1, 0)
-   content.Selectable               = false
-   content.Size 			            = UDim2.new(1, -5, 0, 100)
-   content.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   content.Style 			            = Enum.FrameStyle.Custom
-   content.Visible                  = true
-   content.ZIndex                   = 1
-   content.Archivable               = true
-   content.Parent = Folder
+   local Content = GUIUtils.CreateFrame()
+   Content.Name 			            = "Content"
+   Content.BackgroundTransparency   = 1
+   Content.Position 			         = UDim2.new(0, 5, 1, 0)
+   Content.Size 			            = UDim2.new(1, -5, 0, 100)
+   Content.Parent = Folder
 
-   local Title = Instance.new("Frame")
-   Title.Name 			            = "title"
-   Title.AnchorPoint	            = Vector2.new(0, 0)
-   Title.BackgroundColor3        = Color3.fromRGB(0, 0, 0)
-   Title.BackgroundTransparency  = 0
-   Title.BorderColor3            = Color3.fromRGB(27, 42, 53)
-   Title.BorderMode 			      = Enum.BorderMode.Outline
-   Title.BorderSizePixel 			= 0
-   Title.Draggable 			      = false
-   Title.Position 			      = UDim2.new(0, 0, 0, 0)
-   Title.Selectable              = false
+   local Title = GUIUtils.CreateFrame()
+   Title.Name 			            = "Title"
+   Title.BackgroundColor3        = Constants.FOLDER_COLOR
    Title.Size 			            = UDim2.new(1, 0, 0, 30)
-   Title.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Title.Style 			         = Enum.FrameStyle.Custom
-   Title.Visible                 = true
-   Title.ZIndex                  = 1
-   Title.Archivable              = true
    Title.Parent = Folder
 
-   local LabelText = Instance.new('TextLabel')
-   LabelText.Name 			         = "LabelText"
-   LabelText.AnchorPoint	         = Vector2.new(0, 0)
-   LabelText.AutomaticSize	         = Enum.AutomaticSize.None
-   LabelText.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
-   LabelText.BackgroundTransparency = 1
-   LabelText.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   LabelText.BorderMode 			   = Enum.BorderMode.Outline
-   LabelText.BorderSizePixel 			= 0
-   LabelText.Position 			      = UDim2.new(0, 15, 0, 0)
-   LabelText.Selectable             = false
-   LabelText.Size 			         = UDim2.new(1, -15, 1, -1)
-   LabelText.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   LabelText.Visible                = true
-   LabelText.ZIndex                 = 1
-   LabelText.Archivable             = true
-   LabelText.Font                   = Enum.Font.SourceSans
-   LabelText.LineHeight             = 1
-   LabelText.RichText               = false
-   LabelText.Text                   = 'Folder Title'
-   LabelText.TextColor3 			   = Constants.LABEL_COLOR
-   LabelText.TextScaled             = false
-   LabelText.TextSize               = 14
-   LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
-   LabelText.TextStrokeTransparency = 1
-   LabelText.TextTransparency       = 0
-   LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
-   LabelText.TextWrapped            = false
-   LabelText.TextXAlignment         = Enum.TextXAlignment.Left
-   LabelText.TextYAlignment         = Enum.TextYAlignment.Center
+   local LabelText = GUIUtils.CreateLabel()
+   LabelText.Position 			      = UDim2.new(0, 16, 0, 0)
+   LabelText.Size 			         = UDim2.new(1, -16, 1, -1)
    LabelText.Parent = Title
 
-   local Chevron = Instance.new("Frame")
+   local Chevron = GUIUtils.CreateFrame()
    Chevron.Name 			            = "chevron"
-   Chevron.AnchorPoint	            = Vector2.new(0, 0)
-   Chevron.BackgroundColor3         = Color3.fromRGB(214, 214, 214)
-   Chevron.BackgroundTransparency   = 1
-   Chevron.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   Chevron.BorderMode 			      = Enum.BorderMode.Outline
-   Chevron.BorderSizePixel 			= 0
-   Chevron.Draggable 			      = false
-   Chevron.Position 			         = UDim2.new(0, 5, 0, 0)
-   Chevron.Selectable               = false
-   Chevron.Size 			            = UDim2.new(0, 10, 1, 0)
-   Chevron.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Chevron.Style 			            = Enum.FrameStyle.Custom
-   Chevron.Visible                  = true
+   Chevron.BackgroundColor3         = Constants.LABEL_COLOR
+   Chevron.BackgroundTransparency   = 0
+   Chevron.Position 			         = UDim2.new(0, 6, 0.5, -3)
+   Chevron.Size 			            = UDim2.new(0, 5, 0, 5)
+   Chevron.Rotation                 = 45
    Chevron.ZIndex                   = 2
-   Chevron.Archivable               = true
    Chevron.Parent = Title
 
-   local ChevronImage = Instance.new("ImageLabel")
-   ChevronImage.Name 			         = "image"
-   ChevronImage.AnchorPoint	         = Vector2.new(0, 0)
-   ChevronImage.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
-   ChevronImage.BackgroundTransparency = 1
-   ChevronImage.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   ChevronImage.BorderMode 			   = Enum.BorderMode.Outline
-   ChevronImage.BorderSizePixel 			= 0
-   ChevronImage.Position 			      = UDim2.new(0, 0, 0, 12)
-   ChevronImage.Selectable             = false
-   ChevronImage.Size 			         = UDim2.new(0, 6, 1, -24)
-   ChevronImage.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   ChevronImage.Visible                = true
-   ChevronImage.ZIndex                 = 1
-   ChevronImage.Archivable             = true
-   ChevronImage.Image                  = 'rbxassetid://5780747753'
-   ChevronImage.ImageColor3            = Color3.fromRGB(255, 255, 255)
-   ChevronImage.ImageTransparency 	   = 0
-   ChevronImage.ScaleType              = Enum.ScaleType.Stretch
-   ChevronImage.SliceScale             = 1
-   ChevronImage.Parent = Chevron
+   local ChevronMask = GUIUtils.CreateFrame()
+   ChevronMask.Name 			            = "Mask"
+   ChevronMask.BackgroundColor3        = Constants.FOLDER_COLOR
+   ChevronMask.BackgroundTransparency  = 0
+   ChevronMask.Position 			      = UDim2.new(0, -2, 0, -2)
+   ChevronMask.Size 			            = UDim2.new(0, 5, 0, 5)
+   ChevronMask.Rotation                = 45
+   ChevronMask.ZIndex                  = 1
+   ChevronMask.Parent = Chevron
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
@@ -258,9 +162,9 @@ local function CreateGUIFolder(connections)
 
    table.insert(connections, Closed.Changed:connect(function()
       if Closed.Value then
-         ChevronImage.Rotation = -90
+         Chevron.Rotation = -45
       else
-         ChevronImage.Rotation = 0
+         Chevron.Rotation = 45
       end
    end))
 
@@ -272,41 +176,19 @@ local function CreateGUIFolder(connections)
 end
 
 local function CreateGUIScrollbar(connections)
-   local Scrollbar = Instance.new("Frame")
+   local Scrollbar = GUIUtils.CreateFrame()
    Scrollbar.Name 			         = "Scrollbar"
-   Scrollbar.AnchorPoint	         = Vector2.new(0, 0)
    Scrollbar.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
    Scrollbar.BackgroundTransparency = 0
-   Scrollbar.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   Scrollbar.BorderMode 			   = Enum.BorderMode.Outline
-   Scrollbar.BorderSizePixel 			= 0
-   Scrollbar.Draggable 			      = false
    Scrollbar.Position 			      = UDim2.new(1, 0, 0, 0)
-   Scrollbar.Selectable             = false
    Scrollbar.Size 			         = UDim2.new(0, 5, 1, 0)
-   Scrollbar.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Scrollbar.Style 			         = Enum.FrameStyle.Custom
-   Scrollbar.Visible                = true
-   Scrollbar.ZIndex                 = 1
-   Scrollbar.Archivable             = true
 
-   local Thumb = Instance.new("Frame")
+   local Thumb = GUIUtils.CreateFrame()
    Thumb.Name 			            = "thumb"
-   Thumb.AnchorPoint	            = Vector2.new(0, 0)
    Thumb.BackgroundColor3        = Color3.fromRGB(103, 103, 103)
    Thumb.BackgroundTransparency  = 0
-   Thumb.BorderColor3            = Color3.fromRGB(27, 42, 53)
-   Thumb.BorderMode 			      = Enum.BorderMode.Outline
-   Thumb.BorderSizePixel 			= 0
-   Thumb.Draggable 			      = false
    Thumb.Position 			      = UDim2.new(0, 0, 0.24, 0)
-   Thumb.Selectable              = false
    Thumb.Size 			            = UDim2.new(1, 0, 0.2, 0)
-   Thumb.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Thumb.Style 			         = Enum.FrameStyle.Custom
-   Thumb.Visible                 = true
-   Thumb.ZIndex                  = 1
-   Thumb.Archivable              = true
    Thumb.Parent = Scrollbar
 
    local ContentPosition = Instance.new('NumberValue')
@@ -375,59 +257,20 @@ local function CreateGUIScrollbar(connections)
 end
 
 local function CreateGUICloseButton(connections)
-   local Button = Instance.new("Frame")
+   local Button = GUIUtils.CreateFrame()
    Button.Name 			         = "CloseButton"
-   Button.AnchorPoint	         = Vector2.new(0, 0)
    Button.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
    Button.BackgroundTransparency = 0
-   Button.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   Button.BorderMode 			   = Enum.BorderMode.Outline
-   Button.BorderSizePixel 			= 0
-   Button.Draggable 			      = false
-   Button.Position 			      = UDim2.new(0, 0, 0, 0)
-   Button.Selectable             = false
    Button.Size 			         = UDim2.new(1, 0, 0, 20)
-   Button.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   Button.Style 			         = Enum.FrameStyle.Custom
-   Button.Visible                = true
-   Button.ZIndex                 = 1
-   Button.Archivable             = true
 
    local ClosedValue = Instance.new('BoolValue')
    ClosedValue.Name     = 'Closed'
    ClosedValue.Value    = false
    ClosedValue.Parent   = Button
 
-   local LabelText = Instance.new('TextLabel')
-   LabelText.Name 			         = "LabelText"
-   LabelText.AnchorPoint	         = Vector2.new(0, 0)
-   LabelText.AutomaticSize	         = Enum.AutomaticSize.None
-   LabelText.BackgroundColor3       = Color3.fromRGB(255, 255, 255)
-   LabelText.BackgroundTransparency = 1
-   LabelText.BorderColor3           = Color3.fromRGB(27, 42, 53)
-   LabelText.BorderMode 			   = Enum.BorderMode.Outline
-   LabelText.BorderSizePixel 			= 0
-   LabelText.Position 			      = UDim2.new(0, 0, 0, 0)
-   LabelText.Selectable             = false
-   LabelText.Size 			         = UDim2.new(1, 0, 1, 0)
-   LabelText.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   LabelText.Visible                = true
-   LabelText.ZIndex                 = 1
-   LabelText.Archivable             = true
-   LabelText.Font                   = Enum.Font.SourceSans
-   LabelText.LineHeight             = 1
-   LabelText.RichText               = false
+   local LabelText = GUIUtils.CreateLabel()
    LabelText.Text                   = 'Close Controls'
-   LabelText.TextColor3 			   = Constants.LABEL_COLOR
-   LabelText.TextScaled             = false
-   LabelText.TextSize               = 14
-   LabelText.TextStrokeColor3 		= Color3.fromRGB(0, 0, 0)
-   LabelText.TextStrokeTransparency = 1
-   LabelText.TextTransparency       = 0
-   LabelText.TextTruncate           = Enum.TextTruncate.AtEnd
-   LabelText.TextWrapped            = false
    LabelText.TextXAlignment         = Enum.TextXAlignment.Center
-   LabelText.TextYAlignment         = Enum.TextYAlignment.Center
    LabelText.Parent = Button
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------   
@@ -644,20 +487,20 @@ local function resize(gui)
 		
 		-- scroll
 		local totalContentSize 		= root.frame.Size.Y.Offset
-		root.content.Size 			= UDim2.new(1, 0, 0, totalContentSize)		
+		root.Content.Size 			= UDim2.new(1, 0, 0, totalContentSize)		
 		root.frame.Size 			   = UDim2.new(0, root.width, 0, screenSize)
 		local maxPosition			   = -(totalContentSize - screenSize)	
 		
 		-- animate to new position, if needed
-		if root.content.Position.Y.Offset ~= 0 then
+		if root.Content.Position.Y.Offset ~= 0 then
 			
-			local newPosition = math.min(math.max(root.content.Position.Y.Offset, maxPosition), 0)
+			local newPosition = math.min(math.max(root.Content.Position.Y.Offset, maxPosition), 0)
 			
 			if root.ScrollTween ~= nil then
 				root.ScrollTween:Cancel()
 			end
 			
-			root.ScrollTween = TweenService:Create(root.content, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
+			root.ScrollTween = TweenService:Create(root.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
 				Position =  UDim2.new(0, 0, 0, newPosition)		 
 			})
 			
@@ -669,13 +512,13 @@ local function resize(gui)
 		ContextActionService:BindAction("dat.GUI.Scroll",  function(actionName, inputState, input)
 			if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputState == Enum.UserInputState.Change and root.HOVER then 
 				
-				local newPosition = math.min(math.max(root.content.Position.Y.Offset + (input.Position.Z*50), maxPosition), 0)
+				local newPosition = math.min(math.max(root.Content.Position.Y.Offset + (input.Position.Z*50), maxPosition), 0)
 				
 				if root.ScrollTween ~= nil then
 					root.ScrollTween:Cancel()
 				end
 				
-				root.ScrollTween = TweenService:Create(root.content, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
+				root.ScrollTween = TweenService:Create(root.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
 					Position =  UDim2.new(0, 0, 0, newPosition)		 
 				})
 				
@@ -690,15 +533,15 @@ local function resize(gui)
 		end,  false,  Enum.UserInputType.MouseWheel)
 	else
 		root.ScrollContentPosition.Value = 0
-		root.content.Size 					= UDim2.new(1, 0, 1, 0)
+		root.Content.Size 					= UDim2.new(1, 0, 1, 0)
 		root.closeButton.Position 			= UDim2.new(0, 0, 0, 0)
 		
-		if root.content.Position.Y.Offset ~= 0 then
+		if root.Content.Position.Y.Offset ~= 0 then
 			-- scroll to top
 			if root.ScrollTween ~= nil then
 				root.ScrollTween:Cancel()
 			end		
-			root.ScrollTween = TweenService:Create(root.content, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
+			root.ScrollTween = TweenService:Create(root.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
 				Position =  UDim2.new(0, 0, 0, 0)		 
 			})		
 			root.ScrollTween:Play()
@@ -755,19 +598,19 @@ function GUI.new(params)
 		gui.GUI.ZIndexBehavior 	= Enum.ZIndexBehavior.Sibling
 		gui.GUI.Parent 			= PlayerGui
 		
-		gui.frame  = Instance.new("Frame")
+		gui.frame  = GUIUtils.CreateFrame()
 		gui.frame.Name 						= "root"		
 		gui.frame.Size 						= UDim2.new(0, gui.width, 0, 0)		
 		gui.frame.Position					= UDim2.new(1, -(gui.width +15), 0, 0)
 		gui.frame.BackgroundTransparency = 1
 		gui.frame.Parent = gui.GUI
 		
-		gui.content   = Instance.new("Frame")
-		gui.content.Name 					      = "content"		
-		gui.content.Size 					      = UDim2.new(1, 0, 1, 0)
-		gui.content.Position 				   = UDim2.new(0, 0, 0, 20)
-		gui.content.BackgroundTransparency  = 1
-		gui.content.Parent = gui.frame
+		gui.Content   = GUIUtils.CreateFrame()
+		gui.Content.Name 					      = "Content"		
+		gui.Content.Size 					      = UDim2.new(1, 0, 1, 0)
+		gui.Content.Position 				   = UDim2.new(0, 0, 0, 20)
+		gui.Content.BackgroundTransparency  = 1
+		gui.Content.Parent = gui.frame
 		
 		-- scrollbar
 		local scrollbar            = CreateGUIScrollbar(gui.connections)	
@@ -801,11 +644,11 @@ function GUI.new(params)
 	else	
 		gui.frame = CreateGUIFolder(gui.connections)
 		gui.frame.Name 						   = "folder_"..gui._name
-		gui.frameTitle 						   = gui.frame:WaitForChild("title")
+		gui.frameTitle 						   = gui.frame:WaitForChild("Title")
 		gui.frame.BackgroundTransparency 	= 1	
-		gui.frame.Parent = gui.parent.content
+		gui.frame.Parent = gui.parent.Content
 		
-		gui.content    = gui.frame:WaitForChild("content")		
+		gui.Content    = gui.frame:WaitForChild("Content")		
 		gui.closed 	   = gui.frame:WaitForChild("Closed")
 		gui.UILocked   = gui.frame:WaitForChild("UILocked")
 		
@@ -820,7 +663,7 @@ function GUI.new(params)
 	
 	-- On close/open
 	gui.closed.Changed:connect(function()		
-		gui.content.Visible = not gui.closed.Value
+		gui.Content.Visible = not gui.closed.Value
 		resize(gui)
 	end)	
 	
@@ -1075,9 +918,9 @@ function GUI.new(params)
 			gui.frame = nil
 		end
 		
-		if gui.content ~= nil then
-			gui.content.Parent = nil
-			gui.content = nil
+		if gui.Content ~= nil then
+			gui.Content.Parent = nil
+			gui.Content = nil
 		end
 		
 		if gui.closeButton ~= nil then

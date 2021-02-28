@@ -61,7 +61,7 @@ end
 local function StringController(gui, object, property)
 	
 	local frame, DisconnectGUI = CreateGUI()
-	frame.Parent = gui.content
+	frame.Parent = gui.Content
 	
 	local stringValue = frame:WaitForChild("Value")
 	local labelValue 	= frame:WaitForChild("Label")

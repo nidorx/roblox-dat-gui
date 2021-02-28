@@ -126,7 +126,7 @@ end
 local function NumberController(gui, object, property, min, max, step)
 	
 	local frame, DisconnectGUI = CreateGUI()
-	frame.Parent = gui.content
+	frame.Parent = gui.Content
 	
 	local labelValue 	   = frame:WaitForChild("Label")	
 	local minValue 		= frame:WaitForChild("Min")

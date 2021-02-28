@@ -22,6 +22,8 @@ return {
    BORDER_COLOR_2          = Color3.fromRGB(85, 85, 85),
    LABEL_COLOR             = Color3.fromRGB(238, 238, 238),
    LABEL_COLOR_DISABLED	   = Color3.fromRGB(136, 136, 136),
+   -- folder
+   FOLDER_COLOR            = Color3.fromRGB(0, 0, 0),
    -- boolean
    BOOLEAN_COLOR 			   = Color3.fromRGB(128, 103, 135),
    CHECKBOX_COLOR_ON 	   = Color3.fromRGB(47, 161, 214),

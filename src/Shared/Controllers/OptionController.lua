@@ -61,7 +61,6 @@ local function CreateGUI()
    Text.Active                   = true
    Text.AutoButtonColor          = true
    Text.AnchorPoint	            = Vector2.new(0, 0)
-   Text.BackgroundColor3         = Color3.fromRGB(255, 255, 255)
    Text.BackgroundTransparency   = 1
    Text.BorderColor3             = Color3.fromRGB(27, 42, 53)
    Text.BorderMode 			      = Enum.BorderMode.Outline
@@ -296,7 +295,7 @@ end
 local function OptionController(gui, object, property,  options)
 	
 	local frame, DisconnectGUI = CreateGUI()
-	frame.Parent = gui.content
+	frame.Parent = gui.Content
 	
 	local labelValue 		= frame:WaitForChild("Label")	
 	local optionsValue 	= frame:WaitForChild("Options")
