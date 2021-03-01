@@ -247,7 +247,7 @@ local function CreateGUI()
 end
 
 -- Number slider controller
-local function Vector3SliderController(gui, object, property, min, max, step)
+local function Vector3SliderController(gui, object, property, min, max, step, isVector3Value)
 	
 	local frame, valueValue, valueInValue, minValue, maxValue, stepValue,  DisconnectGUI = CreateGUI()
 	frame.Parent = gui.Content
@@ -269,11 +269,15 @@ local function Vector3SliderController(gui, object, property, min, max, step)
 	------------------------------------------------------------------
 	valueValue.Changed:connect(function()	
 		if not controller._isReadonly then
-			object[property] = valueValue.Value;
+         if isVector3Value then
+            object[property].Value = valueValue.Value;
+         else
+            object[property] = valueValue.Value;
+         end
 		end
 		
 		if onChange ~= nil then
-			onChange(object[property]);
+			onChange(controller.getValue())
 		end
 	end)
 	
@@ -295,7 +299,11 @@ local function Vector3SliderController(gui, object, property, min, max, step)
 	end
 	
 	function controller.getValue()
-		return object[property]
+      if isVector3Value then
+         return object[property].Value
+      else 
+         return object[property]
+      end
 	end
 	
 	function controller.min(min)
@@ -346,20 +354,27 @@ local function Vector3SliderController(gui, object, property, min, max, step)
 		if listenConnection ~= nil then
 			return
 		end
-		
-		-- tables (dirty checking before render, Instance.Changed or Instance.GetPropertyChangedSignal dont work for position, CFrame, etc)
-		local oldValueX = object[property].X
-		local oldValueY = object[property].Y
-		local oldValueZ = object[property].Z
-		listenConnection = RunService.RenderStepped:Connect(function(step)
-			local value = object[property]
-			if value.X ~= oldValueX or value.Y ~= oldValueY or value.Z ~= oldValueZ then
-				oldValueX = value.X
-				oldValueY = value.Y
-				oldValueZ = value.Z
-				controller.setValue(object[property])
-			end
-		end)
+
+      if isVector3Value then
+         listenConnection = object[property].Changed:Connect(function(value)
+				controller.setValue(object[property].Value)
+			end)
+
+      else 
+         -- tables (dirty checking before render, Instance.Changed or Instance.GetPropertyChangedSignal dont work for position, CFrame, etc)
+         local oldValueX = object[property].X
+         local oldValueY = object[property].Y
+         local oldValueZ = object[property].Z
+         listenConnection = RunService.RenderStepped:Connect(function(step)
+            local value = object[property]
+            if value.X ~= oldValueX or value.Y ~= oldValueY or value.Z ~= oldValueZ then
+               oldValueX = value.X
+               oldValueY = value.Y
+               oldValueZ = value.Z
+               controller.setValue(object[property])
+            end
+         end)
+      end
 		
 		return controller
 	end
@@ -396,7 +411,7 @@ local function Vector3SliderController(gui, object, property, min, max, step)
 		stepValue.Value = step
 	end
 	
-	valueInValue.Value = object[property]
+	controller.setValue(controller.getValue())
 	
 	return controller
 end

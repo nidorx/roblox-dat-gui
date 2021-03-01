@@ -3,16 +3,22 @@ local GUIUtils    = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitFor
 local Constants   = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 local Misc        = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
 
-local function CreateGUI()
+local function CreateGUI(isMultiline)
 
    local UnlockOnMouseLeave = Instance.new('BoolValue')
    UnlockOnMouseLeave.Value = true
+
+   local Height = 30
+   if isMultiline then
+      Height = 120
+   end
 
    local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
       = GUIUtils.CreateControllerWrapper({
          Name                 = 'StringController',
          Color                = Constants.STRING_COLOR,
-         UnlockOnMouseLeave   = UnlockOnMouseLeave
+         UnlockOnMouseLeave   = UnlockOnMouseLeave,
+         Height               = Height
       })
 
    local TextContainer = GUIUtils.CreateFrame()
@@ -25,8 +31,9 @@ local function CreateGUI()
    local IsTextActive = Instance.new('BoolValue')
 
    local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText =  GUIUtils.CreateInput({
-      Color    = Constants.STRING_COLOR,
-      Active   = IsTextActive
+      Color       = Constants.STRING_COLOR,
+      Active      = IsTextActive,
+      MultiLine   = isMultiline
    })
 
    Value.Parent         = Controller
@@ -58,9 +65,9 @@ local function CreateGUI()
 end
 
 -- Provides a text input to alter the string property of an object.
-local function StringController(gui, object, property)
+local function StringController(gui, object, property, isMultiline, isStringValue)
 	
-	local frame, DisconnectGUI = CreateGUI()
+	local frame, DisconnectGUI = CreateGUI(isMultiline)
 	frame.Parent = gui.Content
 	
 	local stringValue = frame:WaitForChild("Value")
@@ -81,11 +88,15 @@ local function StringController(gui, object, property)
 	------------------------------------------------------------------
 	stringValue.Changed:connect(function()		
 		if not controller._isReadonly then
-			object[property] = stringValue.Value
+         if isStringValue then
+            object[property].Value = stringValue.Value
+         else 
+            object[property] = stringValue.Value
+         end
 		end
 		
 		if onChange ~= nil then
-			onChange(object[property])
+			onChange(controller.getValue())
 		end
 	end)
 	
@@ -106,7 +117,11 @@ local function StringController(gui, object, property)
 	end
 	
 	function controller.getValue()
-		return object[property]
+      if isStringValue then 
+         return object[property].Value
+      else 
+         return object[property]
+      end
 	end
 	
 	-- Removes the controller from its parent GUI.
@@ -134,7 +149,12 @@ local function StringController(gui, object, property)
 			return
 		end
 		
-		if object['IsA'] ~= nil then
+      if isStringValue then 
+         listenConnection = object[property].Changed:Connect(function(value)
+				controller.setValue(object[property].Value)
+			end)
+
+		elseif object['IsA'] ~= nil then
 			-- roblox Interface
 			listenConnection = object:GetPropertyChangedSignal(property):Connect(function(value)
 				controller.setValue(object[property])
@@ -164,7 +184,7 @@ local function StringController(gui, object, property)
 	-- Set initial values
 	------------------------------------------------------------------
 	labelValue.Value = property	
-	stringValue.Value = object[property]
+   controller.setValue(controller.getValue())
 	
 	return controller
 end

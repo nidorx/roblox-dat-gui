@@ -123,7 +123,7 @@ local function CreateGUI()
 end
 
 -- Represents a given property of an object that is a number.
-local function NumberController(gui, object, property, min, max, step)
+local function NumberController(gui, object, property, min, max, step, isNumberValue)
 	
 	local frame, DisconnectGUI = CreateGUI()
 	frame.Parent = gui.Content
@@ -150,11 +150,15 @@ local function NumberController(gui, object, property, min, max, step)
 	------------------------------------------------------------------
 	stringValue.Changed:connect(function()		
 		if not controller._isReadonly then
-			object[property] = tonumber(stringValue.Value)
+         if isNumberValue then
+            object[property].Value = tonumber(stringValue.Value)
+         else
+            object[property] = tonumber(stringValue.Value)
+         end
 		end		
 		
 		if onChange ~= nil then
-			onChange(object[property])
+         onChange(controller.getValue())
 		end
 	end)
 	
@@ -173,7 +177,11 @@ local function NumberController(gui, object, property, min, max, step)
 	end
 	
 	function controller.getValue()
-		return object[property]
+      if isNumberValue then
+         return object[property].Value
+      else
+         return object[property]
+      end
 	end
 	
 	function controller.min(min)
@@ -215,8 +223,13 @@ local function NumberController(gui, object, property, min, max, step)
 		if listenConnection ~= nil then
 			return
 		end
-		
-		if object['IsA'] ~= nil then
+
+      if isNumberValue then
+         listenConnection = object[property].Changed:Connect(function(value)
+				controller.setValue(object[property].Value)
+			end)
+
+		elseif object['IsA'] ~= nil then
 			-- roblox Interface
 			listenConnection = object:GetPropertyChangedSignal(property):Connect(function(value)
 				controller.setValue(object[property])
@@ -246,8 +259,7 @@ local function NumberController(gui, object, property, min, max, step)
 	-- Set initial values
 	------------------------------------------------------------------
 	labelValue.Value     = property
-	valueInValue.Value   = object[property]
-	
+
 	if min ~= nil then
 		minValue.Value = min
 	end
@@ -259,6 +271,8 @@ local function NumberController(gui, object, property, min, max, step)
 	if step ~= nil then
 		stepValue.Value = step
 	end
+
+   controller.setValue(controller.getValue())
 	
 	return controller
 end

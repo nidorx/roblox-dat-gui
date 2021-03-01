@@ -313,6 +313,9 @@ function GUIUtils.CreateInput(config)
    Text.TextWrapped              = false
    Text.TextXAlignment           = Enum.TextXAlignment.Left
    Text.TextYAlignment           = Enum.TextYAlignment.Center
+   if config.MultiLine then 
+      Text.TextYAlignment           = Enum.TextYAlignment.Top
+   end
    Text.Parent = TextFrame
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------

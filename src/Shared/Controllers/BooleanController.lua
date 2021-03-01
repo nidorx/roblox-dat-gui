@@ -34,6 +34,7 @@ local function CreateGUI()
    Check.Size 			            = UDim2.new(0, 6, 0, 10)
    Check.Rotation                = 45
    Check.ZIndex                  = 2
+   Check.Visible                 = false
    Check.Parent = Checkbox
 
    local CheckMask = GUIUtils.CreateFrame()
@@ -137,7 +138,7 @@ local function CreateGUI()
 end
 
 -- Provides a checkbox input to alter the boolean property of an object.
-local BooleanController = function(gui, object, property)
+local BooleanController = function(gui, object, property, isBoolValue)
 	
 	local frame, DisconnectGUI = CreateGUI()
 	frame.Parent = gui.Content
@@ -160,11 +161,15 @@ local BooleanController = function(gui, object, property)
 	------------------------------------------------------------------
 	boolValue.Changed:connect(function()	
 		if not controller._isReadonly then
-			object[property] = boolValue.Value
+         if isBoolValue then
+            object[property].Value = boolValue.Value
+         else
+            object[property] = boolValue.Value
+         end
 		end
 		
 		if onChange ~= nil then
-			onChange(object[property])
+         onChange(controller.getValue())
 		end
 	end)
 	
@@ -187,7 +192,11 @@ local BooleanController = function(gui, object, property)
 	end
 	
 	function controller.getValue()
-		return object[property]
+      if isBoolValue then
+         return object[property].Value
+      else 
+         return object[property]
+      end
 	end
 	
 	-- Removes the controller from its parent GUI.
@@ -215,8 +224,13 @@ local BooleanController = function(gui, object, property)
 		if listenConnection ~= nil then
 			return
 		end
+
+      if isBoolValue then
+         listenConnection = object[property].Changed:Connect(function(value)            
+				controller.setValue(object[property].Value)
+			end)
 		
-		if object['IsA'] ~= nil then
+		elseif object['IsA'] ~= nil then
 			-- roblox Interface
 			listenConnection = object:GetPropertyChangedSignal(property):Connect(function(value)            
 				controller.setValue(object[property])
@@ -247,7 +261,7 @@ local BooleanController = function(gui, object, property)
 	------------------------------------------------------------------
 	labelValue.Value = property	
 
-   controller.setValue(object[property])
+   controller.setValue(controller.getValue())
 	
 	return controller
 end

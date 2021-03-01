@@ -549,7 +549,7 @@ local function CreateGUI()
 end
 
 -- Provides a text input to alter the string property of an object.
-local function ColorController(gui, object, property)
+local function ColorController(gui, object, property, isColor3Value)
 	
 	local frame, DisconnectGUI = CreateGUI()
 	frame.Parent = gui.Content
@@ -572,11 +572,15 @@ local function ColorController(gui, object, property)
 	------------------------------------------------------------------
 	colorValue.Changed:Connect(function()		
 		if not controller._isReadonly then
-			object[property] = colorValue.Value
+         if isColor3Value then
+            object[property].Value = colorValue.Value
+         else 
+            object[property] = colorValue.Value
+         end
 		end		
 		
 		if onChange ~= nil then
-			onChange(object[property])
+			onChange(controller.getValue())
 		end
 	end)
 	
@@ -596,7 +600,11 @@ local function ColorController(gui, object, property)
 	end
 	
 	function controller.getValue()
-		return object[property]
+      if isColor3Value then
+         return object[property].Value
+      else 
+         return object[property]
+      end
 	end
 	
 	-- Removes the controller from its parent GUI.
@@ -623,8 +631,13 @@ local function ColorController(gui, object, property)
 		if listenConnection ~= nil then
 			return
 		end
+
+      if isColor3Value then 
+         listenConnection = object[property].Changed:Connect(function(value)
+				controller.setValue(object[property].Value)
+			end)
 		
-		if object['IsA'] ~= nil then
+		elseif object['IsA'] ~= nil then
 			-- roblox Interface
 			listenConnection = object:GetPropertyChangedSignal(property):Connect(function(value)
 				controller.setValue(object[property])
@@ -654,7 +667,8 @@ local function ColorController(gui, object, property)
 	-- Set initial values
 	------------------------------------------------------------------
 	labelValue.Value = property	
-	colorValue.Value = object[property]
+	
+   controller.setValue(controller.getValue())
 	
 	return controller
 end

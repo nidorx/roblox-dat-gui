@@ -254,56 +254,187 @@ guiPresets.add(presets, 'Tranquil')
 
 --- Other tests
 local guiOthers 			= gui.addFolder('Other')
-local Object = {
-   Text = 'Lorem ipsum dolor',
-   Number = 25,
-   NumberDouble = 33,
-   NumberSlider = 0.5,
-   OptionsEnum = 2,
-   OptionsEnumItem = Enum.ScaleType.Slice,
-   OptionsArray = 1,
-   OptionsObject = 'THREE',
-   Vector3 = Vector3.new(10, 11, 12),
-   Vector3Slider = Vector3.new(10, 11, 12)
+
+--- Bool
+local boolValue = Instance.new('BoolValue')
+local BooleansObject = {
+   Bool = true,
+   BoolValue = boolValue
 }
 
-guiOthers.add(Object, 'Text').listen().onChange(function(value)
-   print('New text = '..value)
+local guiOthersBool  = guiOthers.addFolder('Booleans')
+
+guiOthersBool.add(BooleansObject, 'Bool').listen().onChange(function(value)
+   print('Bool = ', value)
+   assert(BooleansObject.Bool == value)
 end)
 
-guiOthers.add(Object, 'Number').step(1).listen().onChange(function(value)
+guiOthersBool.add(BooleansObject, 'BoolValue').listen().onChange(function(value)
+   print('BoolValue = ', value)
+   assert(BooleansObject.BoolValue.Value == value)
+end)
+
+
+--- Numbers
+local numberValue = Instance.new('NumberValue')
+local NumbersObject = {
+   Number = 25,
+   NumberSlider = 0.5,
+   NumberDouble = 33,
+   NumberValue = numberValue,
+   NumberValueSlider = numberValue
+}
+
+local guiOthersNumber  = guiOthers.addFolder('Numbers')
+
+guiOthersNumber.add(NumbersObject, 'Number').step(1).listen().onChange(function(value)
    print('Number = ', value)
+   assert(NumbersObject.Number == value)
 end)
 
-guiOthers.add(Object, 'NumberDouble').step(0.001).listen().onChange(function(value)
-   print('NumberDouble = ', value)
-end)
-
-guiOthers.add(Object, 'NumberSlider', 0, 1).listen().onChange(function(value)
+guiOthersNumber.add(NumbersObject, 'NumberSlider', 0, 1).listen().onChange(function(value)
    print('NumberSlider = ', value)
+   assert(NumbersObject.NumberSlider == value)
 end)
 
-guiOthers.add(Object, 'OptionsEnum', Enum.ScaleType).listen().onChange(function(value, text)
+guiOthersNumber.add(NumbersObject, 'NumberDouble').step(0.001).listen().onChange(function(value)
+   print('NumberDouble = ', value)
+   assert(NumbersObject.NumberDouble == value)
+end)
+
+guiOthersNumber.add(NumbersObject, 'NumberValue').listen().onChange(function(value)
+   print('NumberValue = ', value)
+   assert(NumbersObject.NumberValue.Value == value)
+end)
+
+guiOthersNumber.add(NumbersObject, 'NumberValueSlider', 0, 100).listen().onChange(function(value)
+   print('NumberValueSlider = ', value)
+   assert(NumbersObject.NumberValueSlider.Value == value)
+end)
+
+
+--- Strings
+local stringValue = Instance.new('StringValue')
+local StringsObject = {
+   String = 'Lorem ipsum dolor',
+   StringValue = stringValue,
+   StringMultiline = 'Lorem ipsum dolor \nLorem ipsum dolor '
+}
+
+local guiOthersStrings  = guiOthers.addFolder('Strings')
+
+guiOthersStrings.add(StringsObject, 'String').listen().onChange(function(value)
+   print('String = '..value)
+   assert(StringsObject.String == value)
+end)
+
+guiOthersStrings.add(StringsObject, 'StringValue').listen().onChange(function(value)
+   print('StringValue = '..value)
+   assert(StringsObject.StringValue.Value == value)
+end)
+
+guiOthersStrings.add(StringsObject, 'StringMultiline', true).listen().onChange(function(value)
+   print('StringMultiline = '..value)
+   assert(StringsObject.StringMultiline == value)
+end)
+
+
+--- Options
+local OptionsObject = {
+   OptionsEnum       = 2,
+   OptionsEnumItem   = Enum.ScaleType.Slice,
+   OptionsArray      = 1,
+   OptionsObject     = 'THREE',
+}
+
+local guiOthersOptions  = guiOthers.addFolder('Options')
+
+guiOthersOptions.add(OptionsObject, 'OptionsEnum', Enum.ScaleType).listen().onChange(function(value, text)
    print('OptionsEnum = ', value, text)
+   assert(OptionsObject.OptionsEnum == value)
 end)
 
-guiOthers.add(Object, 'OptionsEnumItem').listen().onChange(function(value, text)
+guiOthersOptions.add(OptionsObject, 'OptionsEnumItem').listen().onChange(function(value, text)
    print('OptionsEnum = ', value, text)
+   assert(OptionsObject.OptionsEnumItem == value)
 end)
 
-guiOthers.add(Object, 'OptionsArray', {'One', 'Two', 'Three'}).listen().onChange(function(value, text)
+guiOthersOptions.add(OptionsObject, 'OptionsArray', {'One', 'Two', 'Three'}).listen().onChange(function(value, text)
    print('OptionsEnum = ', value, text)
+   assert(OptionsObject.OptionsArray == value)
 end)
 
-guiOthers.add(Object, 'OptionsObject', { ONE = 'One', TWO = 'Two', THREE = 'Three' }).listen().onChange(function(value, text)
+guiOthersOptions.add(OptionsObject, 'OptionsObject', { ONE = 'One', TWO = 'Two', THREE = 'Three' }).listen().onChange(function(value, text)
    print('OptionsObject = ', value, text)
+   assert(OptionsObject.OptionsObject == value)
 end)
 
-guiOthers.add(Object, 'Vector3').step(1).listen().onChange(function(value)
+--- Color3
+local color3Value = Instance.new('Color3Value')
+local Color3Object = {
+   Color3 = Color3.fromRGB(255, 0, 255),
+   Color3Value = color3Value
+}
+
+local guiOthersColor3  = guiOthers.addFolder('Color3')
+
+guiOthersColor3.add(Color3Object, 'Color3').listen().onChange(function(value)
+   print('Color3 = ', value)
+   assert(Color3Object.Color3.R == value.R)
+   assert(Color3Object.Color3.G == value.G)
+   assert(Color3Object.Color3.B == value.B)
+end)
+
+guiOthersColor3.add(Color3Object, 'Color3Value').listen().onChange(function(value)
+   print('Color3Value = ', value)
+   assert(Color3Object.Color3Value.Value.R == value.R)
+   assert(Color3Object.Color3Value.Value.G == value.G)
+   assert(Color3Object.Color3Value.Value.B == value.B)
+end)
+
+--- Vector3
+local vector3Value = Instance.new('Vector3Value')
+local Vector3Object = {
+   Vector3 = Vector3.new(10, 11, 12),
+   Vector3Slider = Vector3.new(10, 11, 12),
+   Vector3Value = vector3Value
+}
+
+local guiOthersVector3  = guiOthers.addFolder('Vector3')
+
+guiOthersVector3.add(Vector3Object, 'Vector3').step(1).listen().onChange(function(value)
    print('Vector3 = ', value)
+   assert(Vector3Object.Vector3:FuzzyEq(value))
 end)
 
-guiOthers.add(Object, 'Vector3Slider', 0, 100).listen().onChange(function(value)
+local vec3Controller = guiOthersVector3.add(Vector3Object, 'Vector3Slider', 0, 100).listen().onChange(function(value)
    print('Vector3Slider = ', value)
+   assert(Vector3Object.Vector3Slider:FuzzyEq(value))
 end)
+
+guiOthersVector3.add(Vector3Object, 'Vector3Value', 0, 100).listen().onChange(function(value)
+   print('Vector3Value = ', value)
+   assert(Vector3Object.Vector3Value.Value:FuzzyEq(value))
+end)
+
+-- Function, remove and name
+local guiOthersFunctions  = guiOthers.addFolder('Functions')
+local toggleVec3Controller
+local Vector3Object = {
+   ToggleVector3Slider = function()
+      if vec3Controller ~= nil then
+         guiOthersVector3.removeChild(vec3Controller)
+         vec3Controller = nil
+         toggleVec3Controller.name('AddVector3Slider')
+      else
+         vec3Controller = guiOthersVector3.add(Vector3Object, 'Vector3Slider', 0, 100).listen().onChange(function(value)
+            print('Vector3Slider = ', value)
+            assert(Vector3Object.Vector3Slider:FuzzyEq(value))
+         end)
+         toggleVec3Controller.name('RemoveVector3Slider')
+      end
+   end
+}
+toggleVec3Controller = guiOthersFunctions.add(Vector3Object, 'ToggleVector3Slider')
+
 

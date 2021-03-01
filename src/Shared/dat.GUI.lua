@@ -1,5 +1,5 @@
 --[[
-   Roblox-dat.GUI v1.1 [2021-02-28 11:00]
+   Roblox-dat.GUI v1.2 [2021-02-28 21:05]
 
    A lightweight graphical user interface and controller library. 
    
@@ -694,62 +694,64 @@ function GUI.new(params)
 		end		
 		
 		local controller
-		local initialValue 		= object[property];
-		local initialValueType 	= typeof(initialValue)
+		local initialValue 		   = object[property];
+		local initialValueType 	   = type(initialValue)
+		local initialValueTypeOf   = typeof(initialValue)
+      local isInstance           = initialValueTypeOf == "Instance" 
 		local arguments 		= {...}
 		
-		if initialValueType == "Vector3" then
+		if initialValueTypeOf == "Vector3" or (isInstance and initialValue:IsA('Vector3Value')) then
 			
 			local min = arguments[1]
 			local max = arguments[2]
 			local step = arguments[3]
+
+         local isVector3Value = (isInstance and initialValue:IsA('Vector3Value'))
 			
 			-- Has min and max? (slider)
 			if min ~= nil and max ~= nil then
-				controller = Vector3SliderController(gui, object, property, min, max, step);
+				controller = Vector3SliderController(gui, object, property, min, max, step, isVector3Value)
 			else
-				controller = Vector3Controller(gui, object, property, min, max, step);
+				controller = Vector3Controller(gui, object, property, min, max, step, isVector3Value)
 			end
 			
-		elseif initialValueType == "Color3" then
-			controller = ColorController(gui, object, property)
+		elseif initialValueTypeOf == "Color3"  or (isInstance and initialValue:IsA('Color3Value')) then
+			controller = ColorController(gui, object, property, (isInstance and initialValue:IsA('Color3Value')))
 			
-		elseif initialValueType == "EnumItem" or (arguments[1] ~= nil and typeof(arguments[1]) == "Enum") then
+		elseif initialValueTypeOf == "EnumItem" or (arguments[1] ~= nil and typeof(arguments[1]) == "Enum") then
 			-- Enum options
 			controller = OptionController(gui, object, property, arguments[1])
 			
-		else
-			-- @TODO: Vector3, CFRAME, UDIM2		
-			if arguments[1] ~= nil and type(arguments[1]) == "table" then
-				-- Providing options
-				controller = OptionController(gui, object, property, arguments[1])
-				
-			else			
-				if (initialValueType == "number") then
-					
-					local min = arguments[1]
-					local max = arguments[2]
-					local step = arguments[3]
-					
-					-- Has min and max? (slider)
-					if min ~= nil and max ~= nil and type(min) == "number" and type(max) == "number" then
-						controller = NumberSliderController(gui, object, property, min, max, step);
-					else
-						controller = NumberController(gui, object, property, min, max, step);
-					end
-					
-				elseif (initialValueType == "boolean") then
-					controller = BooleanController(gui, object, property);
-					
-				elseif (initialValueType == "string") then
-					controller = StringController(gui, object, property);
-					
-				elseif (type(initialValue) == "function") then
-					controller = FunctionController(gui, object, property, arguments[1]);
-					
-				end			
-			end
-		end		
+		elseif arguments[1] ~= nil and type(arguments[1]) == "table" then
+         -- Providing options
+         controller = OptionController(gui, object, property, arguments[1])
+         
+      elseif (initialValueTypeOf == "number" or (isInstance and initialValue:IsA('NumberValue'))) then
+            
+         local min = arguments[1]
+         local max = arguments[2]
+         local step = arguments[3]
+
+         local isNumberValue = (isInstance and initialValue:IsA('NumberValue'))
+         
+         -- Has min and max? (slider)
+         if min ~= nil and max ~= nil and type(min) == "number" and type(max) == "number" then
+            controller = NumberSliderController(gui, object, property, min, max, step, isNumberValue)
+         else
+            controller = NumberController(gui, object, property, min, max, step, isNumberValue)
+         end
+         
+      elseif (initialValueTypeOf == "boolean" or (isInstance and initialValue:IsA('BoolValue'))) then
+         controller = BooleanController(gui, object, property, (isInstance and initialValue:IsA('BoolValue')))
+         
+      elseif (initialValueTypeOf == "string" or (isInstance and initialValue:IsA('StringValue'))) then
+         local isMultiline = arguments[1] == true
+         controller = StringController(gui, object, property, isMultiline, (isInstance and initialValue:IsA('StringValue')))
+         
+      elseif (type(initialValue) == "function") then
+         controller = FunctionController(gui, object, property, arguments[1])
+         
+      end	
 		
 		if controller == nil then
 			return error("It was not possible to identify the controller builder, check the parameters")
@@ -946,11 +948,20 @@ function GUI.new(params)
 		controller	Controller
 	]]
 	function gui.removeChild(item)
+      if item._is_removing == true then
+         return
+      end
+
 		local itemIdx = -1
 		for index = 1, #gui.children do
 			local child = gui.children[index]
 			if child == item then
-				child.frame.Parent = nil
+            -- avoid recursion
+            child._is_removing = true
+
+            child.remove()
+            itemIdx = index
+				-- child.frame.Parent = nil
 				break
 			end
 		end
