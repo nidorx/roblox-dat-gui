@@ -126,6 +126,9 @@ local function StringController(gui, object, property, isMultiline, isStringValu
 	
 	-- Removes the controller from its parent GUI.
 	function controller.remove()
+      if controller._is_removing_parent then
+         return
+      end
 		
       DisconnectGUI()
 
@@ -133,14 +136,15 @@ local function StringController(gui, object, property, isMultiline, isStringValu
 			listenConnection:Disconnect()
 		end
 		
+      -- avoid recursion
+      controller._is_removing_parent = true
+      
 		gui.removeChild(controller)
 		
 		if controller.frame ~= nil then
 			controller.frame.Parent = nil
 			controller.frame = nil
 		end		
-		
-		controller = nil
 	end
 	
 	-- Sets controller to listen for changes on its underlying object.

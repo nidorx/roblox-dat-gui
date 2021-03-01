@@ -1,5 +1,5 @@
 --[[
-   Roblox-dat.GUI v1.2 [2021-02-28 21:05]
+   Roblox-dat.GUI v1.2.1 [2021-02-28 22:10]
 
    A lightweight graphical user interface and controller library. 
    
@@ -384,7 +384,7 @@ local function unlockUI(gui, controller)
 	
 	local root = gui.getRoot()	
 	
-	if root.LockedController ~= nil and  root.LockedController ~= controller then		
+	if root.LockedController ~= nil and root.LockedController ~= controller and controller ~= nil then		
 		-- relock, only the locked component can remove the lock
 		controller.frame.ZIndex  	= 1
 		controller.UILocked.Value 	= "LOCKED"
@@ -891,17 +891,23 @@ function GUI.new(params)
 	end	
 	
 	--[[
-	Removes the GUI from the game and unbinds all event listeners.
+	   Removes the GUI from the game and unbinds all event listeners.
 	]]
 	function gui.remove()
+      if gui._is_removing_parent then
+         return
+      end
+      
 		lockAllUI(gui)
 		
-		for index = 1, #gui.children do
+		for index = table.getn(gui.children), 1, -1  do
 			-- folders and controllers
 			gui.children[index].remove()
 		end
 		
 		if gui.parent ~= nil then
+         -- avoid recursion
+         gui._is_removing_parent = true
 			gui.parent.removeChild(gui)
 		end
 		
@@ -948,7 +954,7 @@ function GUI.new(params)
 		controller	Controller
 	]]
 	function gui.removeChild(item)
-      if item._is_removing == true then
+      if item._is_removing_child == true then
          return
       end
 
@@ -957,7 +963,7 @@ function GUI.new(params)
 			local child = gui.children[index]
 			if child == item then
             -- avoid recursion
-            child._is_removing = true
+            child._is_removing_child = true
 
             child.remove()
             itemIdx = index

@@ -419,22 +419,66 @@ end)
 
 -- Function, remove and name
 local guiOthersFunctions  = guiOthers.addFolder('Functions')
-local toggleVec3Controller
-local Vector3Object = {
-   ToggleVector3Slider = function()
-      if vec3Controller ~= nil then
-         guiOthersVector3.removeChild(vec3Controller)
-         vec3Controller = nil
-         toggleVec3Controller.name('AddVector3Slider')
-      else
-         vec3Controller = guiOthersVector3.add(Vector3Object, 'Vector3Slider', 0, 100).listen().onChange(function(value)
-            print('Vector3Slider = ', value)
-            assert(Vector3Object.Vector3Slider:FuzzyEq(value))
-         end)
-         toggleVec3Controller.name('RemoveVector3Slider')
+
+local countClick = 0
+local toggleNameController
+
+local testFolder
+local testControllers = {}
+
+local FunctionsObject = {
+   ToggleName = function()
+      countClick = countClick+1
+      toggleNameController.name('Called ('..countClick..') times')
+   end,
+   AddFolder = function()
+      if testFolder == nil then
+         testFolder = guiOthersFunctions.addFolder('Test Folder')
+      end
+   end,
+   AddController = function()
+      if testFolder ~= nil then
+         table.insert(testControllers, testFolder.add({ Value = 0.5}, 'Value', 0, 1, 0.001))
+      end
+   end,
+   RemoveController = function()
+      if testFolder ~= nil then
+         local pos = table.getn(testControllers)
+         if pos > 0 then 
+            testControllers[pos].remove()
+            table.remove(testControllers, pos)
+         end
+      end
+   end,
+   RemoveControllerByParent = function()
+      if testFolder ~= nil then
+         local pos = table.getn(testControllers)
+         if pos > 0 then 
+            testFolder.removeChild(testControllers[pos])
+            table.remove(testControllers, pos)
+         end
+      end
+   end,
+   RemoveFolder = function()
+      if testFolder ~= nil then
+         testFolder.remove()
+         testFolder = nil
+      end
+   end,
+   RemoveFolderByParent = function()
+      if testFolder ~= nil then
+         guiOthersFunctions.removeChild(testFolder)
+         testFolder = nil
       end
    end
 }
-toggleVec3Controller = guiOthersFunctions.add(Vector3Object, 'ToggleVector3Slider')
+
+toggleNameController = guiOthersFunctions.add(FunctionsObject, 'ToggleName')
+guiOthersFunctions.add(FunctionsObject, 'AddFolder')
+guiOthersFunctions.add(FunctionsObject, 'AddController')
+guiOthersFunctions.add(FunctionsObject, 'RemoveController')
+guiOthersFunctions.add(FunctionsObject, 'RemoveControllerByParent')
+guiOthersFunctions.add(FunctionsObject, 'RemoveFolder')
+guiOthersFunctions.add(FunctionsObject, 'RemoveFolderByParent')
 
 
