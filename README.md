@@ -38,7 +38,7 @@ gui.add(obj, 'Winner')
 - **Forum**
     - https://devforum.roblox.com/t/817209
 - **Releases**
-   - https://github.com/goldenstein64/roblox-dat-gui/releases
+   - https://github.com/nidorx/roblox-dat-gui/releases
     
 ## Installation
 
