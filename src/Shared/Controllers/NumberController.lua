@@ -22,11 +22,11 @@ local function CreateGUI()
    
    local Min = Instance.new('NumberValue')
    Min.Name    = 'Min'
-   Min.Value   = Misc.NUMBER_MIN
+   Min.Value   = -math.huge
    
    local Max = Instance.new('NumberValue')
    Max.Name    = 'Max'
-   Max.Value   = Misc.NUMBER_MAX
+   Max.Value   = math.huge
    
    local Step = Instance.new('NumberValue')
    Step.Name    = 'Step'
@@ -109,7 +109,7 @@ local function CreateGUI()
 
    -- On change value from outside
    table.insert(connections, ValueIn.Changed:connect(function()
-      local value = math.max(math.min(ValueIn.Value, Max.Value), Min.Value)
+      local value = math.clamp(ValueIn.Value, Min.Value, Max.Value)
       
       local step = Step.Value
       if value % step ~= 0 then
@@ -262,7 +262,9 @@ local function NumberController(gui, object, property, min, max, step, isNumberV
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value     = property
+	labelValue.Value = property
+
+   controller.setValue(controller.getValue())
 
 	if min ~= nil then
 		minValue.Value = min
@@ -275,8 +277,6 @@ local function NumberController(gui, object, property, min, max, step, isNumberV
 	if step ~= nil then
 		stepValue.Value = step
 	end
-
-   controller.setValue(controller.getValue())
 	
 	return controller
 end

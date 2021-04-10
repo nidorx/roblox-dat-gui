@@ -29,12 +29,12 @@ local function CreateGUI()
 
    local Min = Instance.new('Vector3Value')
    Min.Name    = 'Min'
-   Min.Value   = Vector3.new(Misc.NUMBER_MIN, Misc.NUMBER_MIN, Misc.NUMBER_MIN)
+   Min.Value   = Vector3.new(-math.huge, -math.huge, -math.huge)
    Min.Parent  = Controller
 
    local Max = Instance.new('Vector3Value')
    Max.Name    = 'Max'
-   Max.Value   = Vector3.new(Misc.NUMBER_MAX, Misc.NUMBER_MAX, Misc.NUMBER_MAX)
+   Max.Value   = Vector3.new(math.huge, math.huge, math.huge)
    Max.Parent  = Controller
 
    local Step = Instance.new('Vector3Value')
@@ -226,7 +226,7 @@ local function CreateGUI()
    -- On change value from outside
    table.insert(connections, ValueIn.Changed:connect(function()
       for _, axis in ipairs(Misc.AXES) do
-         local value = math.max(math.min(ValueIn.Value[axis], Max.Value[axis]), Min.Value[axis])
+         local value = math.clamp(ValueIn.Value[axis], Min.Value[axis], Max.Value[axis])
       
          local step = Step.Value[axis]
          if value % step ~= 0 then
@@ -392,7 +392,9 @@ local function Vector3SliderController(gui, object, property, min, max, step, is
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = property	
+	labelValue.Value = property
+
+   controller.setValue(controller.getValue())
 	
 	if min ~= nil then
 		if typeof(min) == "number" then
@@ -414,8 +416,6 @@ local function Vector3SliderController(gui, object, property, min, max, step, is
 		end
 		stepValue.Value = step
 	end
-	
-	controller.setValue(controller.getValue())
 	
 	return controller
 end

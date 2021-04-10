@@ -442,11 +442,11 @@ function GUIUtils.CreateSlider(config)
    end
 
    if config.Min == nil then
-      config.Min = Misc.NUMBER_MIN
+      config.Min = -math.huge
    end
 
    if config.Max == nil then
-      config.Max = Misc.NUMBER_MAX
+      config.Max = math.huge
    end
 
    local Value = Instance.new('NumberValue')
@@ -454,9 +454,11 @@ function GUIUtils.CreateSlider(config)
 
    local Min = Instance.new('NumberValue')
    Min.Name    = 'Min'
+   Min.Value = -math.huge
    
    local Max = Instance.new('NumberValue')
    Max.Name    = 'Max'
+   Max.Value = math.huge
    
    local Percent = Instance.new('NumberValue')
    Percent.Name    = 'Percent'
@@ -572,11 +574,11 @@ function GUIUtils.CreateSlider(config)
 
    -- On change value from outside
    table.insert(connections, Value.Changed:Connect(function()
-      local value 	= math.max( math.min(Value.Value, Max.Value), Min.Value)
+      local value = math.clamp(Value.Value, Min.Value, Max.Value)
       
       if value ~= Value.Value then
          spawn(function()
-            Value.Value = math.max(math.min(Value.Value, Max.Value), Min.Value)
+            Value.Value = math.clamp(Value.Value, Min.Value, Max.Value)
          end)
       else
          spawn(function()
@@ -586,14 +588,14 @@ function GUIUtils.CreateSlider(config)
    end))
 
    table.insert(connections, Min.Changed:Connect(function()
-      Value.Value = math.max( math.min(Value.Value, Max.Value), Min.Value)
+      Value.Value = math.clamp(Value.Value, Min.Value, Max.Value)
       spawn(function()
          Percent.Value = Misc.MapRange(Value.Value, Min.Value, Max.Value, 0, 1)
       end)
    end))
 
    table.insert(connections, Max.Changed:Connect(function()
-      Value.Value = math.max( math.min(Value.Value, Max.Value), Min.Value)
+      Value.Value = math.clamp(Value.Value, Min.Value, Max.Value)
       spawn(function()
          Percent.Value = Misc.MapRange(Value.Value, Min.Value, Max.Value, 0, 1)
       end)

@@ -277,6 +277,9 @@ end)
 
 --- Numbers
 local numberValue = Instance.new('NumberValue')
+
+numberValue.Value = 4.00
+
 local NumbersObject = {
    Number = 25,
    NumberSlider = 0.5,
@@ -307,7 +310,7 @@ guiOthersNumber.add(NumbersObject, 'NumberValue').listen().onChange(function(val
    assert(NumbersObject.NumberValue.Value == value)
 end)
 
-guiOthersNumber.add(NumbersObject, 'NumberValueSlider', 0, 100).listen().onChange(function(value)
+guiOthersNumber.add(NumbersObject, 'NumberValueSlider', 1, 15).listen().onChange(function(value)
    print('NumberValueSlider = ', value)
    assert(NumbersObject.NumberValueSlider.Value == value)
 end)

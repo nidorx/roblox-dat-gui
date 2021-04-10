@@ -187,7 +187,8 @@ local function StringController(gui, object, property, isMultiline, isStringValu
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = property	
+	labelValue.Value = property
+   
    controller.setValue(controller.getValue())
 	
 	return controller

@@ -1,5 +1,5 @@
 --[[
-   Roblox-dat.GUI v1.2.1 [2021-02-28 22:10]
+   Roblox-dat.GUI v1.2.2 [2021-04-10 02:50]
 
    A lightweight graphical user interface and controller library. 
    

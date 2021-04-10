@@ -130,7 +130,7 @@ local function CreateGUI()
 
    -- On change value from outside
    table.insert(connections, ValueIn.Changed:connect(function()
-      local value = math.max(math.min(ValueIn.Value, Max.Value), Min.Value)
+      local value = math.clamp(ValueIn.Value,  Min.Value, Max.Value)
       
       if value % Step.Value ~= 0 then
          value = math.round(value/Step.Value) * Step.Value
@@ -290,10 +290,12 @@ local function NumberSliderController(gui, object, property, min, max, step, isN
 	------------------------------------------------------------------
 	labelValue.Value = property
 
+   controller.setValue(controller.getValue())
+
 	if min ~= nil then
 		minValue.Value = min
 	end
-	
+
 	if max ~= nil then
 		maxValue.Value = max
 	end
@@ -302,8 +304,6 @@ local function NumberSliderController(gui, object, property, min, max, step, isN
 		stepValue.Value = step
 	end
 
-   controller.setValue(controller.getValue())
-	
 	return controller
 end
 
