@@ -66,6 +66,12 @@ local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):W
 local BG_COLOR_ON 			= Color3.fromRGB(17, 17, 17)
 local LABEL_COLOR_DISABLED	= Color3.fromRGB(136, 136, 136)
 
+local SCROLL_WIDTH   = 5
+local HEADER_SIZE    = 20
+
+local MIN_WIDTH   = 250
+local MAX_WIDTH   = 600
+local MIN_HEIGHT  = HEADER_SIZE
 
 
 local function CreateGUIFolder(connections)
@@ -114,25 +120,25 @@ local function CreateGUIFolder(connections)
    LabelText.Size 			         = UDim2.new(1, -16, 1, -1)
    LabelText.Parent = Title
 
-   local Chevron = GUIUtils.CreateFrame()
-   Chevron.Name 			            = "chevron"
-   Chevron.BackgroundColor3         = Constants.LABEL_COLOR
-   Chevron.BackgroundTransparency   = 0
+   local Chevron = Instance.new("ImageLabel")
+   Chevron.Name 			            = "Chevron"
+   Chevron.AnchorPoint	            = Vector2.new(0, 0)
+   Chevron.BackgroundTransparency   = 1
+   Chevron.BorderSizePixel 			= 0
    Chevron.Position 			         = UDim2.new(0, 6, 0.5, -3)
+   Chevron.Selectable               = false
    Chevron.Size 			            = UDim2.new(0, 5, 0, 5)
-   Chevron.Rotation                 = 45
+   Chevron.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
+   Chevron.Visible                  = true
    Chevron.ZIndex                   = 2
+   Chevron.Archivable               = true
+   Chevron.Image                    = Constants.ICON_CHEVRON
+   Chevron.ImageColor3              = Constants.LABEL_COLOR
+   Chevron.ImageTransparency 	      = 0
+   Chevron.ScaleType                = Enum.ScaleType.Stretch
+   Chevron.SliceScale               = 1
+   Chevron.Rotation                 = 90
    Chevron.Parent = Title
-
-   local ChevronMask = GUIUtils.CreateFrame()
-   ChevronMask.Name 			            = "Mask"
-   ChevronMask.BackgroundColor3        = Constants.FOLDER_COLOR
-   ChevronMask.BackgroundTransparency  = 0
-   ChevronMask.Position 			      = UDim2.new(0, -2, 0, -2)
-   ChevronMask.Size 			            = UDim2.new(0, 5, 0, 5)
-   ChevronMask.Rotation                = 45
-   ChevronMask.ZIndex                  = 1
-   ChevronMask.Parent = Chevron
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
@@ -162,9 +168,9 @@ local function CreateGUIFolder(connections)
 
    table.insert(connections, Closed.Changed:connect(function()
       if Closed.Value then
-         Chevron.Rotation = -45
+         Chevron.Rotation = 0
       else
-         Chevron.Rotation = 45
+         Chevron.Rotation = 90
       end
    end))
 
@@ -180,8 +186,8 @@ local function CreateGUIScrollbar(connections)
    Scrollbar.Name 			         = "Scrollbar"
    Scrollbar.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
    Scrollbar.BackgroundTransparency = 0
-   Scrollbar.Position 			      = UDim2.new(1, 0, 0, 0)
-   Scrollbar.Size 			         = UDim2.new(0, 5, 1, 0)
+   Scrollbar.Position 			      = UDim2.new(1, -SCROLL_WIDTH, 0, 0)
+   Scrollbar.Size 			         = UDim2.new(0, SCROLL_WIDTH, 1, 0)
 
    local Thumb = GUIUtils.CreateFrame()
    Thumb.Name 			            = "thumb"
@@ -256,57 +262,176 @@ local function CreateGUIScrollbar(connections)
    return Scrollbar
 end
 
-local function CreateGUICloseButton(connections)
-   local Button = GUIUtils.CreateFrame()
-   Button.Name 			         = "CloseButton"
-   Button.BackgroundColor3       = Color3.fromRGB(0, 0, 0)
-   Button.BackgroundTransparency = 0
-   Button.Size 			         = UDim2.new(1, 0, 0, 20)
+--[[
+   Cria o cabeçalho do GUI
+]]
+local function CreateHeader(gui, params)
+   local Header = GUIUtils.CreateFrame()
+   Header.Name 			         = "Header"
+   Header.BackgroundColor3       = Constants.FOLDER_COLOR
+   Header.BackgroundTransparency = 0
+   Header.Size 			         = UDim2.new(1, -SCROLL_WIDTH, 0, HEADER_SIZE)
 
    local ClosedValue = Instance.new('BoolValue')
    ClosedValue.Name     = 'Closed'
    ClosedValue.Value    = false
-   ClosedValue.Parent   = Button
+   ClosedValue.Parent   = Header
 
    local LabelText = GUIUtils.CreateLabel()
-   LabelText.Text                   = 'Close Controls'
+   LabelText.Text                   = gui._name
    LabelText.TextXAlignment         = Enum.TextXAlignment.Center
-   LabelText.Parent = Button
+   LabelText.Parent = Header
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------   
 
    local hover = false
 
-   table.insert(connections, Button.MouseEnter:Connect(function()
+   table.insert(gui.connections, Header.MouseEnter:Connect(function()
       hover = true
    end))
 
-   table.insert(connections, Button.MouseMoved:Connect(function()
+   table.insert(gui.connections, Header.MouseMoved:Connect(function()
       hover = true
    end))
 
-   table.insert(connections, Button.MouseLeave:Connect(function()
+   table.insert(gui.connections, Header.MouseLeave:Connect(function()
       hover = false
    end))
 
-   table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
-      if hover and input.UserInputType == Enum.UserInputType.MouseButton1 then
-         ClosedValue.Value = not ClosedValue.Value
-      end
-   end))
 
-   table.insert(connections, ClosedValue.Changed:connect(function()
+   table.insert(gui.connections, ClosedValue.Changed:connect(function()
       if ClosedValue.Value then
-         LabelText.Text = "Open Controls"
+         gui.frame.BackgroundTransparency = 1
       else
-         LabelText.Text = "Close Controls"
+         gui.frame.BackgroundTransparency = 0.9
       end
    end))
 
-   return Button
+   -- resize
+   if params.resizable ~= false then
+      local Resize = GUIUtils.CreateFrame()
+      Resize.Name 			            = "Resize"
+      Resize.BackgroundTransparency   = 0
+      Resize.Size 			            = UDim2.new(0, HEADER_SIZE, 0, HEADER_SIZE)
+      Resize.Position 			         = UDim2.new(0, 0, 0, 0)
+      Resize.Parent = Header
+
+      local ResizeIcon = GUIUtils.CreateIcon(Constants.ICON_RESIZE)
+      ResizeIcon.Parent = Resize
+
+      local isHover        = false
+      local frameSizeStart = nil
+      local framePosStart  = nil
+
+      local function update()
+         if frameSizeStart then 
+            -- isDragging
+            Resize.BackgroundColor3 = Constants.NUMBER_COLOR
+            ResizeIcon.ImageColor3 	 = Constants.LABEL_COLOR
+         elseif isHover then
+            Resize.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
+            ResizeIcon.ImageColor3 	 = Constants.LABEL_COLOR
+         else
+            Resize.BackgroundColor3 = Constants.FOLDER_COLOR
+            ResizeIcon.ImageColor3 	 = Constants.FOLDER_COLOR
+         end
+      end
+
+      table.insert(gui.connections, GUIUtils.OnHover(Resize, function(hover)
+         isHover = hover
+         update()
+      end))
+
+      table.insert(gui.connections, GUIUtils.OnDrag(Resize, function(el, event, startPos, position, delta)
+         if event == 'start' then
+            frameSizeStart = Vector2.new(gui.frame.Size.X.Offset, gui.frame.Size.Y.Offset)
+            
+         elseif event == 'end' then
+            frameSizeStart = nil
+         elseif event == 'drag' then
+            local frameSize = frameSizeStart - delta
+            gui.resize(frameSize.X, frameSize.Y)
+         end
+         update()
+      end))
+
+      update()
+   end
+
+   -- drag
+   if params.fixed == false then
+
+      local Drag = GUIUtils.CreateFrame()
+      Drag.Name 			            = "Drag"
+      Drag.BackgroundTransparency   = 0
+      Drag.Size 			            = UDim2.new(0, HEADER_SIZE, 0, HEADER_SIZE)
+
+      if params.resizable ~= false then 
+         Drag.Position = UDim2.new(0, HEADER_SIZE, 0, 0)
+      else
+         Drag.Position  = UDim2.new(0, 0, 0, 0)
+      end
+
+      Drag.Parent = Header
+
+      local DragIcon = GUIUtils.CreateIcon(Constants.ICON_DRAG)
+      DragIcon.Parent   = Drag
+
+      local isHover        = false
+      local framePosStart  = nil
+
+      local function update()
+         if framePosStart then 
+            -- isDragging
+            Drag.BackgroundColor3 = Constants.NUMBER_COLOR
+            DragIcon.ImageColor3 	 = Constants.LABEL_COLOR
+         elseif isHover then
+            Drag.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
+            DragIcon.ImageColor3 	 = Constants.LABEL_COLOR
+         else
+            Drag.BackgroundColor3 = Constants.FOLDER_COLOR
+            DragIcon.ImageColor3 	 = Constants.FOLDER_COLOR
+         end
+      end
+
+      table.insert(gui.connections, GUIUtils.OnHover(Drag, function(hover)
+         isHover = hover
+         update()
+      end))
+
+      table.insert(gui.connections, GUIUtils.OnDrag(Drag, function(el, event, startPos, position, delta)
+         if event == 'start' then
+            framePosStart = Vector2.new(gui.frame.Position.X.Offset, gui.frame.Position.Y.Offset)
+         elseif event == 'end' then
+            framePosStart = nil
+         elseif event == 'drag' then
+            local framePos = framePosStart + delta
+            gui.move(framePos.X, framePos.Y)
+         end
+         update()
+      end))
+
+      update()
+   end
+
+   if params.closeable == true then 
+      -- close button
+   end
+
+   if params.minimize ~= false then
+      table.insert(gui.connections, GUIUtils.OnClick(Header, function(el, input)
+         ClosedValue.Value = not ClosedValue.Value
+      end))
+   end
+
+   return Header
 end
 
-
+local DEFAULT_SCREEN_GUI = Instance.new("ScreenGui")
+DEFAULT_SCREEN_GUI.Name 			   = "dat.GUI"
+DEFAULT_SCREEN_GUI.IgnoreGuiInset	= true -- fullscreen
+DEFAULT_SCREEN_GUI.ZIndexBehavior 	= Enum.ZIndexBehavior.Sibling
+DEFAULT_SCREEN_GUI.Parent 			   = PlayerGui
 
 -- detach (remove template from UI)
 
@@ -316,10 +441,10 @@ end
 
 -- A lightweight controller library for Roblox. It allows you to easily 
 -- manipulate variables and fire functions on the fly.
-local GUI = {}
-GUI.__index = GUI
+local DatGUI = {}
+DatGUI.__index = DatGUI
 
-GUI.DEFAULT_WIDTH = 250
+DatGUI.DEFAULT_WIDTH = MIN_WIDTH
 
 -- defines the control or GUI that has mastery over UI events
 local function lockUI(gui, controller)
@@ -444,14 +569,14 @@ local function lockAllUI(gui)
 end
 
 -- iterate across all elements to define their relative positions
-local function resize(gui)
+local function updateScroll(gui)
 	
 	local root = gui.getRoot()
 	
 	lockAllUI(root)
 	
-	local function iterate(gui, pos)
-		
+   -- itera sobre todos os elementos ajustando suas posições relativas e contabilizando o tamanho total do conteúdo
+	local function iterate(gui, pos)		
 		if gui.closed.Value == false then
 			for index = 1, #gui.children do
 				local child = gui.children[index]
@@ -466,30 +591,24 @@ local function resize(gui)
 			end
 		end
 		
-		if root == gui then
-			gui.frame.Size = UDim2.new(0, gui.width, 0, pos)
-		else
+		if root ~= gui then
 			-- title height
 			pos = pos + gui.frameTitle.Size.Y.Offset
-		end	
+		elseif not gui.resizedY then
+         -- root auto size while not resized by user
+         gui.frame.Size = UDim2.new(0, gui.frame.Size.X.Offset, 0, math.min(pos, gui.frame.Parent.AbsoluteSize.Y))
+      end
 		
 		return pos
 	end
 	
-	iterate(root, 20)
-	
-	-- scroll	
-	
-	local contentSize 		= root.frame.AbsoluteSize.Y
-	local screenSize 		   = Camera.ViewportSize.Y
-	local closeButtonSize   = root.closeButton.AbsoluteSize.Y
-	if contentSize > screenSize - closeButtonSize then
+	local totalContentSize  = iterate(root, HEADER_SIZE)
+	local frameSize 		   = root.frame.Size.Y.Offset
+	if totalContentSize > frameSize - HEADER_SIZE then
 		
 		-- scroll
-		local totalContentSize 		= root.frame.Size.Y.Offset
-		root.Content.Size 			= UDim2.new(1, 0, 0, totalContentSize)		
-		root.frame.Size 			   = UDim2.new(0, root.width, 0, screenSize)
-		local maxPosition			   = -(totalContentSize - screenSize)	
+		root.Content.Size 			= UDim2.new(1, -SCROLL_WIDTH, 0, totalContentSize)		
+		local maxPosition			   = -(totalContentSize - frameSize)	
 		
 		-- animate to new position, if needed
 		if root.Content.Position.Y.Offset ~= 0 then
@@ -533,7 +652,7 @@ local function resize(gui)
 		end,  false,  Enum.UserInputType.MouseWheel)
 	else
 		root.ScrollContentPosition.Value = 0
-		root.Content.Size 					= UDim2.new(1, 0, 1, 0)
+		root.Content.Size 					= UDim2.new(1, -SCROLL_WIDTH, 1, 0)
 		root.closeButton.Position 			= UDim2.new(0, 0, 0, 0)
 		
 		if root.Content.Position.Y.Offset ~= 0 then
@@ -551,7 +670,7 @@ local function resize(gui)
 		ContextActionService:UnbindAction("dat.GUI.Scroll")
 	end
 	
-	root.ScrollContentSize.Value	= contentSize
+	root.ScrollContentSize.Value	= totalContentSize
 	root.ScrollFrameSize.Value    = root.frame.AbsoluteSize.Y
 end
 
@@ -560,16 +679,19 @@ end
 Constructor, Example: "local gui = dat.GUI.new({name = 'My GUI'})"
 
 Params:
-	[params]			Object		
-	[params.name]		String			The name of this GUI.
-	[params.load]		Object			JSON object representing the saved state of this GUI.
+   [params]             Object		
+	[params.name]		   String			The name of this GUI.
+	[params.load]		   Object			JSON object representing the saved state of this GUI.
 	[params.parent]		dat.gui.GUI		The GUI I'm nested in.
 	[params.autoPlace]	Boolean	true	
-	[params.hideable]	Boolean	true	If true, GUI is shown/hidden by h keypress.
+	[params.hideable]    Boolean	true	If true, GUI is shown/hidden by h keypress.
 	[params.closed]		Boolean	false	If true, starts closed
 	[params.closeOnTop]	Boolean	false	If true, close/open button shows on top of the GUI
+	[params.resizable]	Boolean	true	
+	[params.fixed]	      Boolean	false	If false the panel can be moved
+	[params.closeable]	Boolean	false	If false the panel can be moved
 ]]
-function GUI.new(params)
+function DatGUI.new(params)
 	
 	-- remove game UI
 	game.StarterGui:SetCore("TopbarEnabled", false)
@@ -577,33 +699,34 @@ function GUI.new(params)
 	if params == nil then
 		params = {}
 	end
+
+   local name = params.name
+   if name == nil or name == '' then
+      name = 'dat.GUI'
+   end
 	
 	local gui = {
+		_name 		= name,
+      resized     = false,
 		isGui 		= true,
 		parent 		= params.parent,
-		_name 		= params.name,
-		width 		= GUI.DEFAULT_WIDTH,
 		children 	= {},
-		connections = {},
+		connections = {}
 	}
+
+   local width = params.width
+   if width == nil or width < DatGUI.DEFAULT_WIDTH then 
+      width = DatGUI.DEFAULT_WIDTH
+   end
 	
-	if params == nil then
-		params = {}
-	end
-	
-	if gui.parent == nil then
-		gui.GUI = Instance.new("ScreenGui")
-		gui.GUI.Name 			= "dat.GUI"
-		gui.GUI.IgnoreGuiInset	= true -- fullscreen
-		gui.GUI.ZIndexBehavior 	= Enum.ZIndexBehavior.Sibling
-		gui.GUI.Parent 			= PlayerGui
-		
+	if gui.parent == nil then		
 		gui.frame  = GUIUtils.CreateFrame()
 		gui.frame.Name 						= "root"		
-		gui.frame.Size 						= UDim2.new(0, gui.width, 0, 0)		
-		gui.frame.Position					= UDim2.new(1, -(gui.width +15), 0, 0)
-		gui.frame.BackgroundTransparency = 1
-		gui.frame.Parent = gui.GUI
+		gui.frame.Size 						= UDim2.new(0, width, 0, 0)		
+		gui.frame.Position					= UDim2.new(0, Camera.ViewportSize.X-(width + 15), 0, 0)
+		gui.frame.BackgroundTransparency = 0.9
+		gui.frame.ClipsDescendants       = true
+		gui.frame.Parent                 = DEFAULT_SCREEN_GUI
 		
 		gui.Content   = GUIUtils.CreateFrame()
 		gui.Content.Name 					      = "Content"		
@@ -620,7 +743,7 @@ function GUI.new(params)
 		scrollbar.Parent = gui.frame
 		
 		-- Global close button
-		gui.closeButton = CreateGUICloseButton(gui.connections);
+		gui.closeButton = CreateHeader(gui, params)
 		gui.closeButton.Parent = gui.frame
 		
 		gui.closed = gui.closeButton:WaitForChild("Closed")	
@@ -633,14 +756,11 @@ function GUI.new(params)
 		gui.frame.MouseLeave:Connect(function()
 			gui.HOVER = false
 		end)
-		
-		-- on resize screen, resize gui		
-		local onResize = Camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-			resize(gui)
-		end)
-		
-		table.insert(gui.connections, onResize)
-		
+
+		-- on resize screen, resize gui
+		table.insert(gui.connections, Camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+			updateScroll(gui)
+		end))
 	else	
 		gui.frame = CreateGUIFolder(gui.connections)
 		gui.frame.Name 						   = "folder_"..gui._name
@@ -664,7 +784,7 @@ function GUI.new(params)
 	-- On close/open
 	gui.closed.Changed:connect(function()		
 		gui.Content.Visible = not gui.closed.Value
-		resize(gui)
+		updateScroll(gui)
 	end)	
 	
 	--[[
@@ -851,7 +971,7 @@ function GUI.new(params)
 		
 		-- container.appendChild(name);
 		-- gui.__controllers.push(controller);
-		resize(gui)
+		updateScroll(gui)
 		
 		return controller
 	end
@@ -878,14 +998,14 @@ function GUI.new(params)
 			end
 		end
 		
-		local folder = GUI.new({
+		local folder = DatGUI.new({
 			name = name, 
 			parent = gui
 		})
 		
 		table.insert(gui.children, folder)
 		
-		resize(gui)
+		updateScroll(gui)
 		
 		return folder
 	end	
@@ -913,11 +1033,6 @@ function GUI.new(params)
 		
 		for index = 1, #gui.connections do
 			gui.connections[index]:Disconnect()
-		end
-		
-		if gui.GUI ~= nil then
-			gui.GUI.Parent = nil
-			gui.GUI = nil
 		end
 		
 		if gui.frame ~= nil then
@@ -976,7 +1091,7 @@ function GUI.new(params)
 			table.remove(gui.children, itemIdx)
 		end
 		
-		resize(gui)
+		updateScroll(gui)
 		
 		return gui
 	end
@@ -993,17 +1108,71 @@ function GUI.new(params)
 		return gui
 	end
 	
-	function gui.setWidth(width)
-		if gui.parent == nil then			
-			gui.width = width			
-			gui.frame.Size		= UDim2.new(0, gui.width, 0, 0)		
-			gui.frame.Position  = UDim2.new(1, -(gui.width +15), 0, 0)
+   --[[
+      Permite redimensionar um root
+   ]]
+	function gui.resize(width, height)
+		if gui.parent == nil then
+
+         if gui.closed.Value then 
+            return
+         end
+
+         local framePosStart  = Vector2.new(gui.frame.Position.X.Offset, gui.frame.Position.Y.Offset)
+         local frameSizeStart = Vector2.new(gui.frame.Size.X.Offset, gui.frame.Size.Y.Offset)
+           
+         local parentSizeX = gui.frame.Parent.AbsoluteSize.X
+         local parentSizeY = gui.frame.Parent.AbsoluteSize.Y
+
+			width = math.clamp(width, math.min(MIN_WIDTH, parentSizeX), math.min(MAX_WIDTH, parentSizeX))
+         
+         if height ~= nil then
+            height = math.clamp(height, math.min(MIN_HEIGHT, parentSizeY), parentSizeY)
+            gui.frame.Size	= UDim2.new(0, width, 0, height)
+            gui.resizedY = true
+         else
+            gui.frame.Size	  = UDim2.new(0, width, 0, 0)
+         end
+
+         local delta    = Vector2.new(gui.frame.Size.X.Offset, gui.frame.Size.Y.Offset) - frameSizeStart
+         local framePos = framePosStart - delta
+         gui.move(framePos.X, framePos.Y)
+
+         -- gui.move(gui.frame.Size.X.Offset, gui.frame.Size.Y.Offset)
 			
-			resize(gui)
+			updateScroll(gui)
 		end
 		
 		return gui
-	end	
+	end
+
+   --[[
+      Atualiza a posição da instancia
+   ]]
+   function gui.move(posX, posY)
+		if gui.parent == nil then
+         local sizeX = gui.frame.Size.X.Offset
+         local sizeY = gui.frame.Size.Y.Offset
+
+         local posMaxX
+         local posMaxY
+
+         local frameGui = gui.frame.Parent
+         if frameGui:IsA('ScreenGui') then
+            posMaxX = frameGui.AbsoluteSize.X - sizeX
+            posMaxY = frameGui.AbsoluteSize.Y - sizeY
+         else
+            -- is a FrameGui
+            posMaxX = frameGui.Size.X.Offset - sizeX
+            posMaxY = frameGui.Size.Y.Offset - sizeY   
+         end
+         
+         posX = math.clamp(posX, 0, math.max(posMaxX, 0))
+         posY = math.clamp(posY, 0, math.max(posMaxY, 0))
+         gui.frame.Position  = UDim2.new(0, posX, 0, posY)
+		end
+		return gui
+	end
 	
 	-- Returns: dat.GUI - the topmost parent GUI of a nested GUI.
 	function gui.getRoot()
@@ -1020,4 +1189,4 @@ function GUI.new(params)
 	return gui
 end
 
-return GUI
+return DatGUI

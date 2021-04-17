@@ -138,6 +138,19 @@ npm run build
 - [ ] Add CFrame controller (number & slider)
 - [ ] Remove duplicate codes
 - [ ] Fix Roblox library icon
+- [ ] Resize
+- [ ] Move
+- [ ] Custom Elements
+- [ ] .help()
+- [ ] .help()
+- [ ] AddTextInfo
+- [ ] AddTextWarn
+- [ ] AddLogo
+- [ ] AddImage
+- [ ] AddLog
+- [ ] AddChart
+- [ ] AddCurve (curve controller)
+- [ ] Color e Enum tem de ser popup, pois o container agora vai fazer crop dos descendentes
 
 
 ## Feedback, Requests and Roadmap

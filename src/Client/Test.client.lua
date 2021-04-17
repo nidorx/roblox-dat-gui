@@ -31,7 +31,7 @@ ColorCorrection.Parent  = Lighting
 SunRays.Parent          = Lighting
 
 -- root gui
-local gui = DatGUI.new({ width = 300 })
+local gui = DatGUI.new({ width = 300, fixed = false })
 
 --- Lighting
 local guiLigh		 	= gui.addFolder('Lighting')

@@ -26,25 +26,10 @@ local function CreateGUI()
    Checkbox.Size 			            = UDim2.new(0, 21, 1, -8)
    Checkbox.Parent = Control
 
-   local Check = GUIUtils.CreateFrame()
+   local Check = GUIUtils.CreateIcon(Constants.ICON_CHECKMARK)
    Check.Name 			            = "Check"
-   Check.BackgroundColor3        = Constants.CHECKBOX_COLOR_IMAGE
-   Check.BackgroundTransparency  = 0
-   Check.Position 			      = UDim2.new(0.5, -3, 0.5, -7)
-   Check.Size 			            = UDim2.new(0, 6, 0, 10)
-   Check.Rotation                = 45
-   Check.ZIndex                  = 2
-   Check.Visible                 = false
+   Check.ImageColor3             = Constants.CHECKBOX_COLOR_IMAGE
    Check.Parent = Checkbox
-
-   local CheckMask = GUIUtils.CreateFrame()
-   CheckMask.Name 			         = "Mask"
-   CheckMask.BackgroundColor3       = Constants.CHECKBOX_COLOR_OFF
-   CheckMask.BackgroundTransparency = 0
-   CheckMask.Position 			      = UDim2.new(0, -3, 0, 0)
-   CheckMask.Size 			         = UDim2.new(0, 7, 0, 8)
-   CheckMask.ZIndex                 = 1
-   CheckMask.Parent = Check
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
@@ -58,22 +43,17 @@ local function CreateGUI()
          -- checked
          if checkboxHover then
             Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
-            CheckMask.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
          else
             Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR
-            CheckMask.BackgroundColor3 = Constants.NUMBER_COLOR
          end
       elseif hover then
          if checkboxHover then
             Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS
-            CheckMask.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS
          else
             Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
-            CheckMask.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
          end
       else
          Checkbox.BackgroundColor3 = Constants.INPUT_COLOR
-         CheckMask.BackgroundColor3 = Constants.INPUT_COLOR
       end
    end
 

@@ -1,11 +1,36 @@
-local UserInputService  = game:GetService("UserInputService")
-local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
-local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
+local UserInputService     = game:GetService("UserInputService")
+local ContextActionService = game:GetService("ContextActionService")
+local Misc                 = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+local Constants            = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
+
 
 local GUIUtils = {}
 
 local function foo()
    
+end
+
+function GUIUtils.CreateIcon(image)
+   local Check = Instance.new("ImageLabel")
+   Check.Name 			            = "Icon"
+   Check.AnchorPoint	            = Vector2.new(0, 0)
+   Check.BackgroundTransparency  = 1
+   Check.BorderSizePixel 			= 0
+   Check.Selectable              = false
+   Check.Position 			      = UDim2.new(0, 4, 0, 4)
+   Check.Size 			            = UDim2.new(1, -8, 1, -8)
+   Check.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+   Check.Visible                 = true
+   Check.ZIndex                  = 2
+   Check.Archivable              = true
+   Check.Image                   = image
+   Check.ImageColor3             = Constants.CHECKBOX_COLOR_IMAGE
+   Check.ImageTransparency 	   = 0
+   Check.ScaleType               = Enum.ScaleType.Stretch
+   Check.SliceScale              = 1
+   Check.Parent = Checkbox
+
+   return Check
 end
 
 --[[
@@ -607,6 +632,105 @@ function GUIUtils.CreateSlider(config)
    Value.Value = config.Value
 
    return Slider, Value, Min, Max, Percent, OnFocused.Event, OnFocusLost.Event, Misc.DisconnectFn(connections)
+end
+
+local EVENT_SEQ = 0
+
+
+function GUIUtils.OnHover(element, callback)
+
+   local connections = {}
+
+   table.insert(connections, element.MouseEnter:Connect(function()
+      callback(true)
+   end))
+   
+   table.insert(connections, element.MouseLeave:Connect(function()
+      callback(false)
+   end))
+
+   return Misc.DisconnectFnEvent(connections)
+end
+
+
+--[[
+   Adiciona um evento de onClick em um elemento
+]]
+function GUIUtils.OnClick(element, callback)
+
+   EVENT_SEQ = EVENT_SEQ+1
+
+   local actionName  = 'dat.Gui.OnClick_'..EVENT_SEQ
+   local isHover     = false
+   local connections = {}
+   
+   table.insert(connections,  GUIUtils.OnHover(element, function(hover)
+      isHover = hover
+   end))
+   
+   ContextActionService:BindAction(actionName, function(actionName, inputState, input)
+      if not isHover or inputState ~= Enum.UserInputState.End then
+         return Enum.ContextActionResult.Pass
+      end
+
+      callback(element, input)
+      
+      return Enum.ContextActionResult.Sink
+   end, false, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
+
+   return Misc.DisconnectFnEvent(connections, function()
+      ContextActionService:UnbindAction(actionName)
+   end)
+end
+
+--[[
+   Adiciona funcionalidade de Drag
+]]
+function GUIUtils.OnDrag(element, callback)
+
+   EVENT_SEQ = EVENT_SEQ + 1
+
+   local actionName  = 'dat.Gui.OnDrag_'..EVENT_SEQ
+   local isHover     = false
+   local isDragging  = false
+   local connections = {}
+   local startPos    = nil
+
+   table.insert(connections, GUIUtils.OnHover(element, function(hover)
+      isHover = hover
+   end))
+
+   ContextActionService:BindActionAtPriority(actionName, function(actionName, inputState, input)
+      
+      if isDragging  then
+
+         -- inputState ~= Enum.UserInputState.End
+         if inputState == Enum.UserInputState.End then
+            isDragging = false
+            callback(element, 'end')
+            return Enum.ContextActionResult.Sink
+         else
+            local position = Vector2.new(input.Position.X, input.Position.Y)
+            local delta    = position - startPos
+            callback(element, 'drag', startPos, position, delta)
+            return Enum.ContextActionResult.Sink
+         end
+      
+      elseif inputState == Enum.UserInputState.Begin and input.UserInputType ~= Enum.UserInputType.MouseMovement then
+         if isHover then
+            isDragging = true
+            startPos = Vector2.new(input.Position.X, input.Position.Y)
+            callback(element, 'start', startPos)
+            return Enum.ContextActionResult.Sink
+         end         
+      end
+      
+      return Enum.ContextActionResult.Pass
+   end, false, 999999999, Enum.UserInputType.MouseMovement, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
+
+   return Misc.DisconnectFnEvent(connections, function()
+      ContextActionService:UnbindAction(actionName)
+   end)
 end
 
 

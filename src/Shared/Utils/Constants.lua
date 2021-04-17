@@ -43,6 +43,11 @@ return {
    INPUT_COLOR_FOCUS       = Color3.fromRGB(73, 73, 73),
    INPUT_COLOR_FOCUS_TXT   = Color3.fromRGB(255, 255, 255),
    INPUT_COLOR_PLACEHOLDER = Color3.fromRGB(117, 117, 117),
+   -- icons
+   ICON_CHEVRON            = 'rbxassetid://6690562401',
+   ICON_CHECKMARK          = 'rbxassetid://6690588631',
+   ICON_RESIZE             = 'rbxassetid://6690641141',
+   ICON_DRAG               = 'rbxassetid://6690641345',
 
 }
 
