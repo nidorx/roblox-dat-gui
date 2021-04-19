@@ -1,3 +1,6 @@
+local Players 	            = game:GetService("Players")
+local Player 	            = Players.LocalPlayer
+local PlayerGui            = Player:WaitForChild("PlayerGui")
 
 -- GUI.DEFAULT_WIDTH = 245;
 -- GUI.TEXT_CLOSED = 'Close Controls';
@@ -14,7 +17,24 @@
 
 
 
+
+local SCREEN_GUI = Instance.new("ScreenGui")
+SCREEN_GUI.Name 			   = "dat.GUI"
+SCREEN_GUI.IgnoreGuiInset	= true -- fullscreen
+SCREEN_GUI.ZIndexBehavior 	= Enum.ZIndexBehavior.Sibling
+SCREEN_GUI.DisplayOrder    = 2
+SCREEN_GUI.Parent 			= PlayerGui
+
+local MODAL_GUI = Instance.new("ScreenGui")
+MODAL_GUI.Name 			   = "dat.GUI.Modal"
+MODAL_GUI.IgnoreGuiInset	= true -- fullscreen
+MODAL_GUI.ZIndexBehavior 	= Enum.ZIndexBehavior.Sibling
+MODAL_GUI.DisplayOrder     = 2
+MODAL_GUI.Parent 			   = PlayerGui
+
 return {
+   SCREEN_GUI              = SCREEN_GUI,
+   MODAL_GUI               = MODAL_GUI,
    -- general
    BACKGROUND_COLOR        = Color3.fromRGB(26, 26, 26),
    BACKGROUND_COLOR_2      = Color3.fromRGB(34, 34, 34),
@@ -48,7 +68,9 @@ return {
    ICON_CHECKMARK          = 'rbxassetid://6690588631',
    ICON_RESIZE             = 'rbxassetid://6690641141',
    ICON_DRAG               = 'rbxassetid://6690641345',
-
+   ICON_RESIZE_SE          = 'rbxassetid://6700720657',
+   -- Cursor
+   CURSOR_RESIZE_SE        = 'rbxassetid://6700682562',
 }
 
 

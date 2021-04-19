@@ -8,15 +8,10 @@ local WHITE = Color3.fromRGB(255, 255, 255)
 
 local function CreateGUI()
 
-   local UnlockOnMouseLeave = Instance.new('BoolValue')
-   UnlockOnMouseLeave.Value = true
-
-   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
-      = GUIUtils.CreateControllerWrapper({
-         Name                 = 'ColorController',
-         Color                = Constants.BACKGROUND_COLOR,
-         UnlockOnMouseLeave   = UnlockOnMouseLeave
-      })
+   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+      Name                 = 'ColorController',
+      Color                = Constants.BACKGROUND_COLOR
+   })
 
    local BorderLeft = Controller:WaitForChild('BorderLeft')
 
@@ -82,6 +77,11 @@ local function CreateGUI()
    TextFrame.Size 			            = UDim2.new(1, -2, 1, -8)
    TextFrame.Parent = Control
 
+   local TextFake = TextFrame:WaitForChild('TextBoxFake')
+   TextFake.Position 			      = UDim2.new(0, 0, 0, 0)
+   TextFake.Size 			            = UDim2.new(1, 0, 1, 0)
+   TextFake.TextXAlignment          = Enum.TextXAlignment.Center
+
    local Text = TextFrame:WaitForChild('TextBox')
    Text.Position 			         = UDim2.new(0, 0, 0, 0)
    Text.Size 			            = UDim2.new(1, 0, 1, 0)
@@ -92,9 +92,8 @@ local function CreateGUI()
    Selector.BackgroundColor3        = Constants.BACKGROUND_COLOR_2
    Selector.BorderColor3            = Constants.BACKGROUND_COLOR_2
    Selector.BorderSizePixel 			= 3
-   Selector.Position 			      = UDim2.new(0, 0, 1, -6)
+   Selector.Position 			      = UDim2.new(0, 0, 0, 0)
    Selector.Size 			            = UDim2.new(0, 122, 0, 102)
-   Selector.Parent = Control
 
    local HueSelector = GUIUtils.CreateFrame()
    HueSelector.Name 			            = "Hue"
@@ -139,7 +138,7 @@ local function CreateGUI()
    HueKnob.Parent = HueSelector
 
    local SatLumSelector = GUIUtils.CreateFrame()
-   SatLumSelector.Name 			            = "Saturation"
+   SatLumSelector.Name 			            = "SatLum"
    SatLumSelector.BackgroundColor3        = WHITE
    SatLumSelector.BorderColor3            = Constants.BORDER_COLOR_2
    SatLumSelector.BorderSizePixel 			= 1
@@ -148,49 +147,28 @@ local function CreateGUI()
    SatLumSelector.ZIndex                  = 2
    SatLumSelector.Parent = Selector
 
-   local Brightness = Instance.new("ImageLabel")
+   local Brightness = GUIUtils.CreateImageLabel('rbxassetid://5787992121')
    Brightness.Name 			            = "Brightness"
-   Brightness.AnchorPoint	            = Vector2.new(0, 0)
    Brightness.BackgroundColor3         = WHITE
-   Brightness.BackgroundTransparency   = 1
    Brightness.BorderColor3             = Color3.fromRGB(27, 42, 53)
    Brightness.BorderMode 			      = Enum.BorderMode.Outline
    Brightness.BorderSizePixel 			= 1
    Brightness.Position 			         = UDim2.new(0, 0, 0, 0)
-   Brightness.Selectable               = false
    Brightness.Size 			            = UDim2.new(0, 100, 0, 100)
-   Brightness.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Brightness.Visible                  = true
-   Brightness.ZIndex                   = 2
-   Brightness.Archivable               = true
-   Brightness.Image                    = 'rbxassetid://5787992121'
    Brightness.ImageColor3              = WHITE
-   Brightness.ImageTransparency 	      = 0
-   Brightness.ScaleType                = Enum.ScaleType.Stretch
-   Brightness.SliceScale               = 1
    Brightness.Parent = SatLumSelector
 
-   local SaturationImage = Instance.new("ImageLabel")
+   local SaturationImage = GUIUtils.CreateImageLabel('rbxassetid://5787998939')
    SaturationImage.Name 			         = "Saturation"
-   SaturationImage.AnchorPoint	         = Vector2.new(0, 0)
    SaturationImage.BackgroundColor3       = WHITE
-   SaturationImage.BackgroundTransparency = 1
    SaturationImage.BorderColor3           = Color3.fromRGB(27, 42, 53)
    SaturationImage.BorderMode 			   = Enum.BorderMode.Outline
    SaturationImage.BorderSizePixel 			= 1
    SaturationImage.Position 			      = UDim2.new(0, 0, 0, 0)
    SaturationImage.Rotation 			      = -90
-   SaturationImage.Selectable             = false
    SaturationImage.Size 			         = UDim2.new(0, 100, 0, 100)
-   SaturationImage.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   SaturationImage.Visible                = true
    SaturationImage.ZIndex                 = 1
-   SaturationImage.Archivable             = true
-   SaturationImage.Image                  = 'rbxassetid://5787998939'
    SaturationImage.ImageColor3            = Color3.fromRGB(255, 0, 0)
-   SaturationImage.ImageTransparency 	   = 0
-   SaturationImage.ScaleType              = Enum.ScaleType.Stretch
-   SaturationImage.SliceScale             = 1
    SaturationImage.Parent = SatLumSelector
 
    local SatLumKnob = GUIUtils.CreateFrame()
@@ -207,7 +185,6 @@ local function CreateGUI()
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
    local connections       = {}
-   local locked            = true
    local controlHover 	   = false
    local selectorHover 	   = false
    local hueHover 			= false
@@ -267,20 +244,18 @@ local function CreateGUI()
       SatLumKnob.BackgroundColor3 	= Value.Value	
    end
 
+   local popover = GUIUtils.CreatePopover(TextFrame, Vector2.new(122, 102), 'bottom', -4)
+   Selector.Parent = popover.Frame
+
    -- Checks the selector's visibility
    local function checkVisibility()
-      if locked then
-         Selector.Visible           = false
-         UnlockOnMouseLeave.Value   = true
-      elseif textFocused then
-         Selector.Visible           = false
+      if textFocused then
+         popover:Hide()
       elseif controlHover or selectorHover or hueHover or satLumHover or hueMouseDown or satLumMouseDown then
-         Selector.Visible           = true
-         UnlockOnMouseLeave.Value   = false
+         popover:Show()
       else
-         Selector.Visible = false
-         UnlockOnMouseLeave.Value   = true
-      end	
+         popover:Hide()
+      end
    end
 
    local function parseHueMouse(input)
@@ -334,6 +309,7 @@ local function CreateGUI()
       local color = Value.Value
 
       Text.TextColor3               = Misc.BestContrast(color)
+      TextFake.TextColor3           = Text.TextColor3
       BorderLeft.BackgroundColor3   = color
       TextFrame.BackgroundColor3    = color
    end
@@ -356,25 +332,6 @@ local function CreateGUI()
       end
 
       Value.Value = color
-   end))
-
-   table.insert(connections, OnLock:Connect(function()
-      locked                     = true
-      controlHover 		         = false
-      selectorHover 		         = false
-      hueHover 			         = false
-      hueMouseDown 		         = false
-      satLumHover 		         = false
-      satLumMouseDown 	         = false
-      textFocused 		         = false
-      IsTextActive.Value         = false
-      checkVisibility()
-   end))
-
-   table.insert(connections, OnUnLock:Connect(function()
-      locked = false
-      IsTextActive.Value = true
-      checkVisibility()
    end))
 
    table.insert(connections, OnFocused:Connect(function()
@@ -408,140 +365,61 @@ local function CreateGUI()
       updateColorValue()
    end))
 
-   table.insert(connections, Control.MouseEnter:Connect(function()
-      if locked then
-         return
-      end
-      
-      controlHover = true
+   table.insert(connections, GUIUtils.OnHover(TextFrame, function(hover)
+      controlHover = hover
       checkVisibility()
    end))
 
-   table.insert(connections, Control.MouseMoved:Connect(function()
-      if locked then
-         return
-      end
-      
-      controlHover = true
+   table.insert(connections, GUIUtils.OnHover(popover.Frame, function(hover)
+      selectorHover = hover
       checkVisibility()
    end))
 
-   table.insert(connections, Control.MouseLeave:Connect(function()
-      controlHover = false
+   table.insert(connections, GUIUtils.OnHover(SatLumSelector, function(hover)
+      satLumHover = hover
+      if hover then 
+         selectorHover = true
+      end
       checkVisibility()
    end))
 
-   table.insert(connections, Selector.MouseEnter:Connect(function()
-      if locked then
-         return
+   table.insert(connections, GUIUtils.OnHover(HueSelector, function(hover)
+      hueHover = hover
+      if hover then 
+         selectorHover = true
       end
-      
-      selectorHover = true
       checkVisibility()
    end))
 
-   table.insert(connections, Selector.MouseMoved:Connect(function()
-      if locked then
-         return
-      end
-      
-      selectorHover = true
-      checkVisibility()
-   end))
-
-   table.insert(connections, Selector.MouseLeave:Connect(function()
-      selectorHover = false
-      checkVisibility()
-   end))
-
-   table.insert(connections, SatLumSelector.MouseEnter:Connect(function()
-      if locked then
-         return
-      end
-      
-      satLumHover = true
-      checkVisibility()
-   end))
-
-   table.insert(connections, SatLumSelector.MouseMoved:Connect(function()
-      if locked then
-         return
-      end
-      
-      satLumHover = true
-      checkVisibility()
-   end))
-
-   table.insert(connections, SatLumSelector.MouseLeave:Connect(function()
-      satLumHover = false
-      checkVisibility()
-   end))
-
-   table.insert(connections, HueSelector.MouseEnter:Connect(function()
-      if locked then
-         return
-      end
-      
-      hueHover = true
-      checkVisibility()
-   end))
-
-   table.insert(connections, HueSelector.MouseMoved:Connect(function()
-      if locked then
-         return
-      end
-      
-      hueHover = true
-      checkVisibility()
-   end))
-
-   table.insert(connections, HueSelector.MouseLeave:Connect(function()
-      hueHover = false
-      checkVisibility()
-   end))
-
-   table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
-      if locked then
-         return
-      end
-
-      if input.UserInputType == Enum.UserInputType.MouseButton1 then
-         if satLumHover then
-            satLumMouseDown = true
-            parseSatLumMouse(input)
-            
-         elseif hueHover then
-            hueMouseDown = true
-            parseHueMouse(input)
-         end
-      end
-      
-      checkVisibility()
-   end))
-
-   table.insert(connections, UserInputService.InputChanged:Connect(function(input, gameProcessed)
-      if locked then
-         return
-      end
-
-      if input.UserInputType == Enum.UserInputType.MouseMovement then
-         if hueMouseDown then		
-            parseHueMouse(input)
-         elseif satLumMouseDown then
-            parseSatLumMouse(input)	
-         end
-      end
-   end))
-
-   table.insert(connections, UserInputService.InputEnded:Connect(function(input, gameProcessed)	
-      if locked then
-         return
-      end
-      
-      if input.UserInputType == Enum.UserInputType.MouseButton1 then			
-         hueMouseDown      = false
-         satLumMouseDown   = false	
+   table.insert(connections, GUIUtils.OnDrag(SatLumSelector, function(el, event, startPos, position, delta)
+      if event == 'start' then
+         satLumMouseDown = true
          checkVisibility()
+
+      elseif event == 'end' then
+         satLumMouseDown = false
+         checkVisibility()
+
+      elseif event == 'drag' then
+         parseSatLumMouse({
+            Position = position
+         })
+      end
+   end))
+
+   table.insert(connections, GUIUtils.OnDrag(HueSelector, function(el, event, startPos, position, delta)
+      if event == 'start' then
+         hueMouseDown = true
+         checkVisibility()
+
+      elseif event == 'end' then
+         hueMouseDown = false
+         checkVisibility()
+
+      elseif event == 'drag' then
+         parseHueMouse({
+            Position = position
+         })
       end
    end))
 
@@ -650,7 +528,7 @@ local function ColorController(gui, object, property, isColor3Value)
 		else
 			-- tables (dirty checking before render)
 			local oldValue = object[property]
-			listenConnection = RunService.RenderStepped:Connect(function(step)
+			listenConnection = RunService.Heartbeat:Connect(function()
 				if object[property] ~= oldValue then
 					oldValue = object[property]
 					controller.setValue(object[property])

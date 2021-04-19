@@ -5,21 +5,16 @@ local Misc        = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitFor
 
 local function CreateGUI(isMultiline)
 
-   local UnlockOnMouseLeave = Instance.new('BoolValue')
-   UnlockOnMouseLeave.Value = true
-
    local Height = 30
    if isMultiline then
       Height = 120
    end
 
-   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
-      = GUIUtils.CreateControllerWrapper({
-         Name                 = 'StringController',
-         Color                = Constants.STRING_COLOR,
-         UnlockOnMouseLeave   = UnlockOnMouseLeave,
-         Height               = Height
-      })
+   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+      Name                 = 'StringController',
+      Color                = Constants.STRING_COLOR,
+      Height               = Height
+   })
 
    local TextContainer = GUIUtils.CreateFrame()
    TextContainer.Name 			            = 'TextContainer'
@@ -28,38 +23,17 @@ local function CreateGUI(isMultiline)
    TextContainer.Size 			            = UDim2.new(1, -2, 1, -8)
    TextContainer.Parent = Control
 
-   local IsTextActive = Instance.new('BoolValue')
-
-   local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText =  GUIUtils.CreateInput({
+   local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText = GUIUtils.CreateInput({
       Color       = Constants.STRING_COLOR,
-      Active      = IsTextActive,
       MultiLine   = isMultiline
    })
 
    Value.Parent         = Controller
    TextFrame.Parent     = TextContainer
-   IsTextActive.Value   = false
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
    local connections = {}
-
-   table.insert(connections, OnLock:Connect(function()
-      IsTextActive.Value         = false
-      UnlockOnMouseLeave.Value   = true
-   end))
-
-   table.insert(connections, OnUnLock:Connect(function()
-      IsTextActive.Value = true
-   end))
-   
-   table.insert(connections, OnFocused:Connect(function()
-      UnlockOnMouseLeave.Value   = false
-   end))
-   
-   table.insert(connections, OnFocusLost:Connect(function()
-      UnlockOnMouseLeave.Value   = true
-   end))
    
    return Controller, Misc.DisconnectFn(connections, DisconnectParent, DisconnectText)
 end
@@ -167,7 +141,7 @@ local function StringController(gui, object, property, isMultiline, isStringValu
 		else
 			-- tables (dirty checking before render)
 			local oldValue = object[property]
-			listenConnection = RunService.RenderStepped:Connect(function(step)
+			listenConnection = RunService.Heartbeat:Connect(function(step)
 				if object[property] ~= oldValue then
 					oldValue = object[property]
 					controller.setValue(object[property])

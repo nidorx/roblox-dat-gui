@@ -37,17 +37,12 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
 ]]
-local Mouse 	            = game.Players.LocalPlayer:GetMouse()
 local Camera 	            = workspace.CurrentCamera
-local Players 	            = game:GetService("Players")
 local TweenService 		   = game:GetService("TweenService")
-local UserInputService     = game:GetService("UserInputService")
-local ContextActionService = game:GetService("ContextActionService")
 local GUIUtils             = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
 local Constants            = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 local Misc                 = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
-local Player 	            = Players.LocalPlayer
-local PlayerGui            = Player:WaitForChild("PlayerGui")
+
 
 -- controllers
 local Controllers             = game.ReplicatedStorage:WaitForChild("Controllers")
@@ -73,7 +68,6 @@ local MIN_WIDTH   = 250
 local MAX_WIDTH   = 600
 local MIN_HEIGHT  = HEADER_SIZE
 
-
 local function CreateGUIFolder(connections)
 
    local Folder = GUIUtils.CreateFrame()
@@ -84,10 +78,6 @@ local function CreateGUIFolder(connections)
    local LabelValue = Instance.new('StringValue')
    LabelValue.Name = 'Label'
    LabelValue.Parent = Folder
-
-   local UILocked = Instance.new('StringValue')
-   UILocked.Name = 'UILocked'
-   UILocked.Parent = Folder
 
    local Closed = Instance.new('BoolValue')
    Closed.Name     = 'Closed'
@@ -120,50 +110,18 @@ local function CreateGUIFolder(connections)
    LabelText.Size 			         = UDim2.new(1, -16, 1, -1)
    LabelText.Parent = Title
 
-   local Chevron = Instance.new("ImageLabel")
+   local Chevron = GUIUtils.CreateImageLabel(Constants.ICON_CHEVRON)
    Chevron.Name 			            = "Chevron"
-   Chevron.AnchorPoint	            = Vector2.new(0, 0)
-   Chevron.BackgroundTransparency   = 1
-   Chevron.BorderSizePixel 			= 0
    Chevron.Position 			         = UDim2.new(0, 6, 0.5, -3)
-   Chevron.Selectable               = false
    Chevron.Size 			            = UDim2.new(0, 5, 0, 5)
-   Chevron.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Chevron.Visible                  = true
-   Chevron.ZIndex                   = 2
-   Chevron.Archivable               = true
-   Chevron.Image                    = Constants.ICON_CHEVRON
    Chevron.ImageColor3              = Constants.LABEL_COLOR
-   Chevron.ImageTransparency 	      = 0
-   Chevron.ScaleType                = Enum.ScaleType.Stretch
-   Chevron.SliceScale               = 1
    Chevron.Rotation                 = 90
    Chevron.Parent = Title
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
-   -- variables
-   local hover = false
-
-   table.insert(connections, Title.MouseEnter:Connect(function()
-      hover = true
-   end))
-
-   table.insert(connections, Title.MouseMoved:Connect(function()
-      hover = true
-   end))
-
-   table.insert(connections, Title.MouseLeave:Connect(function()
-      hover = false
-   end))
-
-   table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
-      if gameProcessed then
-         return
-      end
-      if hover and UILocked.Value == "ACTIVE"  and input.UserInputType == Enum.UserInputType.MouseButton1 then
-         Closed.Value = not Closed.Value
-      end
+   table.insert(connections, GUIUtils.OnClick(Title, function(el, input)
+      Closed.Value = not Closed.Value
    end))
 
    table.insert(connections, Closed.Changed:connect(function()
@@ -298,7 +256,6 @@ local function CreateHeader(gui, params)
       hover = false
    end))
 
-
    table.insert(gui.connections, ClosedValue.Changed:connect(function()
       if ClosedValue.Value then
          gui.frame.BackgroundTransparency = 1
@@ -316,7 +273,7 @@ local function CreateHeader(gui, params)
       Resize.Position 			         = UDim2.new(0, 0, 0, 0)
       Resize.Parent = Header
 
-      local ResizeIcon = GUIUtils.CreateIcon(Constants.ICON_RESIZE)
+      local ResizeIcon = GUIUtils.CreateImageLabel(Constants.ICON_RESIZE)
       ResizeIcon.Parent = Resize
 
       local isHover        = false
@@ -374,7 +331,7 @@ local function CreateHeader(gui, params)
 
       Drag.Parent = Header
 
-      local DragIcon = GUIUtils.CreateIcon(Constants.ICON_DRAG)
+      local DragIcon = GUIUtils.CreateImageLabel(Constants.ICON_DRAG)
       DragIcon.Parent   = Drag
 
       local isHover        = false
@@ -427,12 +384,6 @@ local function CreateHeader(gui, params)
    return Header
 end
 
-local DEFAULT_SCREEN_GUI = Instance.new("ScreenGui")
-DEFAULT_SCREEN_GUI.Name 			   = "dat.GUI"
-DEFAULT_SCREEN_GUI.IgnoreGuiInset	= true -- fullscreen
-DEFAULT_SCREEN_GUI.ZIndexBehavior 	= Enum.ZIndexBehavior.Sibling
-DEFAULT_SCREEN_GUI.Parent 			   = PlayerGui
-
 -- detach (remove template from UI)
 
 -- @TODO: create controllers for the most used classes
@@ -446,134 +397,10 @@ DatGUI.__index = DatGUI
 
 DatGUI.DEFAULT_WIDTH = MIN_WIDTH
 
--- defines the control or GUI that has mastery over UI events
-local function lockUI(gui, controller)
-	
-	local root = gui.getRoot()	
-	
-	if root.LockedController and root.LockedController ~= controller then
-		root.LockedControllerNext = controller
-		
-		-- remove next lock after timeout
-		spawn(function()
-			wait(0.1)
-			if root.LockedControllerNext == controller then
-				root.LockedControllerNext = nil
-			end
-		end)
-	elseif root.LockedController == nil then
-		root.LockedController = controller		
-		
-		local function iterate(gui)	
-			local locked = false
-			for index = 1, #gui.children do
-				local child = gui.children[index]
-				if child.isGui then
-					-- ignore if parent is closed
-					if child.closed ~= false then
-						if iterate(child) then
-							-- set folder z-index
-							locked = true
-							child.frame.ZIndex 	 = 100	
-							child.UILocked.Value 	= "ACTIVE"
-						else
-							child.UILocked.Value = "LOCKED"
-						end
-					else
-						child.UILocked.Value = "LOCKED"
-					end
-					
-				else
-					if child ~= controller then
-						-- Lock others
-						child.frame.ZIndex 	 = 1
-						child.UILocked.Value = "LOCKED"
-					else
-						-- Activate this	
-						child.frame.ZIndex  	= 100
-						child.UILocked.Value 	= "ACTIVE"
-						locked = true
-					end
-				end
-			end
-
-			return locked
-		end
-		
-		iterate(root)
-	end
-end
-
--- faz o unlock da controller ativa apenas quando ela solicita
-local function unlockUI(gui, controller)
-	
-	local root = gui.getRoot()	
-	
-	if root.LockedController ~= nil and root.LockedController ~= controller and controller ~= nil then		
-		-- relock, only the locked component can remove the lock
-		controller.frame.ZIndex  	= 1
-		controller.UILocked.Value 	= "LOCKED"
-		return
-	end
-	
-	root.LockedController = nil
-	
-	local function iterate(gui)	
-		for index = 1, #gui.children do
-			local child = gui.children[index]
-			
-			-- reset folder and controller z-index
-			child.frame.ZIndex = 1
-			
-			if child.isGui then
-				-- dont ignores closed
-				child.UILocked.Value = "ACTIVE"
-				iterate(child)
-			else
-				child.UILocked.Value 	= "LOCKED"
-			end
-		end
-	end
-	
-	iterate(root)
-	
-	-- has next?		
-	if root.LockedControllerNext ~= nil and  root.LockedControllerNext ~= controller then	
-		local nextCtrl = root.LockedControllerNext
-		root.LockedControllerNext = nil
-		lockUI(gui, nextCtrl)			
-	end
-end
-
--- defines the control or GUI that has mastery over UI events
-local function lockAllUI(gui)
-	-- controller.UILocked
-	local root = gui.getRoot()
-	
-	root.LockedController = nil
-	root.LockedControllerNext = nil
-	
-	local function iterate(gui)	
-		for index = 1, #gui.children do
-			local child = gui.children[index]
-			if child.isGui then
-				iterate(child)
-				
-			else
-				child.UILocked.Value = "LOCKED"
-			end
-		end
-	end
-	
-	iterate(root)
-end
-
 -- iterate across all elements to define their relative positions
 local function updateScroll(gui)
 	
 	local root = gui.getRoot()
-	
-	lockAllUI(root)
 	
    -- itera sobre todos os elementos ajustando suas posições relativas e contabilizando o tamanho total do conteúdo
 	local function iterate(gui, pos)		
@@ -601,11 +428,17 @@ local function updateScroll(gui)
 		
 		return pos
 	end
+
+   -- remove events
+   if root._scrollConnection ~= nil then 
+      root._scrollConnection:Disconnect()
+      root._scrollConnection = nil
+   end
 	
 	local totalContentSize  = iterate(root, HEADER_SIZE)
 	local frameSize 		   = root.frame.Size.Y.Offset
-	if totalContentSize > frameSize - HEADER_SIZE then
-		
+	if totalContentSize  > frameSize - HEADER_SIZE then
+
 		-- scroll
 		root.Content.Size 			= UDim2.new(1, -SCROLL_WIDTH, 0, totalContentSize)		
 		local maxPosition			   = -(totalContentSize - frameSize)	
@@ -627,29 +460,44 @@ local function updateScroll(gui)
 			
 			root.ScrollContentPosition.Value = -newPosition
 		end
+
+      root._scrollConnection = GUIUtils.OnScroll(root.frame, function(el, input)
+         local newPosition = math.min(math.max(root.Content.Position.Y.Offset + (input.Position.Z*50), maxPosition), 0)
+				
+         if root.ScrollTween ~= nil then
+            root.ScrollTween:Cancel()
+         end
+         
+         root.ScrollTween = TweenService:Create(root.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
+            Position =  UDim2.new(0, 0, 0, newPosition)		 
+         })
+         
+         root.ScrollTween:Play()         
+         root.ScrollContentPosition.Value = -newPosition
+      end)
 		
-		ContextActionService:BindAction("dat.GUI.Scroll",  function(actionName, inputState, input)
-			if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputState == Enum.UserInputState.Change and root.HOVER then 
+		-- ContextActionService:BindAction("dat.GUI.Scroll",  function(actionName, inputState, input)
+		-- 	if input.UserInputType == Enum.UserInputType.MouseWheel and input.UserInputState == Enum.UserInputState.Change and root.HOVER then 
 				
-				local newPosition = math.min(math.max(root.Content.Position.Y.Offset + (input.Position.Z*50), maxPosition), 0)
+		-- 		local newPosition = math.min(math.max(root.Content.Position.Y.Offset + (input.Position.Z*50), maxPosition), 0)
 				
-				if root.ScrollTween ~= nil then
-					root.ScrollTween:Cancel()
-				end
+		-- 		if root.ScrollTween ~= nil then
+		-- 			root.ScrollTween:Cancel()
+		-- 		end
 				
-				root.ScrollTween = TweenService:Create(root.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
-					Position =  UDim2.new(0, 0, 0, newPosition)		 
-				})
+		-- 		root.ScrollTween = TweenService:Create(root.Content, TweenInfo.new(0.2, Enum.EasingStyle.Quint,Enum.EasingDirection.Out), { 
+		-- 			Position =  UDim2.new(0, 0, 0, newPosition)		 
+		-- 		})
 				
-				root.ScrollTween:Play()
+		-- 		root.ScrollTween:Play()
 				
-				root.ScrollContentPosition.Value = -newPosition
+		-- 		root.ScrollContentPosition.Value = -newPosition
 				
-				return Enum.ContextActionResult.Sink
-			end
+		-- 		return Enum.ContextActionResult.Sink
+		-- 	end
 			
-			return Enum.ContextActionResult.Pass
-		end,  false,  Enum.UserInputType.MouseWheel)
+		-- 	return Enum.ContextActionResult.Pass
+		-- end,  false,  Enum.UserInputType.MouseWheel)
 	else
 		root.ScrollContentPosition.Value = 0
 		root.Content.Size 					= UDim2.new(1, -SCROLL_WIDTH, 1, 0)
@@ -665,9 +513,6 @@ local function updateScroll(gui)
 			})		
 			root.ScrollTween:Play()
 		end
-		
-		-- remove events
-		ContextActionService:UnbindAction("dat.GUI.Scroll")
 	end
 	
 	root.ScrollContentSize.Value	= totalContentSize
@@ -726,7 +571,7 @@ function DatGUI.new(params)
 		gui.frame.Position					= UDim2.new(0, Camera.ViewportSize.X-(width + 15), 0, 0)
 		gui.frame.BackgroundTransparency = 0.9
 		gui.frame.ClipsDescendants       = true
-		gui.frame.Parent                 = DEFAULT_SCREEN_GUI
+		gui.frame.Parent                 = Constants.SCREEN_GUI
 		
 		gui.Content   = GUIUtils.CreateFrame()
 		gui.Content.Name 					      = "Content"		
@@ -747,15 +592,6 @@ function DatGUI.new(params)
 		gui.closeButton.Parent = gui.frame
 		
 		gui.closed = gui.closeButton:WaitForChild("Closed")	
-		
-		-- used for scroll
-		gui.frame.MouseEnter:Connect(function()
-			gui.HOVER = true
-		end)
-		
-		gui.frame.MouseLeave:Connect(function()
-			gui.HOVER = false
-		end)
 
 		-- on resize screen, resize gui
 		table.insert(gui.connections, Camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
@@ -770,7 +606,6 @@ function DatGUI.new(params)
 		
 		gui.Content    = gui.frame:WaitForChild("Content")		
 		gui.closed 	   = gui.frame:WaitForChild("Closed")
-		gui.UILocked   = gui.frame:WaitForChild("UILocked")
 		
 		local Label = gui.frame:WaitForChild("Label")
 		Label.Value = gui._name
@@ -887,51 +722,13 @@ function DatGUI.new(params)
 		frame.Name 		= property
 		controller._name = property
 		
-		local UILocked
-		
-		-- Indicates locked state UNLOCK, ACTIVE, LOCKED
-		if frame:FindFirstChild("UILocked") == nil then
-			UILocked = Instance.new("StringValue")
-			UILocked.Name = "UILocked"
-			UILocked.Parent = frame			
-		end
-		
-		UILocked = controller.frame:WaitForChild("UILocked")
-		UILocked.Value = "LOCKED"
-		
-		controller.UILocked = UILocked
-		
-		-- On mouse enter, try to register in the lock queue 	
-		frame.MouseEnter:Connect(function()
-			if not controller._isReadonly then
-				lockUI(gui, controller)
-			end			
-		end)
-		
-		-- On mouse move, try to register in the lock queue 
-		frame.MouseMoved:Connect(function()
-			if not controller._isReadonly then
-				lockUI(gui, controller)
-			end
-		end)
-		
-		UILocked.Changed:connect(function()			
-			if UILocked.Value == "UNLOCK" then
-				-- try to unlock
-				unlockUI(gui, controller)	
-			end
-			
-			if controller._isReadonly then
-				frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
-				
-			else
-				if UILocked.Value == "ACTIVE" then
-					frame.BackgroundColor3 = BG_COLOR_ON
-				else				
-					frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
-				end
-			end
-		end)
+      GUIUtils.OnHover(frame, function(hover)
+         if hover then
+            frame.BackgroundColor3 = BG_COLOR_ON
+         else
+            frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
+         end
+      end)
 		
 		frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
 		
@@ -1018,7 +815,7 @@ function DatGUI.new(params)
          return
       end
       
-		lockAllUI(gui)
+		-- lockAllUI(gui)
 		
 		for index = table.getn(gui.children), 1, -1  do
 			-- folders and controllers
@@ -1184,7 +981,7 @@ function DatGUI.new(params)
 	end
 
 
-   unlockUI(gui, nil)
+   -- unlockUI(gui, nil)
 	
 	return gui
 end

@@ -6,7 +6,7 @@ local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):W
 
 local function CreateGUI()
 
-   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
+   local Controller, Control, DisconnectParent 
       = GUIUtils.CreateControllerWrapper({
          Name  = 'FunctionController',
          Color = Constants.FUNCTION_COLOR
@@ -24,23 +24,9 @@ local function CreateGUI()
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
    local connections = {}
-   local locked      = true
 
-   table.insert(connections, OnLock:Connect(function()
-      locked   = true
-   end))
-
-   table.insert(connections, OnUnLock:Connect(function()
-      locked = false
-   end))
-
-   table.insert(connections, UserInputService.InputEnded:Connect(function(input, gameProcessed)
-      if gameProcessed then
-         return
-      end
-      if not locked and input.UserInputType == Enum.UserInputType.MouseButton1 then
-         OnClickEvent:Fire()
-      end
+   table.insert(connections, GUIUtils.OnClick(Controller, function(el, input)
+      OnClickEvent:Fire()
    end))
 
    return Controller, Misc.DisconnectFn(connections, DisconnectParent)

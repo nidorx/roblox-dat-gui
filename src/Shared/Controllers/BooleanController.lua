@@ -7,11 +7,10 @@ local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):W
 
 local function CreateGUI()
 
-   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
-      = GUIUtils.CreateControllerWrapper({
-         Name  = 'BooleanController',
-         Color = Constants.BOOLEAN_COLOR
-      })
+   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+      Name  = 'BooleanController',
+      Color = Constants.BOOLEAN_COLOR
+   })
 
    local Value = Instance.new('BoolValue')
    Value.Name     = 'Value'
@@ -26,7 +25,7 @@ local function CreateGUI()
    Checkbox.Size 			            = UDim2.new(0, 21, 1, -8)
    Checkbox.Parent = Control
 
-   local Check = GUIUtils.CreateIcon(Constants.ICON_CHECKMARK)
+   local Check = GUIUtils.CreateImageLabel(Constants.ICON_CHECKMARK)
    Check.Name 			            = "Check"
    Check.ImageColor3             = Constants.CHECKBOX_COLOR_IMAGE
    Check.Parent = Checkbox
@@ -34,73 +33,23 @@ local function CreateGUI()
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
    local connections    = {}
-   local hover          = false
-   local locked         = true
-   local checkboxHover  = false
+   local isHover        = false
 
    local function updateCheckbox()
       if Value.Value then
          -- checked
-         if checkboxHover then
+         if isHover then
             Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
          else
             Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR
          end
-      elseif hover then
-         if checkboxHover then
-            Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS
-         else
-            Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
-         end
+      elseif isHover then
+         Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS
       else
+         -- Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
          Checkbox.BackgroundColor3 = Constants.INPUT_COLOR
       end
    end
-
-   table.insert(connections, OnLock:Connect(function()
-      hover    = false
-      locked   = true
-      updateCheckbox()
-   end))
-
-   table.insert(connections, OnUnLock:Connect(function()
-      locked = false
-   end))
-
-   table.insert(connections, OnMouseEnter:Connect(function()
-      hover = true
-      updateCheckbox()
-   end))
-
-   table.insert(connections, OnMouseMoved:Connect(function()
-      hover = true
-      updateCheckbox()
-   end))
-
-   table.insert(connections, OnMouseLeave:Connect(function()	
-      hover = false
-      updateCheckbox()
-   end))
-
-   table.insert(connections, Checkbox.MouseEnter:Connect(function()
-      if locked then
-         return
-      end
-      
-      checkboxHover = true
-   end))
-
-   table.insert(connections, Checkbox.MouseMoved:Connect(function()
-      if locked then
-         return
-      end
-      
-      checkboxHover = true
-   end))
-
-   table.insert(connections, Checkbox.MouseLeave:Connect(function()
-      checkboxHover = false
-   end))
 
    -- On change value (safe)
    table.insert(connections, Value.Changed:connect(function()
@@ -108,10 +57,13 @@ local function CreateGUI()
       updateCheckbox()
    end))
 
-   table.insert(connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
-      if not locked and input.UserInputType == Enum.UserInputType.MouseButton1 then
-         Value.Value = not Value.Value
-      end
+   table.insert(connections, GUIUtils.OnHover(Controller, function(hover)
+      isHover = hover
+      updateCheckbox()
+   end))
+   
+   table.insert(connections, GUIUtils.OnClick(Controller, function(el, input)
+      Value.Value = not Value.Value
    end))
 
    return Controller, Misc.DisconnectFn(connections, DisconnectParent)
@@ -222,7 +174,7 @@ local BooleanController = function(gui, object, property, isBoolValue)
 		else
 			-- tables (dirty checking before render)
 			local oldValue = object[property]
-			listenConnection = RunService.RenderStepped:Connect(function(step)
+			listenConnection = RunService.Heartbeat:Connect(function()
 				if object[property] ~= oldValue then
 					oldValue = object[property]
 					controller.setValue(object[property])

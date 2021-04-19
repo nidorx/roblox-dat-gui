@@ -7,14 +7,10 @@ local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):W
 
 local function CreateGUI()
 
-   local UnlockOnMouseLeave = Instance.new('BoolValue')
-   UnlockOnMouseLeave.Value = true
-
-   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, ControllerDisconnect 
+   local Controller, Control, ControllerDisconnect 
       = GUIUtils.CreateControllerWrapper({
          Name                 = 'NumberSliderController',
-         Color                = Constants.NUMBER_COLOR,
-         UnlockOnMouseLeave   = UnlockOnMouseLeave
+         Color                = Constants.NUMBER_COLOR
       })
 
    local ValueIn = Instance.new('NumberValue')
@@ -44,7 +40,6 @@ local function CreateGUI()
 
    local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
       Color    = Constants.NUMBER_COLOR,
-      Active   = IsControllerActive,
       Render   = RenderText,
       Parse    = function (text, value)
          if string.len(text) == 0 then
@@ -71,44 +66,22 @@ local function CreateGUI()
    SliderContainer.Parent = Control
 
    local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.CreateSlider({
-      Active   = IsControllerActive
    })
    SliderFrame.Parent = SliderContainer
-
-   IsControllerActive.Value   = false
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
    local connections = {}
    local textFocus   = false
 
-   table.insert(connections, OnLock:Connect(function()
-      UnlockOnMouseLeave.Value   = true
-      IsControllerActive.Value   = false
-   end))
-
-   table.insert(connections, OnUnLock:Connect(function()
-      IsControllerActive.Value = true
-   end))
-
    table.insert(connections, TextOnFocus:Connect(function()
-      UnlockOnMouseLeave.Value   = false
       textFocus = true
    end))
    
    table.insert(connections, TextOnFocusLost:Connect(function()
-      UnlockOnMouseLeave.Value   = true
       textFocus = false
    end))
    
-   table.insert(connections, SliderOnFocus:Connect(function()
-      UnlockOnMouseLeave.Value   = false
-   end))
-   
-   table.insert(connections, SliderOnFocusLost:Connect(function()
-      UnlockOnMouseLeave.Value   = true
-   end))
-
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()
       Precision.Value = Misc.CountDecimals(Step.Value);
@@ -267,7 +240,7 @@ local function NumberSliderController(gui, object, property, min, max, step, isN
 		else
 			-- tables (dirty checking before render)
 			local oldValue = object[property]
-			listenConnection = RunService.RenderStepped:Connect(function(step)
+			listenConnection = RunService.Heartbeat:Connect(function(step)
 				if object[property] ~= oldValue then
 					oldValue = object[property]
 					controller.setValue(object[property])

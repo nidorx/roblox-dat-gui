@@ -8,14 +8,10 @@ local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):W
 
 local function CreateGUI()
 
-   local UnlockOnMouseLeave = Instance.new('BoolValue')
-   UnlockOnMouseLeave.Value = true
-
-   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
+   local Controller, Control, DisconnectParent 
       = GUIUtils.CreateControllerWrapper({
          Name  = 'OptionController',
-         Color = Constants.STRING_COLOR,
-         UnlockOnMouseLeave = UnlockOnMouseLeave
+         Color = Constants.STRING_COLOR
       })
 
    local Selected = Instance.new('IntValue')
@@ -92,20 +88,19 @@ local function CreateGUI()
    local connections          = {}
    local connectionsItems     = {}
    local itemsSize			   = 0
-   local hover 	            = false
-   local locked               = true
-   local listHover 	         = false
+   local isHover 	            = false
+   local isListHover 	         = false
    local listIsOpen	         = false
    
    local function checkVisibility()
-      if locked then
-         listIsOpen = false
-         SelectList.Size = UDim2.new(1, 0, 1, 0)
-      else
+      -- if locked then
+      --    listIsOpen = false
+      --    SelectList.Size = UDim2.new(1, 0, 1, 0)
+      -- else
          SelectList.Size = UDim2.new(1, 0, 0, itemsSize)		
-      end
+      -- end
       
-      if not locked and listIsOpen then
+      if listIsOpen then
          
          SelectContainer.ZIndex = 100
          SelectContainer.ClipsDescendants = false		
@@ -131,55 +126,18 @@ local function CreateGUI()
       end
    end
 
-   table.insert(connections, OnLock:Connect(function()
-      hover       = false
-      locked      = true
-      listHover 	= false
-      -- listIsOpen	= false
+   table.insert(connections, GUIUtils.OnHover(Controller, function(hover)
+      isHover = hover
       checkVisibility()
    end))
 
-   table.insert(connections, OnUnLock:Connect(function()
-      locked = false
-   end))
+   table.insert(connections, GUIUtils.OnHover(SelectList, function(hover)
+      isListHover = hover
 
-   table.insert(connections, OnMouseEnter:Connect(function()
-      hover = true
-      checkVisibility()
-   end))
-
-   table.insert(connections, OnMouseMoved:Connect(function()
-      hover = true
-      checkVisibility()
-   end))
-
-   table.insert(connections, OnMouseLeave:Connect(function()	
-      hover = false
-      checkVisibility()
-   end))
-   
-   table.insert(connections, SelectList.MouseEnter:Connect(function()
-      if locked then
-         return
+      if not isListHover then 
+         listIsOpen = false
       end
-      
-      listHover = true
-      checkVisibility()
-   end))
-   
-   table.insert(connections, SelectList.MouseMoved:Connect(function()
-      if locked then
-         return
-      end
-      
-      listHover = true
-      checkVisibility()
-   end))
-   
-   table.insert(connections, SelectList.MouseLeave:Connect(function()
-      listHover = false
-      listIsOpen = false
-      UnlockOnMouseLeave.Value   = true
+
       checkVisibility()
    end))
    
@@ -192,33 +150,20 @@ local function CreateGUI()
       -- controls focus effect
       local Text = Item:WaitForChild("TextButton")
 
-      table.insert(connections, Text.MouseEnter:Connect(function()
-         if locked then
-            return
+      table.insert(connections, GUIUtils.OnHover(Text, function(hover)
+         if hover then 
+            Text.TextColor3 = Constants.STRING_COLOR
+            Item.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
+         else
+            Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
+            Item.BackgroundColor3 = Constants.INPUT_COLOR
          end
-         
-         Text.TextColor3 = Constants.STRING_COLOR
-         Item.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
       end))
 
-      table.insert(connections, Text.MouseMoved:Connect(function()
-         if locked then
-            return
-         end
-         
-         Text.TextColor3 = Constants.STRING_COLOR
-         Item.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
-      end))
-
-      table.insert(connections, Text.MouseLeave:Connect(function()
-         Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
-         Item.BackgroundColor3 = Constants.INPUT_COLOR
-      end))
-
-      table.insert(connections, OnLock:Connect(function()
-         Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
-         Item.BackgroundColor3 = Constants.INPUT_COLOR
-      end))
+      -- table.insert(connections, OnLock:Connect(function()
+      --    Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
+      --    Item.BackgroundColor3 = Constants.INPUT_COLOR
+      -- end))
    end
    
    table.insert(connections, Options.Changed:Connect(function()
@@ -249,16 +194,11 @@ local function CreateGUI()
             if listIsOpen then				
                Selected.Value = index
                listIsOpen = false
-               UnlockOnMouseLeave.Value   = true
                checkVisibility()
                
             else
-               if locked then
-                  return
-               end
                
                listIsOpen = true
-               UnlockOnMouseLeave.Value   = false
                checkVisibility()
             end
          end)
@@ -479,7 +419,7 @@ local function OptionController(gui, object, property,  options)
 		else
 			-- tables (dirty checking before render)
 			local oldValue = object[property]
-			listenConnection = RunService.RenderStepped:Connect(function(step)
+			listenConnection = RunService.Heartbeat:Connect(function()
 				if object[property] ~= oldValue then
 					oldValue = object[property]
 					controller.setValue(oldValue)

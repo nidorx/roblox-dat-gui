@@ -5,15 +5,11 @@ local Constants   = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitFor
 
 local function CreateGUI()
 
-   local UnlockOnMouseLeave = Instance.new('BoolValue')
-   UnlockOnMouseLeave.Value = true
-
-   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
+   local Controller, Control, DisconnectParent 
       = GUIUtils.CreateControllerWrapper({
          Name                 = 'Vector3Controller',
          Color                = Constants.NUMBER_COLOR,
-         Height               = 50,
-         UnlockOnMouseLeave   = UnlockOnMouseLeave
+         Height               = 50
       })
   
    local Value = Instance.new('Vector3Value')
@@ -46,8 +42,6 @@ local function CreateGUI()
    Precision.Value   =  Vector3.new(Misc.NUMBER_PRECISION, Misc.NUMBER_PRECISION, Misc.NUMBER_PRECISION)
    Precision.Parent  = Controller
 
-   local IsControllerActive = Instance.new('BoolValue')
-
    -- create X, Y, Z
    local function CreateAxisController(axis, position)
 
@@ -75,7 +69,6 @@ local function CreateGUI()
    
       local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
          Color    = Constants.NUMBER_COLOR,
-         Active   = IsControllerActive,
          Render   = RenderText,
          Parse    = function (text, value)
             if string.len(text) == 0 then
@@ -97,22 +90,12 @@ local function CreateGUI()
 
       -- SCRIPTS -------------------------------------------------------------------------------------------------------
 
-      table.insert(connections, TextOnFocus:Connect(function()
-         UnlockOnMouseLeave.Value   = false
-      end))
-      
-      table.insert(connections, TextOnFocusLost:Connect(function()
-         UnlockOnMouseLeave.Value   = true
-      end))
-
       table.insert(connections, Precision.Changed:Connect(function()
          AxisPrecision.Value = Precision.Value[axis]
       end))
 
       return TextValue, RenderText, Misc.DisconnectFn(connections, TextDisconnect) 
    end
-
-   IsControllerActive.Value   = false
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
@@ -142,15 +125,6 @@ local function CreateGUI()
          Value.Value = Vector3.new(values.X, values.Y, values.Z)
       end))
    end
-
-   table.insert(connections, OnLock:Connect(function()
-      IsControllerActive.Value         = false
-      UnlockOnMouseLeave.Value   = true
-   end))
-
-   table.insert(connections, OnUnLock:Connect(function()
-      IsControllerActive.Value = true
-   end))
 
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()	
@@ -321,7 +295,7 @@ local function Vector3Controller(gui, object, property, min, max, step, isVector
          local oldValueX = object[property].X
          local oldValueY = object[property].Y
          local oldValueZ = object[property].Z
-         listenConnection = RunService.RenderStepped:Connect(function(step)
+         listenConnection = RunService.Heartbeat:Connect(function(step)
             local value = object[property]
             if value.X ~= oldValueX or value.Y ~= oldValueY or value.Z ~= oldValueZ then
                oldValueX = value.X

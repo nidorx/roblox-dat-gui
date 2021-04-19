@@ -6,15 +6,11 @@ local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):W
 
 local function CreateGUI()
 
-   local UnlockOnMouseLeave = Instance.new('BoolValue')
-   UnlockOnMouseLeave.Value = true
-
-   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
+   local Controller, Control, DisconnectParent 
       = GUIUtils.CreateControllerWrapper({
          Name                 = 'Vector3SliderController',
          Color                = Constants.NUMBER_COLOR,
-         Height               = 90,
-         UnlockOnMouseLeave   = UnlockOnMouseLeave
+         Height               = 90
       })
   
    local Value = Instance.new('Vector3Value')
@@ -46,8 +42,6 @@ local function CreateGUI()
    Precision.Name    = 'Precision'
    Precision.Value   =  Vector3.new(Misc.NUMBER_PRECISION, Misc.NUMBER_PRECISION, Misc.NUMBER_PRECISION)
    Precision.Parent  = Controller
-
-   local IsControllerActive = Instance.new('BoolValue')
 
    -- create X, Y, Z
    local function CreateAxisController(axis, position)
@@ -82,7 +76,6 @@ local function CreateGUI()
       
       local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
          Color    = Constants.NUMBER_COLOR,
-         Active   = IsControllerActive,
          Render   = RenderText,
          Parse    = function (text, value)
             if string.len(text) == 0 then
@@ -110,7 +103,7 @@ local function CreateGUI()
       SliderContainer.Parent = Frame
    
       local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.CreateSlider({
-         Active   = IsControllerActive
+         
       })
       SliderFrame.Parent = SliderContainer
 
@@ -120,20 +113,10 @@ local function CreateGUI()
 
       table.insert(connections, TextOnFocus:Connect(function()
          textFocus = true
-         UnlockOnMouseLeave.Value   = false
       end))
       
       table.insert(connections, TextOnFocusLost:Connect(function()
          textFocus = false
-         UnlockOnMouseLeave.Value   = true
-      end))
-
-      table.insert(connections, SliderOnFocus:Connect(function()
-         UnlockOnMouseLeave.Value   = false
-      end))
-      
-      table.insert(connections, SliderOnFocusLost:Connect(function()
-         UnlockOnMouseLeave.Value   = true
       end))
 
       table.insert(connections, Precision.Changed:Connect(function()
@@ -184,15 +167,6 @@ local function CreateGUI()
          Value.Value = Vector3.new(values.X, values.Y, values.Z)
       end))
    end
-   
-   table.insert(connections, OnLock:Connect(function()
-      IsControllerActive.Value   = false
-      UnlockOnMouseLeave.Value   = true
-   end))
-
-   table.insert(connections, OnUnLock:Connect(function()
-      IsControllerActive.Value = true
-   end))
 
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()	
@@ -369,7 +343,7 @@ local function Vector3SliderController(gui, object, property, min, max, step, is
          local oldValueX = object[property].X
          local oldValueY = object[property].Y
          local oldValueZ = object[property].Z
-         listenConnection = RunService.RenderStepped:Connect(function(step)
+         listenConnection = RunService.Heartbeat:Connect(function(step)
             local value = object[property]
             if value.X ~= oldValueX or value.Y ~= oldValueY or value.Z ~= oldValueZ then
                oldValueX = value.X

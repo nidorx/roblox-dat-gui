@@ -7,14 +7,10 @@ local Constants   = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitFor
 
 local function CreateGUI()
 
-   local UnlockOnMouseLeave = Instance.new('BoolValue')
-   UnlockOnMouseLeave.Value = true
-
-   local Controller, Control, OnLock, OnUnLock, OnMouseEnter, OnMouseMoved, OnMouseLeave, DisconnectParent 
+   local Controller, Control, DisconnectParent 
       = GUIUtils.CreateControllerWrapper({
          Name                 = 'NumberController',
-         Color                = Constants.NUMBER_COLOR,
-         UnlockOnMouseLeave   = UnlockOnMouseLeave
+         Color                = Constants.NUMBER_COLOR
       })
 
    local ValueIn = Instance.new('NumberValue')
@@ -44,11 +40,8 @@ local function CreateGUI()
 
    local RenderText = Misc.CreateTextNumberFn(Precision)
 
-   local IsTextActive = Instance.new('BoolValue')
-
    local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText =  GUIUtils.CreateInput({
       Color    = Constants.NUMBER_COLOR,
-      Active   = IsTextActive,
       Render   = RenderText,
       Parse    = function (text, value)
          if string.len(text) == 0 then
@@ -76,27 +69,12 @@ local function CreateGUI()
    TextFrame.Parent     = TextContainer
 
    Value.Parent         = Controller
-   IsTextActive.Value   = false
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
    local connections       = {}
 
-   table.insert(connections, OnLock:Connect(function()
-      IsTextActive.Value         = false
-      UnlockOnMouseLeave.Value   = true
-   end))
-
-   table.insert(connections, OnUnLock:Connect(function()
-      IsTextActive.Value = true
-   end))
-   
    table.insert(connections, OnFocused:Connect(function()
-      UnlockOnMouseLeave.Value   = false
-   end))
-   
-   table.insert(connections, OnFocusLost:Connect(function()
-      UnlockOnMouseLeave.Value   = true
    end))
    
    -- On change steps
@@ -242,7 +220,7 @@ local function NumberController(gui, object, property, min, max, step, isNumberV
 		else
 			-- tables (dirty checking before render)
 			local oldValue = object[property]
-			listenConnection = RunService.RenderStepped:Connect(function(step)
+			listenConnection = RunService.Heartbeat:Connect(function()
 				if object[property] ~= oldValue then
 					oldValue = object[property]
 					controller.setValue(oldValue)
