@@ -1,7 +1,10 @@
 local RunService  = game:GetService("RunService")
-local GUIUtils    = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
-local Constants   = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
-local Misc        = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+
+-- lib
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local Misc        = require(Lib:WaitForChild("Misc"))
+local GUIUtils    = require(Lib:WaitForChild("GUI"))
+local Constants   = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI(isMultiline)
 

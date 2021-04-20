@@ -1,10 +1,9 @@
-local Player               = game.Players.LocalPlayer or game.Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 local Camera 	            = workspace.CurrentCamera
-local GUIUtils             = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
-local Constants            = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 
--- https://devforum.roblox.com/t/gui-absoluteposition-doesnt-respect-ignoreguiinset/1168583/5
-local GUI_INSET = 36
+-- lib
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local GUIUtils             = require(Lib:WaitForChild("GUI"))
+local Constants            = require(Lib:WaitForChild("Constants"))
 
 local POPOVER_SEQ    = 0
 
@@ -32,10 +31,10 @@ function Popover.new(reference, size, position, offset)
    end
 
    return setmetatable({
-      _reference  = reference,
-      _position   = position,
-      _offset     = offset, 
-      Frame       = frame,      
+      ['_reference']  = reference,
+      ['_position']   = position,
+      ['_offset']     = offset, 
+      ['Frame']       = frame,      
    }, Popover)
 end
 
@@ -56,7 +55,7 @@ function Popover:Show()
       posX = refPos.X + (refSiz.X/2) - size.X/2
 
       posY = refPos.Y - size.Y - self._offset 
-      if posY < -GUI_INSET then 
+      if posY < -Constants.GUI_INSET then 
          -- on bottom
          posY = refPos.Y + refSiz.Y + self._offset
       end
@@ -65,18 +64,18 @@ function Popover:Show()
       posX = refPos.X + (refSiz.X/2) - size.X/2
 
       posY = refPos.Y + refSiz.Y + self._offset
-      if (posY + size.Y) > scrSiz.Y - GUI_INSET then 
+      if (posY + size.Y) > scrSiz.Y - Constants.GUI_INSET then 
          -- on top
          posY = refPos.Y - size.Y - self._offset
       end
       
    elseif self._position == 'left' then
       posY = refPos.Y + (refSiz.Y/2) - (size.Y/2)
-      if posY < - GUI_INSET then 
-         posY = - GUI_INSET
+      if posY < - Constants.GUI_INSET then 
+         posY = - Constants.GUI_INSET
       end
-      if (posY + size.Y) > scrSiz.Y - GUI_INSET then 
-         posY = scrSiz.Y - GUI_INSET - size.Y
+      if (posY + size.Y) > scrSiz.Y - Constants.GUI_INSET then 
+         posY = scrSiz.Y - Constants.GUI_INSET - size.Y
       end
 
       posX = refPos.X - size.X - self._offset
@@ -88,11 +87,11 @@ function Popover:Show()
    else
       -- right
       posY = refPos.Y + (refSiz.Y/2) - (size.Y/2)
-      if posY < - GUI_INSET then 
-         posY = - GUI_INSET
+      if posY < - Constants.GUI_INSET then 
+         posY = - Constants.GUI_INSET
       end
-      if (posY + size.Y) > scrSiz.Y - GUI_INSET then 
-         posY = scrSiz.Y - GUI_INSET - size.Y
+      if (posY + size.Y) > scrSiz.Y - Constants.GUI_INSET then 
+         posY = scrSiz.Y - Constants.GUI_INSET - size.Y
       end
 
       posX = refPos.X + refSiz.X + self._offset
@@ -102,7 +101,7 @@ function Popover:Show()
       end
    end
 
-   self.Frame.Position  = UDim2.new(0, posX, 0, posY+GUI_INSET)
+   self.Frame.Position  = UDim2.new(0, posX, 0, posY+Constants.GUI_INSET)
    self.Frame.Visible   = true
 
    -- on Change _reference property Show Again

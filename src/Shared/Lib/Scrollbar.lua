@@ -1,6 +1,10 @@
 local TweenService 		   = game:GetService("TweenService")
-local GUIUtils             = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
-local Constants            = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
+
+-- lib
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local Misc                 = require(Lib:WaitForChild("Misc"))
+local GUIUtils             = require(Lib:WaitForChild("GUI"))
+local Constants            = require(Lib:WaitForChild("Constants"))
 
 local Scrollbar = {}
 Scrollbar.__index = Scrollbar
@@ -98,18 +102,41 @@ function Scrollbar.new(parent, content, contentOffset)
    table.insert(connections, contentPosition.Changed:connect(updatePosition))
 
 
-   local scrollbar = setmetatable({
-      _parent           = parent, 
-      _content          = content,
-      _parentHeight     = parentHeight,
-      _contentHeight    = contentHeight,
-      _contentPosition  = contentPosition,
-      _contentOffset    = contentOffset
+   local self = setmetatable({
+      ['_parent']           = parent, 
+      ['_content']          = content,
+      ['_parentHeight']     = parentHeight,
+      ['_contentHeight']    = contentHeight,
+      ['_contentPosition']  = contentPosition,
+      ['_contentOffset']    = contentOffset     
    }, Scrollbar)
 
-   return scrollbar
+   self._disconnect = Misc.DisconnectFn(connections, function()
+      if self._onScroll ~= nil then 
+         self._onScroll:Disconnect()
+      end
+
+      if self._tween ~= nil then
+         self._tween:Cancel()
+      end
+
+      if positionTween ~= nil then
+         positionTween:Cancel()
+      end
+      
+      if sizeTween ~= nil then
+         sizeTween:Cancel()
+      end
+      
+      Frame.Parent = nil
+   end)
+
+   return self
 end
 
+function Scrollbar:Destroy()
+   self._disconnect()
+end
 
 function Scrollbar:Update()
 
@@ -178,7 +205,7 @@ function Scrollbar:Update()
 		end
 	end
 	
-	self._contentHeight.Value = contentHeight - self._contentOffset
+	self._contentHeight.Value  = contentHeight - self._contentOffset
 	self._parentHeight.Value   = self._parent.AbsoluteSize.Y
 end
 

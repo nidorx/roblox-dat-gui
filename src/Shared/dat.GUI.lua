@@ -37,13 +37,13 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
 ]]
-local Camera 	            = workspace.CurrentCamera
-local TweenService 		   = game:GetService("TweenService")
-local GUIUtils             = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
-local Constants            = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
-local Misc                 = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
-local Panel                = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Panel"))
+local Camera 	      = workspace.CurrentCamera
 
+-- lib
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local Panel          = require(Lib:WaitForChild("Panel"))
+local GUIUtils       = require(Lib:WaitForChild("GUI"))
+local Constants      = require(Lib:WaitForChild("Constants"))
 
 -- controllers
 local Controllers             = game.ReplicatedStorage:WaitForChild("Controllers")
@@ -57,18 +57,6 @@ local NumberSliderController	= require(Controllers:WaitForChild("NumberSliderCon
 local Vector3Controller			= require(Controllers:WaitForChild("Vector3Controller"))
 local Vector3SliderController	= require(Controllers:WaitForChild("Vector3SliderController"))
 
-local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
-
-local LABEL_COLOR_DISABLED	= Color3.fromRGB(136, 136, 136)
-
-local SCROLL_WIDTH   = 5
-local HEADER_SIZE    = 30
-
-local MIN_WIDTH   = 250
-local MAX_WIDTH   = 600
-local MIN_HEIGHT  = HEADER_SIZE
-
--- detach (remove template from UI)
 
 -- @TODO: create controllers for the most used classes
 -- https://developer.roblox.com/en-us/api-reference/data-types
@@ -79,28 +67,21 @@ local MIN_HEIGHT  = HEADER_SIZE
 local DatGUI = {}
 DatGUI.__index = DatGUI
 
-DatGUI.DEFAULT_WIDTH = MIN_WIDTH
-
 --[[
-Constructor, Example: "local gui = dat.GUI.new({name = 'My GUI'})"
+   Constructor, Example: "local gui = dat.GUI.new({name = 'My GUI'})"
 
-Params:
-   [params]             Object		
-	[params.name]		   String			The name of this GUI.
-	[params.load]		   Object			JSON object representing the saved state of this GUI.
-	[params.parent]		dat.gui.GUI		The GUI I'm nested in.
-	[params.autoPlace]	Boolean	true	
-	[params.hideable]    Boolean	true	If true, GUI is shown/hidden by h keypress.
-	[params.closed]		Boolean	false	If true, starts closed
-	[params.closeOnTop]	Boolean	false	If true, close/open button shows on top of the GUI
-	[params.resizable]	Boolean	true	
-	[params.fixed]	      Boolean	false	If false the panel can be moved
-	[params.closeable]	Boolean	false	If false the panel can be moved
+   Params:
+      [params]             Object		
+      [params.name]		   String			The name of this GUI.
+      [params.load]		   Object			JSON object representing the saved state of this GUI.
+      [params.parent]		dat.gui.GUI		The GUI I'm nested in.
+      [params.closed]		Boolean	false	If true, starts closed
+      [params.closeable]	Boolean	false	If false the panel can be moved
 ]]
 function DatGUI.new(params)
 	
 	-- remove game UI
-	game.StarterGui:SetCore("TopbarEnabled", false)
+	-- game.StarterGui:SetCore("TopbarEnabled", false)
 	
 	if params == nil then
 		params = {}
@@ -110,57 +91,59 @@ function DatGUI.new(params)
    if name == nil or name == '' then
       name = 'dat.GUI'
    end
-	
+
 	local gui = {
-		_name 		= name,
-      resized     = false,
+		name 		   = name,
 		isGui 		= true,
 		parent 		= params.parent,
-		children 	= {},
-		connections = {}
+		children 	= {}
 	}
 
    local width = params.width
-   if width == nil or width < DatGUI.DEFAULT_WIDTH then 
-      width = DatGUI.DEFAULT_WIDTH
+   if width == nil or width < Panel.MIN_WIDTH then 
+      width = Panel.MIN_WIDTH
    end
 
    local panel = Panel.new()
-   gui.panel      = panel
+   gui.Panel      = panel
    gui.Content    = panel.Content
-   panel.Label.Value = gui._name
+   panel.Label.Value = gui.name
+
+   local panelOnDestroy = panel:OnDestroy(function()
+      gui.remove()
+   end)
 	
-	if gui.parent == nil then		
-      panel:Detach()
+	if gui.parent == nil then
+      panel:Detach(params.closeable)
       panel:Move(Camera.ViewportSize.X-(width + 15), 0)
       panel:Resize(width, Camera.ViewportSize.Y)
-      panel.Frame.Name = gui._name
-		
+      panel.Frame.Name = gui.name
 	else	
-      panel:Atach()
-		panel.Frame.Name     = "folder_"..gui._name
-		panel.Frame.Parent   = gui.parent.Content
+		panel.Frame.Name = gui.parent.name.."_"..gui.name
+      panel:AttachTo(gui.parent.Content)
 	end
-	
+
+   
+
 	--[[
-	Adds a new Controller to the GUI. The type of controller created is inferred from the 
-	initial value of object[property]. For color properties, see addColor.
+      Adds a new Controller to the GUI. The type of controller created is inferred from the 
+      initial value of object[property]. For color properties, see addColor.
 
-	Returns: Controller - The controller that was added to the GUI.
+      Returns: Controller - The controller that was added to the GUI.
 
-	Params:
-		object	Object	The object to be manipulated
-		property	String	The name of the property to be manipulated
-		[min]	Number	Minimum allowed value
-		[max]	Number	Maximum allowed value
-		[step]	Number	Increment by which to change value
-		
-	Examples:
-		Add a string controller.
-			gui:add({name = 'Sam'}, 'name')
-			
-		Add a number controller slider.
-			gui:add({age = 45}, 'age', 0, 100)
+      Params:
+         object	Object	The object to be manipulated
+         property	String	The name of the property to be manipulated
+         [min]	Number	Minimum allowed value
+         [max]	Number	Maximum allowed value
+         [step]	Number	Increment by which to change value
+         
+      Examples:
+         Add a string controller.
+            gui:add({name = 'Sam'}, 'name')
+            
+         Add a number controller slider.
+            gui:add({age = 45}, 'age', 0, 100)
 	]]
 	function gui.add(object, property, ...)
 		
@@ -173,7 +156,7 @@ function DatGUI.new(params)
 		local initialValueType 	   = type(initialValue)
 		local initialValueTypeOf   = typeof(initialValue)
       local isInstance           = initialValueTypeOf == "Instance" 
-		local arguments 		= {...}
+		local arguments 		      = {...}
 		
 		if initialValueTypeOf == "Vector3" or (isInstance and initialValue:IsA('Vector3Value')) then
 			
@@ -240,7 +223,7 @@ function DatGUI.new(params)
 		-------------------------------------------------------------------------------
 		local frame = controller.frame
 		frame.Name 		= property
-		controller._name = property
+		controller.name = property
 		
       GUIUtils.OnHover(frame, function(hover)
          if hover then
@@ -268,13 +251,13 @@ function DatGUI.new(params)
 					local lineThrough = Instance.new('Frame')
 					lineThrough.Size = UDim2.new(0, controller.label.TextBounds.X, 0, 1)
 					lineThrough.Position = UDim2.new(0, 0, 0.5, 0)
-					lineThrough.BackgroundColor3 = LABEL_COLOR_DISABLED
+					lineThrough.BackgroundColor3 = Constants.LABEL_COLOR_DISABLED
 					lineThrough.BackgroundTransparency = 0.4
 					lineThrough.BorderSizePixel = 0
 					lineThrough.Name = "LineThrough"
 					lineThrough.Parent = controller.label
 					
-					controller.label.TextColor3 = LABEL_COLOR_DISABLED					
+					controller.label.TextColor3 = Constants.LABEL_COLOR_DISABLED					
 				else
 					controller.label.TextColor3 = Constants.LABEL_COLOR					
 					if controller.label:FindFirstChild("LineThrough") ~= nil then
@@ -290,15 +273,14 @@ function DatGUI.new(params)
 	end
 	
 	--[[
-	Creates a new subfolder GUI instance.
-	
-	Returns: dat.GUI - The new folder.
-	
-	Params:
-		name String The new folder.
-		
-	Error:
-		if this GUI already has a folder by the specified name
+      Creates a new subfolder GUI instance.
+      
+      Returns: dat.GUI - The new folder.
+      
+      @param name (String) The new folder.
+         
+      Error:
+         if this GUI already has a folder by the specified name
 	]]
 	function gui.addFolder(name)
 		
@@ -306,7 +288,7 @@ function DatGUI.new(params)
 		-- by which to remember saved values (@TODO Future implementation, save as JSON)
 		for index = 1, #gui.children do
 			local child = gui.children[index]
-			if child.isGui and child._name == name then
+			if child.isGui and child.name == name then
 				error("You already have a folder in this GUI by the name \""..name.."\"");
 			end
 		end
@@ -325,9 +307,11 @@ function DatGUI.new(params)
 	   Removes the GUI from the game and unbinds all event listeners.
 	]]
 	function gui.remove()
+      
       if gui._is_removing_parent then
          return
       end
+      
       
 		for index = table.getn(gui.children), 1, -1  do
 			-- folders and controllers
@@ -339,30 +323,18 @@ function DatGUI.new(params)
          gui._is_removing_parent = true
 			gui.parent.removeChild(gui)
 		end
-		
-		for index = 1, #gui.connections do
-			gui.connections[index]:Disconnect()
-		end
-		
-		-- clear all references
-		gui.children = {}
-		gui.connections = {}
-		gui.ScrollFrameSize = nil
-		gui.ScrollContentSize = nil
-		gui.ScrollContentPosition = nil
 
-      gui.panel:Destroy()
-      gui.panel = nil
+      panelOnDestroy:Disconnect()
+      gui.Panel:Destroy()
 		
 		-- finally
 		gui = nil
 	end
 	
 	--[[
-	Removes the given controller/folder from the GUI.
+	   Removes the given controller/folder from the GUI.
 
-	Params:
-		controller	Controller
+	   @param item	Controller
 	]]
 	function gui.removeChild(item)
       if item._is_removing_child == true then
@@ -391,13 +363,13 @@ function DatGUI.new(params)
 	
 	-- Opens the GUI
 	function gui.open()
-		gui.panel.Closed.Value = false
+		gui.Panel.Closed.Value = false
 		return gui
 	end
 	
 	-- Closes the GUI
 	function gui.close()
-		gui.panel.Closed.Value = true
+		gui.Panel.Closed.Value = true
 		return gui
 	end
 	
@@ -405,29 +377,22 @@ function DatGUI.new(params)
       Permite redimensionar um root
    ]]
 	function gui.resize(width, height)
-		
+		gui.Panel:Resize(width, height)
 		return gui
 	end
 
    --[[
       Atualiza a posição da instancia
    ]]
-   function gui.move(posX, posY)
+   function gui.move(left, top)
+      gui.Panel:Move(left, top)
 		return gui
 	end
-	
-	-- Returns: dat.GUI - the topmost parent GUI of a nested GUI.
-	function gui.getRoot()
-		local g = gui;
-		while g.parent ~= nil do
-			g = g.parent;
-		end
-		return g;
-	end
 
+   if params.closed == true then 
+      gui.close()
+   end
 
-   -- unlockUI(gui, nil)
-	
 	return gui
 end
 

@@ -1,11 +1,15 @@
 local RunService           = game:GetService("RunService")
 local UserInputService     = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
-local Player               = game.Players.LocalPlayer or game.Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+local Players              = game:GetService('Players')
+local Player               = Players.LocalPlayer or Players:GetPropertyChangedSignal('LocalPlayer'):Wait()
 local Mouse                = Player:GetMouse()
 local Camera 	            = workspace.CurrentCamera
-local Misc                 = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
-local Constants            = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
+
+-- lib
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local Misc                 = require(Lib:WaitForChild("Misc"))
+local Constants            = require(Lib:WaitForChild("Constants"))
 
 local GUIUtils = {}
 
@@ -35,7 +39,7 @@ end
    Instantiating a generic Frame
 ]]
 function GUIUtils.CreateFrame(params)
-   local frame = Instance.new("Frame")
+   local frame = Instance.new('Frame')
    frame.AnchorPoint	            = Vector2.new(0, 0)
    frame.Position 			      = UDim2.new(0, 0, 0, 0)
    frame.Size 			            = UDim2.new(1, 0, 1, 0)

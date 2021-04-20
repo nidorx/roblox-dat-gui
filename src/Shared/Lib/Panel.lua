@@ -1,17 +1,22 @@
-local Player               = game.Players.LocalPlayer or game.Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+local Players              = game:GetService('Players')
+local Player               = Players.LocalPlayer or Players:GetPropertyChangedSignal('LocalPlayer'):Wait()
 local Mouse                = Player:GetMouse()
 local Camera 	            = workspace.CurrentCamera
-local Misc                 = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
-local Constants            = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
-local GUIUtils             = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
-local Timer                = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Timer"))
-local Scrollbar            = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Scrollbar"))
 
-local PANEL_MIN_WIDTH      = 250
-local PANEL_MAX_WIDTH      = 500
-local PANEL_MIN_HEIGHT     = 100
-local SNAP_TOLERANCE       = 15
-local PANEL_HEADER_HEIGHT  = 30
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local Misc                 = require(Lib:WaitForChild('Misc'))
+local Timer                = require(Lib:WaitForChild('Timer'))
+local Constants            = require(Lib:WaitForChild('Constants'))
+local GUIUtils             = require(Lib:WaitForChild('GUI'))
+local Scrollbar            = require(Lib:WaitForChild('Scrollbar'))
+
+local MIN_WIDTH      = 250
+local MAX_WIDTH      = 500
+local MIN_HEIGHT     = 100
+local HEADER_HEIGHT  = 30
+local SNAP_TOLERANCE = 15
+
+local PANEL_ID_SEQ         = 0
 
 -- os painéis que servem de guia para movimentação e resize
 local SNAP_PANELS = {}
@@ -21,40 +26,49 @@ local ROOT_PANELS = {}
 local Panel = {}
 Panel.__index = Panel
 
+Panel.MIN_WIDTH = MIN_WIDTH
+
 function Panel.new()
+
+   PANEL_ID_SEQ = PANEL_ID_SEQ + 1
+
+   local ID = PANEL_ID_SEQ
+
    local Frame = GUIUtils.CreateFrame()
    Frame.Name 			               = 'Panel'
    Frame.Size 			               = UDim2.new(0, 250, 0, 250)
-   Frame.BackgroundTransparency     = 0.9
+   Frame.BackgroundTransparency     = 0.95
    Frame.ClipsDescendants           = true
-   Frame.Parent                     = Constants.SCREEN_GUI
+   Frame.LayoutOrder                = 0
   
    local Content = GUIUtils.CreateFrame()
    Content.Name 			            = 'Content'
    Content.BackgroundTransparency   = 1
-   Content.Position 			         = UDim2.new(0, 5, 0, PANEL_HEADER_HEIGHT)
-   Content.Size 			            = UDim2.new(1, -5, 0, -PANEL_HEADER_HEIGHT)
+   Content.Position 			         = UDim2.new(0, 5, 0, HEADER_HEIGHT)
+   Content.Size 			            = UDim2.new(1, -5, 0, -HEADER_HEIGHT)
    Content.Parent = Frame
-
-   local BorderBottom = GUIUtils.CreateFrame()
-   BorderBottom.Name 			      = 'BorderBottom'
-   BorderBottom.BackgroundColor3    = Constants.BORDER_COLOR
-   BorderBottom.Position 			   = UDim2.new(0, 0, 0, PANEL_HEADER_HEIGHT-1)
-   BorderBottom.Size 			      = UDim2.new(1, 0, 0, 1)
-   BorderBottom.ZIndex              = 2
-   BorderBottom.Parent = Frame
 
    local Header = GUIUtils.CreateFrame()
    Header.Name 			            = 'Header'
    Header.BackgroundColor3          = Constants.FOLDER_COLOR
-   Header.Size 			            = UDim2.new(1, 0, 0, PANEL_HEADER_HEIGHT)
+   Header.Size 			            = UDim2.new(1, 0, 0, HEADER_HEIGHT)
    Header.Parent = Frame
+
+   local Border = GUIUtils.CreateFrame()
+   Border.Name 			            = 'BorderBottom'
+   Border.BackgroundColor3          = Constants.BORDER_COLOR
+   Border.Position 			         = UDim2.new(0, 0, 1, -1)
+   Border.Size 			            = UDim2.new(1, 0, 0, 1)
+   Border.ZIndex                    = 1
+   Border.Parent = Header
 
    local LabelText = GUIUtils.CreateLabel()
    LabelText.Name                   = 'Label'
    LabelText.Position 			      = UDim2.new(0, 16, 0, 0)
    LabelText.Size 			         = UDim2.new(1, -16, 1, -1)
    LabelText.Parent = Header
+
+   local OnDestroy = Instance.new('BindableEvent')
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
@@ -68,20 +82,36 @@ function Panel.new()
    Label.Parent   = Frame
 
    local panel =  setmetatable({
-      _detached      = false,
-      _atached       = false,
-      Closed         = Closed,
-      Label          = Label,
-      LabelText      = LabelText,
-      Frame          = Frame,
-      Content        = Content,
-      Header         = Header,
+      ['_id']            = ID,
+      ['_detached']      = false,
+      ['_atached']       = false,
+      ['_onDestroy']     = OnDestroy,
+      ['Closed']         = Closed,
+      ['Label']          = Label,
+      ['LabelText']      = LabelText,
+      ['Frame']          = Frame,
+      ['Content']        = Content,
+      ['Header']         = Header
    }, Panel)
    
    Frame:SetAttribute('IsPanel', true)
+   Frame:SetAttribute('PanelId', ID)
    Frame:SetAttribute('IsClosed', false)
    
    local connections = {}
+
+   local lastChildLayoutOrder = 0
+
+   -- quando remove e adiona o mesmo objeto, ele deve voltar ao seu lugar original
+   table.insert(connections, Content.ChildAdded:Connect(function(child)
+      local layoutOrder = child:GetAttribute('LayoutOrderOnPanel_'..ID)
+      if layoutOrder == nil then 
+         layoutOrder = lastChildLayoutOrder
+         lastChildLayoutOrder = lastChildLayoutOrder+1
+      end
+      child.LayoutOrder = layoutOrder
+      child:SetAttribute('LayoutOrderOnPanel_'..ID, layoutOrder)
+   end))
    
    table.insert(connections, GUIUtils.OnClick(Header, function(el, input)
       Closed.Value = not Closed.Value
@@ -104,6 +134,10 @@ function Panel.new()
    return panel
 end
 
+function Panel:OnDestroy(callback)
+   return self._onDestroy.Event:Connect(callback)
+end
+
 function Panel:Destroy()
    self._disconnect()
    if self._detached == true then 
@@ -112,9 +146,16 @@ function Panel:Destroy()
    if self._atached == true then 
       self._disconnectAtach()
    end
+
+   self._onDestroy:Fire()
 end
 
-function Panel:Atach()
+--[[
+   Adciona esse panel em outro elemento. 
+
+   Ao fazer isso, o painel perde algumas características como scrollbar, redimensionamento e movimentação
+]]
+function Panel:AttachTo(parent)
    if self._detached == true then 
       self._disconnectDetach()
    end
@@ -125,36 +166,70 @@ function Panel:Atach()
    self._atached     = true
    local connections = {}
 
-   self.Frame.Size 			          = UDim2.new(1, 0, 0, 250)
-   self.Frame.BackgroundTransparency = 1
-   self.LabelText.TextXAlignment     = Enum.TextXAlignment.Left
+   self.Frame.Size 			            = UDim2.new(1, 0, 0, 250)
+   self.Frame.Visible                  = true
+   self.Frame.BackgroundTransparency   = 1
+   self.Content.Size 			         = UDim2.new(1, -5, 0, -HEADER_HEIGHT)
+   self.Content.Position 			      = UDim2.new(0, 5, 0, HEADER_HEIGHT)
+   self.LabelText.TextXAlignment       = Enum.TextXAlignment.Left
 
-   local Chevron = GUIUtils.CreateImageLabel(Constants.ICON_CHEVRON)
-   Chevron.Name 			            = "Chevron"
-   Chevron.Position 			         = UDim2.new(0, 6, 0.5, -3)
-   Chevron.Size 			            = UDim2.new(0, 5, 0, 5)
-   Chevron.ImageColor3              = Constants.LABEL_COLOR
-   Chevron.Rotation                 = 90
-   Chevron.Parent = self.Header
+   local Detach = GUIUtils.CreateFrame()
+   Detach.Name 			               = 'Detach'
+   Detach.Position 			            = UDim2.new(1, -HEADER_HEIGHT, 0, 0)
+   Detach.Size 			               = UDim2.new(0,  HEADER_HEIGHT, 0, HEADER_HEIGHT)
+   Detach.BackgroundTransparency       = 1
+   Detach.Parent = self.Header
+
+   local DetachIcon = GUIUtils.CreateImageLabel(Constants.ICON_PIN)
+   DetachIcon.Name 			            = 'Icon'
+   DetachIcon.Position 			         = UDim2.new(0, 10, 0, 10)
+   DetachIcon.Size 			            = UDim2.new(0, 10, 0, 10)
+   DetachIcon.ImageColor3              = Constants.LABEL_COLOR
+   DetachIcon.ImageTransparency        = 0.95
+   DetachIcon.Parent = Detach
+
+   local ChevronIcon = GUIUtils.CreateImageLabel(Constants.ICON_CHEVRON)
+   ChevronIcon.Name 			            = 'Chevron'
+   ChevronIcon.Position 			      = UDim2.new(0, 6, 0.5, -3)
+   ChevronIcon.Size 			            = UDim2.new(0, 5, 0, 5)
+   ChevronIcon.ImageColor3             = Constants.LABEL_COLOR
+   ChevronIcon.Rotation                = 90
+   ChevronIcon.Parent = self.Header
+
+   self.Frame.Parent = parent
 
    local function onCloseChange()
       if self.Closed.Value then
-         Chevron.Rotation = 0
+         ChevronIcon.Rotation = 0
       else
-         Chevron.Rotation = 90
+         ChevronIcon.Rotation = 90
       end
    end
+
    onCloseChange()
+
    table.insert(connections, self.Closed.Changed:Connect(onCloseChange))
+
+   table.insert(connections, GUIUtils.OnHover(Detach, function(hover)
+      DetachIcon.ImageTransparency = hover and 0 or 0.95
+   end))
+
+   table.insert(connections, GUIUtils.OnClick(Detach, function(el, input)
+      self:Detach()
+   end))
 
    self._disconnectAtach = Misc.DisconnectFn(connections, function()
       self._atached        = false
-      Chevron.Parent       = nil
+      ChevronIcon.Parent   = nil
+      Detach.Parent        = nil
    end)
 end
 
-function Panel:Detach()
-   if self._atached == true then 
+function Panel:Detach(closeable)
+   if self._atached == true then
+      if closeable  ~= true then
+         self._detachedFrom = self.Frame.Parent
+      end
       self._disconnectAtach()
    end
    
@@ -167,23 +242,26 @@ function Panel:Detach()
 
    ROOT_PANELS[self.Frame] = self
 
-   self.Frame.BackgroundTransparency = 0.9
-   self.LabelText.TextXAlignment     = Enum.TextXAlignment.Center
-
+   self.Frame.Visible                  = false
+   self.Frame.BackgroundTransparency   = 0.95
+   self.LabelText.TextXAlignment       = Enum.TextXAlignment.Center
+   self.Content.Position 			      = UDim2.new(0, 0, 0, 0)
+   
    local InnerShadow = GUIUtils.CreateImageLabel('rbxassetid://6704730899')
-   InnerShadow.Name 			   = "Shadow"
-   InnerShadow.Position 		= UDim2.new(0, 0, 1, 0)
-   InnerShadow.Size 			   = UDim2.new(1, 0, 0, 20)
-   InnerShadow.ImageColor3    = Color3.fromRGB(0, 0, 0)
+   InnerShadow.Name 			      = 'Shadow'
+   InnerShadow.Position 		   = UDim2.new(0, 0, 1, 0)
+   InnerShadow.Size 			      = UDim2.new(1, 0, 0, 20)
+   InnerShadow.ImageColor3       = Color3.fromRGB(0, 0, 0)
+   InnerShadow.ImageTransparency = 0.5
    InnerShadow.Parent = self.Header
 
    -- Resizable
    local ResizeHandle = GUIUtils.CreateFrame()
-   ResizeHandle.Name 			            = "ResizeHandleSE"
-   ResizeHandle.BackgroundTransparency  = 1
-   ResizeHandle.Size 			            = UDim2.new(0, 20, 0, 20)
+   ResizeHandle.Name 			         = 'ResizeHandleSE'
+   ResizeHandle.BackgroundTransparency = 1
+   ResizeHandle.Size 			         = UDim2.new(0, 20, 0, 20)
    ResizeHandle.Position 			      = UDim2.new(1, -17, 1, -17)
-   ResizeHandle.ZIndex                  = 10
+   ResizeHandle.ZIndex                 = 10
    ResizeHandle.Parent = self.Frame
 
    local ResizeIcon = GUIUtils.CreateImageLabel(Constants.ICON_RESIZE_SE)
@@ -192,43 +270,110 @@ function Panel:Detach()
    ResizeIcon.ImageTransparency  = 0.8
    ResizeIcon.Parent             = ResizeHandle
 
-   local framePosStart
-   local sizeStart
-   local mouseCursor
-   local isHover
-   local isScaling
-   local mouseCursorOld
-
    local function onCloseChange()
 
       local frame = self.Frame
 
       if self.Closed.Value then
          ResizeHandle.Visible = false
-
-         self._openSize = {
-            Width    = frame.Size.X.Offset,
-            Height   = frame.Size.Y.Offset
-         }
-
-         frame.Size     = UDim2.new(0, self._openSize.Width, 0, PANEL_HEADER_HEIGHT)
+         frame.Size = UDim2.new(0, frame.Size.X.Offset, 0, HEADER_HEIGHT)
       else
          ResizeHandle.Visible = true
-         local width    = PANEL_MIN_WIDTH
-         local height   = PANEL_MIN_HEIGHT
+         local width    = frame.Size.X.Offset
+         local height   = MIN_HEIGHT
 
-         if self._openSize then 
-            width    = self._openSize.Width
-            height   = self._openSize.Height            
+         if self._size then
+            width    = self._size.Width
+            height   = self._size.Height            
          end
-
-         self._openSize       = nil
-         frame.Size     = UDim2.new(0, width, 0, height)
+         frame.Size = UDim2.new(0, width, 0, height)
       end
       
       self:_checkConstraints()
       self:_updateSnapInfo()
    end
+
+   if closeable  == true then
+      local Close = GUIUtils.CreateFrame()
+      Close.Name 			            = 'Atach'
+      Close.Position 			      = UDim2.new(1, -HEADER_HEIGHT, 0, 0)
+      Close.Size 			            = UDim2.new(0,  HEADER_HEIGHT, 0, HEADER_HEIGHT)
+      Close.BackgroundColor3        = Constants.CLOSE_COLOR
+      Close.BackgroundTransparency  = 1
+      Close.ZIndex                  = 2
+      Close.Parent = self.Header
+   
+      local CloseIcon = GUIUtils.CreateImageLabel(Constants.ICON_CHECKMARK)
+      CloseIcon.Name 			      = 'Icon'
+      CloseIcon.Position 			   = UDim2.new(0, 10, 0, 10)
+      CloseIcon.Size 			      = UDim2.new(0, 10, 0, 10)
+      CloseIcon.ImageColor3        = Constants.LABEL_COLOR
+      CloseIcon.ImageTransparency  = 0.95
+      CloseIcon.Parent = Close
+
+      table.insert(connections, GUIUtils.OnHover(Close, function(hover)
+         Close.BackgroundTransparency = hover and 0 or 1
+         CloseIcon.ImageTransparency  = hover and 0 or 0.95
+      end))
+   
+      table.insert(connections, GUIUtils.OnClick(Close, function(el, input)
+         self:Destroy()
+      end))
+   end
+
+   -- adiciona habilidade de reconectar-se ao lugar de origem
+   local Atach
+   if self._detachedFrom ~= nil then 
+      local origin = self._detachedFrom
+      Atach = GUIUtils.CreateFrame()
+      Atach.Name 			            = 'Atach'
+      Atach.Position 			      = UDim2.new(1, -HEADER_HEIGHT, 0, 0)
+      Atach.Size 			            = UDim2.new(0,  HEADER_HEIGHT, 0, HEADER_HEIGHT)
+      Atach.BackgroundTransparency  = 1
+      Atach.Parent = self.Header
+   
+      local DetachIcon = GUIUtils.CreateImageLabel(Constants.ICON_PIN)
+      DetachIcon.Name 			      = 'Icon'
+      DetachIcon.Position 			   = UDim2.new(0, 10, 0, 10)
+      DetachIcon.Size 			      = UDim2.new(0, 10, 0, 10)
+      DetachIcon.ImageColor3        = Constants.LABEL_COLOR
+      DetachIcon.ImageTransparency  = 0.95
+      DetachIcon.Parent = Atach
+
+      table.insert(connections, GUIUtils.OnHover(Atach, function(hover)
+         DetachIcon.ImageTransparency = hover and 0 or 0.95
+      end))
+   
+      table.insert(connections, GUIUtils.OnClick(Atach, function(el, input)
+         self:AttachTo(origin)
+      end))
+
+      local width  = self.Frame.AbsoluteSize.X
+      local height = self.Frame.AbsoluteSize.Y
+      local left   = self.Frame.AbsolutePosition.X - (width+10)
+
+      if left < 0 then 
+         -- right side
+         left = self.Frame.AbsolutePosition.X + ( width + 10)
+      end
+
+      local top    = self.Frame.AbsolutePosition.Y + Constants.GUI_INSET
+
+      Timer.SetTimeout(function()
+         self:Resize(width, height)
+         self:Move(left, top)
+         onCloseChange()
+      end, 0)
+   end
+
+   self.Frame.Parent = Constants.SCREEN_GUI
+
+   local framePosStart
+   local sizeStart
+   local mouseCursor
+   local isHover
+   local isScaling
+   local mouseCursorOld
 
    onCloseChange()
 
@@ -287,34 +432,39 @@ function Panel:Detach()
    end))
 
    local updateTimeout
-
-   table.insert(connections, self.Content.DescendantAdded:Connect(function(descendant)
+   local function updateContentSize()
       Timer.Clear(updateTimeout)
       updateTimeout = Timer.SetTimeout(function()
          self:UpdateContentSize()
       end, 10)
-   end))
+   end
 
-   table.insert(connections, self.Content.DescendantRemoving:Connect(function(descendant)
-      Timer.Clear(updateTimeout)
-      updateTimeout = Timer.SetTimeout(function()
-         self:UpdateContentSize()
-      end, 10)
-   end))
+   updateContentSize()
 
-   self._scrollbar = Scrollbar.new(self.Frame, self.Content, PANEL_HEADER_HEIGHT)
+   table.insert(connections, self.Content.DescendantAdded:Connect(updateContentSize))
+   table.insert(connections, self.Content.DescendantRemoving:Connect(updateContentSize))
+
+   self._scrollbar = Scrollbar.new(self.Frame, self.Content, HEADER_HEIGHT)
 
    self._disconnectDetach = Misc.DisconnectFn(connections, function()
-      self._detached          = false
-      ResizeHandle.Parent     = nil
-      InnerShadow.Parent           = nil
+      self._scrollbar:Destroy()
+      Timer.Clear(updateTimeout)
 
+      ResizeHandle.Parent     = nil
+      InnerShadow.Parent      = nil
+      
+      if Atach ~= nil then 
+         Atach.Parent = nil
+      end
+      
       if SNAP_PANELS[self] then 
          SNAP_PANELS[self] = nil
       end
-
-      self._scrollbar:Destroy()
+      
+      self._openSize          = nil
+      
       ROOT_PANELS[self.Frame] = nil
+      self._detached          = false
    end)
 
    self:_updateSnapInfo()
@@ -389,12 +539,17 @@ function Panel:Resize(width, height)
       end
    end
    
-   width    = math.clamp(width, PANEL_MIN_WIDTH, PANEL_MAX_WIDTH)
-   height   = math.clamp(height, PANEL_MIN_HEIGHT, Camera.ViewportSize.Y)   
+   width    = math.clamp(width, MIN_WIDTH, MAX_WIDTH)
+   height   = math.clamp(height, MIN_HEIGHT, Camera.ViewportSize.Y)   
    frame.Size = UDim2.new(0, width, 0, height)
 
-   self:_updateSnapInfo()
+   self._size = {
+      Width    = width,
+      Height   = height
+   }
 
+   self:_checkConstraints()
+   self:_updateSnapInfo()
    self:UpdateContentSize()
 end
 
@@ -502,35 +657,57 @@ function Panel:Move(left, top)
    top = math.clamp(top, 0, math.max(posMaxY, 0))
    frame.Position = UDim2.new(0, left, 0, top)
 
-   self:_updateSnapInfo()   
-end
-
-function Panel:_getRootFrame()
-   local frame = self.Frame;
-   while frame.Parent ~= Constants.SCREEN_GUI do
-      frame = frame.Parent;
-   end
-   return frame;
+   self:_checkConstraints()
+   self:_updateSnapInfo()
 end
 
 function Panel:UpdateContentSize()
 
    local rootFrame = self:_getRootFrame()
 
-   local updateTimeout = rootFrame:GetAttribute("UpdateContentSizeTimeout")
+   local updateTimeout = rootFrame:GetAttribute('UpdateContentSizeTimeout')
    Timer.Clear(updateTimeout)
 
-   updateTimeout = Timer.SetTimeout(function()      
+   updateTimeout = Timer.SetTimeout(function()
+      local rootPanel = ROOT_PANELS[rootFrame]
+      if rootPanel == nil then 
+         return
+      end
+      
       -- itera sobre todos os elementos ajustando suas posições relativas e contabilizando o tamanho total do conteúdo
       local function iterate(frame, position)
-         position = position + PANEL_HEADER_HEIGHT
+         position = position + HEADER_HEIGHT
          local content = frame:FindFirstChild('Content')
-         if frame:GetAttribute("IsClosed") == true then
+         local panelId = frame:GetAttribute('PanelId')
+         if frame:GetAttribute('IsClosed') == true then
             content.Visible = false
          else
             content.Visible = true
+
+            -- sort by layout order
+            -- use https://developer.roblox.com/en-us/api-reference/class/UIListLayout ?
+
+            local layoutOrders = {}
+            local layoutOrdersChild = {}
+
+            local HUGE = 9999999999
+
             for _, child in pairs(content:GetChildren()) do
-               if child:GetAttribute("IsPanel") == true then
+               local layoutOrder = child:GetAttribute('LayoutOrderOnPanel_'..panelId)
+               if layoutOrder == nil then 
+                  print('NÃO DEVERIA ENTRAR AQUI', child)
+                  layoutOrder = HUGE
+                  HUGE = HUGE + 1
+               end
+               table.insert(layoutOrders, layoutOrder)
+               layoutOrdersChild[layoutOrder] = child
+            end
+
+            table.sort(layoutOrders)
+
+            for _, layoutOrder in ipairs(layoutOrders) do
+               local child = layoutOrdersChild[layoutOrder]
+               if child:GetAttribute('IsPanel') == true then
                   child.Position = UDim2.new(0, 0, 0, position)
                   position = position + iterate(child, 0)
                else
@@ -554,12 +731,20 @@ function Panel:UpdateContentSize()
       
       iterate(rootFrame, 0)
 
-      if ROOT_PANELS[rootFrame] then 
-         ROOT_PANELS[rootFrame]._scrollbar:Update()
-      end
+      rootFrame.Visible = true
+
+      rootPanel._scrollbar:Update()
    end, 10)
 
-   rootFrame:SetAttribute("UpdateContentSizeTimeout", updateTimeout)
+   rootFrame:SetAttribute('UpdateContentSizeTimeout', updateTimeout)
+end
+
+function Panel:_getRootFrame()
+   local frame = self.Frame;
+   while frame.Parent ~= Constants.SCREEN_GUI do
+      frame = frame.Parent;
+   end
+   return frame;
 end
 
 --[[
@@ -585,11 +770,11 @@ function Panel:_checkConstraints()
    top = math.clamp(frame.Position.Y.Offset, 0, math.max(posMaxY, 0))
    frame.Position = UDim2.new(0, left, 0, top)
 
-   width    = math.clamp(width, PANEL_MIN_WIDTH, PANEL_MAX_WIDTH)
+   width    = math.clamp(width, MIN_WIDTH, MAX_WIDTH)
 
-   local minHeight = PANEL_MIN_HEIGHT
+   local minHeight = MIN_HEIGHT
    if self.Closed.Value then 
-      minHeight = PANEL_HEADER_HEIGHT
+      minHeight = HEADER_HEIGHT
    end
 
    height   = math.clamp(height, minHeight, Camera.ViewportSize.Y)   

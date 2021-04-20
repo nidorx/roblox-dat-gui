@@ -1,16 +1,7 @@
-repeat wait() until game.Players.LocalPlayer.Character
 
 --[[
    Tests during development
 ]]
-
--- Player, Workspace & Environment
-local Players 	= game:GetService("Players")
-local Player 	= Players.LocalPlayer
-local Character	   = Player.Character
-local Humanoid 	= Character:WaitForChild("Humanoid")
-local Camera 	= workspace.CurrentCamera
-
 
 -- services
 local TweenService = game:GetService("TweenService")
@@ -31,7 +22,10 @@ ColorCorrection.Parent  = Lighting
 SunRays.Parent          = Lighting
 
 -- root gui
-local gui = DatGUI.new({ width = 300, fixed = false })
+local gui = DatGUI.new({ 
+   closeable = true,
+   -- width = 300
+})
 
 --- Lighting
 local guiLigh		 	= gui.addFolder('Lighting')

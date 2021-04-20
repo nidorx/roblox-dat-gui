@@ -1,8 +1,11 @@
 local RunService        = game:GetService("RunService")
 local UserInputService  = game:GetService("UserInputService")
-local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
-local GUIUtils          = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
-local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
+
+-- lib
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local Misc              = require(Lib:WaitForChild("Misc"))
+local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
@@ -75,9 +78,9 @@ local function CreateGUI()
       local  RenderText = Misc.CreateTextNumberFn(AxisPrecision)
       
       local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
-         Color    = Constants.NUMBER_COLOR,
-         Render   = RenderText,
-         Parse    = function (text, value)
+         ['Color']    = Constants.NUMBER_COLOR,
+         ['Render']   = RenderText,
+         ['Parse']    = function (text, value)
             if string.len(text) == 0 then
                -- no changes
                return '0'
@@ -146,12 +149,12 @@ local function CreateGUI()
       local pos = (i-1)*0.333
       local TextValue, SliderValue, SliderMin, SliderMax,  RenderText, DisconnectText =  CreateAxisController(axis, UDim2.new(0, 0, pos, 0))
       Axes[axis] = {
-         TextValue   = TextValue,
-         SliderValue = SliderValue,
-         SliderMin   = SliderMin, 
-         SliderMax   = SliderMax,
-         RenderText  = RenderText,
-         Disconnect  = DisconnectText
+         ['TextValue']   = TextValue,
+         ['SliderValue'] = SliderValue,
+         ['SliderMin']   = SliderMin, 
+         ['SliderMax']   = SliderMax,
+         ['RenderText']  = RenderText,
+         ['Disconnect']  = DisconnectText
       }
 
       table.insert(connections, SliderValue.Changed:connect(function()

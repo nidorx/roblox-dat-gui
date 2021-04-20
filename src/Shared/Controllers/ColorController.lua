@@ -1,9 +1,12 @@
 local RunService        = game:GetService("RunService")
 local UserInputService  = game:GetService("UserInputService")
-local GUIUtils          = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
-local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
-local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
-local Popover           = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Popover"))
+
+-- lib
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local Misc              = require(Lib:WaitForChild("Misc"))
+local Popover           = require(Lib:WaitForChild("Popover"))
+local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local Constants         = require(Lib:WaitForChild("Constants"))
 
 local WHITE = Color3.fromRGB(255, 255, 255)
 
@@ -424,7 +427,9 @@ local function CreateGUI()
       end
    end))
 
-   return Controller, Misc.DisconnectFn(connections, DisconnectParent, DisconnectText)
+   return Controller, Misc.DisconnectFn(connections, DisconnectParent, DisconnectText, function()
+      popover:Destroy()
+   end)
 end
 
 -- Provides a text input to alter the string property of an object.

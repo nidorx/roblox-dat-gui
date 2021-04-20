@@ -1,9 +1,11 @@
-local Mouse 	         = game.Players.LocalPlayer:GetMouse()
 local RunService        = game:GetService("RunService")
 local UserInputService  = game:GetService("UserInputService")
-local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
-local GUIUtils          = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
-local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
+
+-- lib
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local Misc              = require(Lib:WaitForChild("Misc"))
+local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
@@ -39,9 +41,9 @@ local function CreateGUI()
    local IsControllerActive = Instance.new('BoolValue')
 
    local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
-      Color    = Constants.NUMBER_COLOR,
-      Render   = RenderText,
-      Parse    = function (text, value)
+      ['Color']    = Constants.NUMBER_COLOR,
+      ['Render']   = RenderText,
+      ['Parse']    = function (text, value)
          if string.len(text) == 0 then
             -- no changes
             return '0'
