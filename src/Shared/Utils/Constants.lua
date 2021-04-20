@@ -37,7 +37,8 @@ return {
    MODAL_GUI               = MODAL_GUI,
    -- general
    BACKGROUND_COLOR        = Color3.fromRGB(26, 26, 26),
-   BACKGROUND_COLOR_2      = Color3.fromRGB(34, 34, 34),
+   BACKGROUND_COLOR_HOVER  = Color3.fromRGB(17, 17, 17),
+   SCROLLBAR_COLOR         = Color3.fromRGB(103, 103, 103),
    BORDER_COLOR            = Color3.fromRGB(44, 44, 44),
    BORDER_COLOR_2          = Color3.fromRGB(85, 85, 85),
    LABEL_COLOR             = Color3.fromRGB(238, 238, 238),

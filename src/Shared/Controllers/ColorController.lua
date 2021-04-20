@@ -3,6 +3,7 @@ local UserInputService  = game:GetService("UserInputService")
 local GUIUtils          = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("GUI"))
 local Constants         = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Constants"))
 local Misc              = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Misc"))
+local Popover           = require(game.ReplicatedStorage:WaitForChild("Utils"):WaitForChild("Popover"))
 
 local WHITE = Color3.fromRGB(255, 255, 255)
 
@@ -89,8 +90,8 @@ local function CreateGUI()
 
    local Selector = GUIUtils.CreateFrame()
    Selector.Name 			            = "Selector"
-   Selector.BackgroundColor3        = Constants.BACKGROUND_COLOR_2
-   Selector.BorderColor3            = Constants.BACKGROUND_COLOR_2
+   Selector.BackgroundColor3        = Constants.BACKGROUND_COLOR_HOVER
+   Selector.BorderColor3            = Constants.BACKGROUND_COLOR_HOVER
    Selector.BorderSizePixel 			= 3
    Selector.Position 			      = UDim2.new(0, 0, 0, 0)
    Selector.Size 			            = UDim2.new(0, 122, 0, 102)
@@ -244,7 +245,7 @@ local function CreateGUI()
       SatLumKnob.BackgroundColor3 	= Value.Value	
    end
 
-   local popover = GUIUtils.CreatePopover(TextFrame, Vector2.new(122, 102), 'bottom', -4)
+   local popover = Popover.new(TextFrame, Vector2.new(122, 102), 'bottom', -4)
    Selector.Parent = popover.Frame
 
    -- Checks the selector's visibility

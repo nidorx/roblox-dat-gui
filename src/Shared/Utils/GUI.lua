@@ -9,561 +9,6 @@ local Constants            = require(game.ReplicatedStorage:WaitForChild("Utils"
 
 local GUIUtils = {}
 
--- https://devforum.roblox.com/t/gui-absoluteposition-doesnt-respect-ignoreguiinset/1168583/5
-local GUI_INSET = 36
-
-
-
-local POPOVER_SEQ    = 0
-
-local Popover = {}
-Popover.__index = Popover
-
-function Popover.new(reference, size, position, offset)
-   local frame = GUIUtils.CreateFrame()
-   POPOVER_SEQ = POPOVER_SEQ +1
-   frame.Name = 'Popover#'..POPOVER_SEQ
-
-   frame.Parent                  = Constants.MODAL_GUI
-   frame.Size                    = UDim2.new(0, size.X, 0, size.Y)
-   frame.BackgroundTransparency  = 1
-   frame.Visible                 = false
-   frame.ZIndex                  = 1000
-   -- frame.Active                  = true
-
-   if position == nil or position == '' then 
-      position = 'top'
-   end
-
-   if offset == nil then 
-      offset = 0
-   end
-
-   return setmetatable({
-      _reference  = reference,
-      _position   = position,
-      _offset     = offset, 
-      Frame       = frame,      
-   }, Popover)
-end
-
--- @TODO: ESTOU AQUI, CRIANDO UM POPOVER
-function Popover:Show()
-   local refPos = self._reference.AbsolutePosition
-   local refSiz = self._reference.AbsoluteSize
-   local scrSiz = Camera.ViewportSize
-
-   local size = self.Frame.AbsoluteSize
-
-   local posX
-   local posY
-
-   local offset = self._offset
-
-   if self._position == 'top' then
-      posX = refPos.X + (refSiz.X/2) - size.X/2
-
-      posY = refPos.Y - size.Y - self._offset 
-      if posY < -GUI_INSET then 
-         -- on bottom
-         posY = refPos.Y + refSiz.Y + self._offset
-      end
-
-   elseif self._position == 'bottom' then
-      posX = refPos.X + (refSiz.X/2) - size.X/2
-
-      posY = refPos.Y + refSiz.Y + self._offset
-      if (posY + size.Y) > scrSiz.Y - GUI_INSET then 
-         -- on top
-         posY = refPos.Y - size.Y - self._offset
-      end
-      
-   elseif self._position == 'left' then
-      posY = refPos.Y + (refSiz.Y/2) - (size.Y/2)
-      if posY < - GUI_INSET then 
-         posY = - GUI_INSET
-      end
-      if (posY + size.Y) > scrSiz.Y - GUI_INSET then 
-         posY = scrSiz.Y - GUI_INSET - size.Y
-      end
-
-      posX = refPos.X - size.X - self._offset
-      if posX  < 0 then 
-         -- on right
-         posX = refPos.X + refSiz.X + self._offset
-      end
-   
-   else
-      -- right
-      posY = refPos.Y + (refSiz.Y/2) - (size.Y/2)
-      if posY < - GUI_INSET then 
-         posY = - GUI_INSET
-      end
-      if (posY + size.Y) > scrSiz.Y - GUI_INSET then 
-         posY = scrSiz.Y - GUI_INSET - size.Y
-      end
-
-      posX = refPos.X + refSiz.X + self._offset
-      if (posX + size.X) > scrSiz.X then 
-         -- on left
-         posX = refPos.X - size.X - self._offset
-      end
-   end
-
-   self.Frame.Position  = UDim2.new(0, posX, 0, posY+GUI_INSET)
-   self.Frame.Visible   = true
-
-   -- on Change _reference property Show Again
-end
-
-function Popover:Hide()
-   self.Frame.Visible = false
-end
-
-function Popover:Destroy()
-   self.Frame.Parent = nil
-   self.Frame = nil
-   self._reference = nil
-end
-
-local PANEL_MIN_WIDTH   = 250
-local PANEL_MAX_WIDTH   = 500
-local PANEL_MIN_HEIGHT  = 100
-local SNAP_TOLERANCE    = 15
-
--- os painéis que servem de guia para movimentação e resize
-local SNAP_PANELS = {}
-
-local Panel = {}
-Panel.__index = Panel
-
-function Panel.new()
-   local Frame = GUIUtils.CreateFrame()
-   Frame.Name 			            = "Panel"
-   Frame.Size 			            = UDim2.new(0, 250, 0, 250)
-   Frame.BackgroundTransparency  = 0.9
-   Frame.Parent                  = Constants.SCREEN_GUI
-  
-   local Content = GUIUtils.CreateFrame()
-   Content.Name 			            = "Content"
-   Content.BackgroundTransparency   = 1
-   Content.Position 			         = UDim2.new(0, 5, 1, 0)
-   Content.Size 			            = UDim2.new(1, -5, 0, 100)
-   Content.Parent = Frame
-
-   local TitleFrame = GUIUtils.CreateFrame()
-   TitleFrame.Name 			         = "Title"
-   TitleFrame.BackgroundColor3      = Constants.FOLDER_COLOR
-   TitleFrame.Size 			         = UDim2.new(1, 0, 0, 30)
-   TitleFrame.Parent = Frame
-
-   local LabelText = GUIUtils.CreateLabel()
-   LabelText.Position 			      = UDim2.new(0, 16, 0, 0)
-   LabelText.Size 			         = UDim2.new(1, -16, 1, -1)
-   LabelText.Parent = TitleFrame
-
-   -- SCRIPTS ----------------------------------------------------------------------------------------------------------
-
-   local Closed = Instance.new('BoolValue')
-   Closed.Name     = 'Closed'
-   Closed.Value    = false
-   Closed.Parent   = Frame
-
-   local Label = Instance.new('StringValue')
-   Label.Name = 'Label'
-   Label.Parent = Frame
-
-   local connections = {}
-
-   table.insert(connections, GUIUtils.OnClick(TitleFrame, function(el, input)
-      Closed.Value = not Closed.Value
-   end))
-
-   table.insert(connections, Label.Changed:connect(function()
-      LabelText.Text = Label.Value
-   end))
-
-   return setmetatable({
-      _detached      = false,
-      _atached       = false,
-      _disconnect    = Misc.DisconnectFn(connections, function()
-         Frame.Parent = nil
-      end),
-      Closed         = Closed,
-      Label          = Label,
-      Frame          = Frame,
-      TitleFrame     = TitleFrame,
-   }, Panel)
-end
-
-function Panel:Destroy()
-   self._disconnect()
-   if self._detached == true then 
-      self._disconnectDetach()
-   end
-   if self._atached == true then 
-      self._disconnectAtach()
-   end
-end
-
-function Panel:Atach()
-   if self._detached == true then 
-      self._disconnectDetach()
-   end
-   if self._atached == true then 
-      return
-   end
-
-   self._atached     = true
-   local connections = {}
-
-   local BorderBottom = GUIUtils.CreateFrame()
-   BorderBottom.Name 			         = "BorderBottom"
-   BorderBottom.BackgroundColor3       = Constants.BORDER_COLOR
-   BorderBottom.Position 			      = UDim2.new(0, 0, 1, -1)
-   BorderBottom.Size 			         = UDim2.new(1, 0, 0, 1)
-   BorderBottom.ZIndex                 = 2
-   BorderBottom.Parent = self.Frame
-
-   local Chevron = GUIUtils.CreateImageLabel(Constants.ICON_CHEVRON)
-   Chevron.Name 			            = "Chevron"
-   Chevron.Position 			         = UDim2.new(0, 6, 0.5, -3)
-   Chevron.Size 			            = UDim2.new(0, 5, 0, 5)
-   Chevron.ImageColor3              = Constants.LABEL_COLOR
-   Chevron.Rotation                 = 90
-   Chevron.Parent = self.TitleFrame
-
-   if self.Closed.Value then
-      Chevron.Rotation = 0
-   else
-      Chevron.Rotation = 90
-   end
-
-   table.insert(connections, self.Closed.Changed:connect(function(closed)
-      if closed then
-         Chevron.Rotation = 0
-      else
-         Chevron.Rotation = 90
-      end
-   end))
-
-   self._disconnectAtach = Misc.DisconnectFn(connections, function()
-      self._atached        = false
-      Chevron.Parent       = nil
-      BorderBottom.Parent  = nil
-   end)
-end
-
-function Panel:Detach()
-   if self._atached == true then 
-      self._disconnectAtach()
-   end
-   if self._detached == true then 
-      return
-   end
-
-   self._detached    = true
-   local connections = {}
-
-   -- Resizable
-   local ResizeHandle = GUIUtils.CreateFrame()
-   ResizeHandle.Name 			            = "ResizeHandleSE"
-   ResizeHandle.BackgroundTransparency  = 1
-   ResizeHandle.Size 			            = UDim2.new(0, 20, 0, 20)
-   ResizeHandle.Position 			      = UDim2.new(1, -17, 1, -17)
-   ResizeHandle.ZIndex                  = 10
-   ResizeHandle.Parent = self.Frame
-
-   local ResizeIcon = GUIUtils.CreateImageLabel(Constants.ICON_RESIZE_SE)
-   ResizeIcon.Size         = UDim2.new(0, 11, 0, 11)
-   ResizeIcon.ImageColor3  = Constants.BACKGROUND_COLOR
-   ResizeIcon.Parent       = ResizeHandle
-
-   -- table.insert(connections, GUIUtils.OnHover(Resize, function(hover)
-   --    isHover = hover
-   --    update()
-   -- end))
-
-   local framePosStart
-   local sizeStart
-   local mouseCursor
-   local isHover
-   local isScaling
-   local mouseCursorOld
-
-   table.insert(connections, GUIUtils.OnDrag(self.TitleFrame, function(el, event, startPos, position, delta)
-      if event == 'start' then
-         framePosStart = Vector2.new(self.Frame.Position.X.Offset, self.Frame.Position.Y.Offset)
-
-      elseif event == 'end' then
-         framePosStart = nil
-
-      elseif event == 'drag' then
-         local framePos = framePosStart + delta
-         self:Move(framePos.X, framePos.Y)
-      end
-   end, 10))
-
-   local function updateMouse()
-      if isHover or isScaling then         
-         if mouseCursorOld == nil then 
-            mouseCursorOld = Mouse.Icon
-         end
-         Mouse.Icon = mouseCursor
-      else
-         Mouse.Icon = mouseCursorOld or ''
-      end
-   end
-
-   table.insert(connections, GUIUtils.OnHover(ResizeHandle, function(hover)
-      isHover = hover
-
-      if hover then 
-         mouseCursor = Constants.CURSOR_RESIZE_SE
-      end
-      updateMouse()
-   end))
-
-   table.insert(connections, GUIUtils.OnDrag(ResizeHandle, function(el, event, startPos, position, delta)
-      if event == 'start' then
-         isScaling = true
-         sizeStart = Vector2.new(self.Frame.Size.X.Offset, self.Frame.Size.Y.Offset)
-         updateMouse()
-         
-      elseif event == 'end' then
-         isScaling = false
-         sizeStart = nil
-         updateMouse()
-
-      elseif event == 'drag' then
-         local frameSize = sizeStart + delta
-         self:Resize(frameSize.X, frameSize.Y)
-      end
-   end))
-
-   self._disconnectDetach = Misc.DisconnectFn(connections, function()
-      self._detached          = false
-      ResizeHandle.Parent   = nil
-
-      if SNAP_PANELS[self] then 
-         SNAP_PANELS[self] = nil
-      end
-   end)
-
-   self:_updateSnapInfo()
-end
-
---[[
-   Só permite redimensionar o painel se ele estiver separado
-]]
-function Panel:Resize(width, height)
-   if self._detached ~= true then 
-      return
-   end
-
-   local frame = self.Frame
-
-   local left  = frame.Position.X.Offset
-   local top   = frame.Position.Y.Offset
-
-   local x1 = left
-   local x2 = left + width
-   local y1 = top
-   local y2 = top + height
-   
-   --[[
-         t
-      l  +----------------+ r
-         |                |
-         |                |
-         +----------------+  
-         b
-
-         y1
-      x1 +----------------+ x2
-         |                |
-         |                |
-         +----------------+
-         y2
-   ]]
-   for p, other in pairs(SNAP_PANELS) do
-      local canSnap = true
-      if
-         p == self or
-         x1 > other.r + SNAP_TOLERANCE or 
-         x2 < other.l - SNAP_TOLERANCE or
-         y1 > other.b + SNAP_TOLERANCE or
-         y2 < other.t - SNAP_TOLERANCE
-      then 
-         canSnap = false
-      end
-
-      if canSnap then
-         
-         -- ts
-         if math.abs( other.t - y2 ) <= SNAP_TOLERANCE then
-            height = other.t - y1
-         end
-
-         -- bs
-         if math.abs( other.b - y2 ) <= SNAP_TOLERANCE then 
-            height = other.b - y1
-         end
-         
-         -- ls
-         if math.abs( other.l - x2 ) <= SNAP_TOLERANCE then 
-            width = other.l - x1
-         end
-         
-         -- rs
-         if math.abs( other.r - x2 ) <= SNAP_TOLERANCE then 
-            width = other.r - x1
-         end
-      end
-   end
-   
-   width    = math.clamp(width, PANEL_MIN_WIDTH, PANEL_MAX_WIDTH)
-   height   = math.clamp(height, PANEL_MIN_HEIGHT, Camera.ViewportSize.Y)   
-   frame.Size = UDim2.new(0, width, 0, height)
-
-   self:_updateSnapInfo()
-end
-
-function Panel:Move(left, top)
-   if self._detached ~= true then 
-      return
-   end
-
-   local frame = self.Frame
-
-   local width    = frame.Size.X.Offset
-   local height   = frame.Size.Y.Offset
-
-   local x1 = left
-   local x2 = left + width
-   local y1 = top
-   local y2 = top + height
-
-   --[[
-      @see https://github.com/jquery/jquery-ui/blob/main/ui/widgets/draggable.js
-
-         t
-      l  +----------------+ r
-         |                |
-         |                |
-         +----------------+  
-         b
-
-         y1
-      x1 +----------------+ x2
-         |                |
-         |                |
-         +----------------+
-         y2
-
-   ]]
-   for p, other in pairs(SNAP_PANELS) do
-      local canSnap = true
-      if
-         p == self or
-         x1 > other.r + SNAP_TOLERANCE or 
-         x2 < other.l - SNAP_TOLERANCE or
-         y1 > other.b + SNAP_TOLERANCE or
-         y2 < other.t - SNAP_TOLERANCE
-      then 
-         canSnap = false
-      end
-
-      if canSnap then          
-         ----------------------------------
-         -- outer
-         ----------------------------------
-         
-         -- ts
-         if math.abs( other.t - y2 ) <= SNAP_TOLERANCE then 
-            top = other.t - height
-         end
-         
-         -- bs
-         if math.abs( other.b - y1 ) <= SNAP_TOLERANCE then 
-            top = other.b
-         end
-         
-         -- ls
-         if math.abs( other.l - x2 ) <= SNAP_TOLERANCE then 
-            left = other.l - width
-         end
-         
-         -- rs
-         if math.abs( other.r - x1 ) <= SNAP_TOLERANCE then 
-            left = other.r
-         end
-
-         ----------------------------------
-         -- inner
-         ----------------------------------
-
-         -- ts
-         if math.abs( other.t - y1 ) <= SNAP_TOLERANCE then 
-            top = other.t
-         end
-         
-         -- bs
-         if math.abs( other.b - y2 ) <= SNAP_TOLERANCE then 
-            top = other.b - height
-         end
-         
-         -- ls
-         if math.abs( other.l - x1 ) <= SNAP_TOLERANCE then 
-            left = other.l
-         end
-         
-         -- rs
-         if math.abs( other.r - x2 ) <= SNAP_TOLERANCE then 
-            left = other.r - width
-         end
-      end
-   end
-
-   local screenGUI = frame.Parent
-   local posMaxX = screenGUI.AbsoluteSize.X - width
-   local posMaxY = screenGUI.AbsoluteSize.Y - height
-   
-   left = math.clamp(left, 0, math.max(posMaxX, 0))
-   top = math.clamp(top, 0, math.max(posMaxY, 0))
-   frame.Position = UDim2.new(0, left, 0, top)
-
-   self:_updateSnapInfo()   
-end
-
---[[
-   Para os painéis que estão soltos, atualiza sua dimensão e posição, usado para que o snap aconteça durante o move e
-   resize
-]]
-function Panel:_updateSnapInfo()
-   local frame    = self.Frame
-   local width    = frame.Size.X.Offset
-   local height   = frame.Size.Y.Offset
-   local left     = frame.Position.X.Offset
-   local top      = frame.Position.Y.Offset
-
-   SNAP_PANELS[self] = {
-      l = left,
-      r = left + width,
-      t = top,
-      b = top + height
-   }
-end
-
-function GUIUtils.CreatePanel(reference, size, position, offset)
-   return Panel.new(reference, size, position, offset)
-end
-
-
-function GUIUtils.CreatePopover(reference, size, position, offset)
-   return Popover.new(reference, size, position, offset)
-end
-
 function GUIUtils.CreateImageLabel(image)
    local Check = Instance.new("ImageLabel")
    Check.Name 			            = "Icon"
@@ -1070,17 +515,35 @@ end
 local EVENT_SEQ               = 0
 local IS_DRAGGING             = false
 local HOVER_ELEMENTS_REF      = {}
+local DRAG_ELEMENTS_REF       = {}
 local TOPMOST_HOVER_ELM       = nil
+local TOPMOST_DRAG_ELM        = nil
 
 local function updateTopmost(x, y)
    local objects = Player.PlayerGui:GetGuiObjectsAtPosition(x, y)
    TOPMOST_HOVER_ELM = nil
+   TOPMOST_DRAG_ELM = nil
    for _, obj in ipairs(objects) do
-      for _, ref in ipairs(HOVER_ELEMENTS_REF) do
-         if ref.Element == obj then
-            TOPMOST_HOVER_ELM = obj
-            return
+      if TOPMOST_HOVER_ELM == nil then
+         for _, ref in ipairs(HOVER_ELEMENTS_REF) do
+            if ref.Element == obj then
+               TOPMOST_HOVER_ELM = obj
+               break
+            end
          end
+      end
+
+      if TOPMOST_DRAG_ELM == nil then
+         for _, ref in ipairs(DRAG_ELEMENTS_REF) do
+            if ref.Element == obj then
+               TOPMOST_DRAG_ELM = obj
+               break
+            end
+         end
+      end
+
+      if TOPMOST_DRAG_ELM ~= nil and TOPMOST_HOVER_ELM ~= nil then 
+         break
       end
    end
 end
@@ -1238,14 +701,28 @@ function GUIUtils.OnScroll(element, callback)
    table.insert(connections, GUIUtils.OnHover(element, function(hover)
       isHover = hover
    end, true))
+
+   -- for mobile
+   local posY 
+   table.insert(connections, GUIUtils.OnDrag(element, function(el, event, startPos, position, delta)
+      if event == 'start' then
+         posY = startPos.Y
+
+      elseif event == 'end' then
+         posY = nil
+
+      elseif event == 'drag' then
+         callback(element, (position.Y - posY)*3)
+         posY = position.Y
+      end
+   end, 20))
    
    ContextActionService:BindActionAtPriority(actionName, function(actionName, inputState, input)
       if not isHover or input.UserInputState ~= Enum.UserInputState.Change then
          return Enum.ContextActionResult.Pass
       end
 
-
-      callback(element, input)
+      callback(element, input.Position.Z*50)
       
       return Enum.ContextActionResult.Sink
    end, false, 999999999, Enum.UserInputType.MouseWheel)
@@ -1273,9 +750,12 @@ function GUIUtils.OnDrag(element, callback, offset)
       offset = 0
    end
 
+   local reference = { Element = element, Callback = callback }
+   table.insert(DRAG_ELEMENTS_REF, reference)
+
    table.insert(connections, GUIUtils.OnHover(element, function(hover)
       isHover = hover
-   end))
+   end, true))
 
    ContextActionService:BindActionAtPriority(actionName, function(actionName, inputState, input)
       if isDragging  then
@@ -1312,7 +792,7 @@ function GUIUtils.OnDrag(element, callback, offset)
             end
          end
       elseif inputState == Enum.UserInputState.Begin and input.UserInputType ~= Enum.UserInputType.MouseMovement then
-         if isHover then
+         if isHover and TOPMOST_DRAG_ELM == element then
             isDragging  = true
             startPos = Vector2.new(input.Position.X, input.Position.Y)
          end
@@ -1323,19 +803,12 @@ function GUIUtils.OnDrag(element, callback, offset)
 
    return Misc.DisconnectFnEvent(connections, function()
       ContextActionService:UnbindAction(actionName)
+
+      local idx = table.find(DRAG_ELEMENTS_REF, reference)
+      if idx ~= nil then
+         table.remove(DRAG_ELEMENTS_REF, idx)
+      end
    end)
 end
-
--- teste
-local panelA = Panel.new()
-panelA:Detach()
--- local panelB = Panel.new()
-
-local panelB = Panel.new()
-panelB:Detach()
-
-local panelC = Panel.new()
-panelC:Detach()
-
 
 return GUIUtils
