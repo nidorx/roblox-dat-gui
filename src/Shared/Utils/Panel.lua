@@ -23,37 +23,38 @@ Panel.__index = Panel
 
 function Panel.new()
    local Frame = GUIUtils.CreateFrame()
-   Frame.Name 			            = "Panel"
-   Frame.Size 			            = UDim2.new(0, 250, 0, 250)
-   Frame.BackgroundTransparency  = 0.9
-   Frame.ClipsDescendants        = true
-   Frame.Parent                  = Constants.SCREEN_GUI
+   Frame.Name 			               = 'Panel'
+   Frame.Size 			               = UDim2.new(0, 250, 0, 250)
+   Frame.BackgroundTransparency     = 0.9
+   Frame.ClipsDescendants           = true
+   Frame.Parent                     = Constants.SCREEN_GUI
   
    local Content = GUIUtils.CreateFrame()
-   Content.Name 			            = "Content"
+   Content.Name 			            = 'Content'
    Content.BackgroundTransparency   = 1
    Content.Position 			         = UDim2.new(0, 5, 0, PANEL_HEADER_HEIGHT)
    Content.Size 			            = UDim2.new(1, -5, 0, -PANEL_HEADER_HEIGHT)
    Content.Parent = Frame
 
    local BorderBottom = GUIUtils.CreateFrame()
-   BorderBottom.Name 			         = "BorderBottom"
-   BorderBottom.BackgroundColor3       = Constants.BORDER_COLOR
-   BorderBottom.Position 			      = UDim2.new(0, 0, 0, PANEL_HEADER_HEIGHT-1)
-   BorderBottom.Size 			         = UDim2.new(1, 0, 0, 1)
-   BorderBottom.ZIndex                 = 2
+   BorderBottom.Name 			      = 'BorderBottom'
+   BorderBottom.BackgroundColor3    = Constants.BORDER_COLOR
+   BorderBottom.Position 			   = UDim2.new(0, 0, 0, PANEL_HEADER_HEIGHT-1)
+   BorderBottom.Size 			      = UDim2.new(1, 0, 0, 1)
+   BorderBottom.ZIndex              = 2
    BorderBottom.Parent = Frame
 
-   local TitleFrame = GUIUtils.CreateFrame()
-   TitleFrame.Name 			         = "Title"
-   TitleFrame.BackgroundColor3      = Constants.FOLDER_COLOR
-   TitleFrame.Size 			         = UDim2.new(1, 0, 0, PANEL_HEADER_HEIGHT)
-   TitleFrame.Parent = Frame
+   local Header = GUIUtils.CreateFrame()
+   Header.Name 			            = 'Header'
+   Header.BackgroundColor3          = Constants.FOLDER_COLOR
+   Header.Size 			            = UDim2.new(1, 0, 0, PANEL_HEADER_HEIGHT)
+   Header.Parent = Frame
 
    local LabelText = GUIUtils.CreateLabel()
+   LabelText.Name                   = 'Label'
    LabelText.Position 			      = UDim2.new(0, 16, 0, 0)
    LabelText.Size 			         = UDim2.new(1, -16, 1, -1)
-   LabelText.Parent = TitleFrame
+   LabelText.Parent = Header
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
@@ -71,23 +72,24 @@ function Panel.new()
       _atached       = false,
       Closed         = Closed,
       Label          = Label,
+      LabelText      = LabelText,
       Frame          = Frame,
       Content        = Content,
-      TitleFrame     = TitleFrame,
+      Header         = Header,
    }, Panel)
    
-   Frame:SetAttribute("IsPanel", true)
-   Frame:SetAttribute("IsClosed", false)
+   Frame:SetAttribute('IsPanel', true)
+   Frame:SetAttribute('IsClosed', false)
    
    local connections = {}
    
-   table.insert(connections, GUIUtils.OnClick(TitleFrame, function(el, input)
+   table.insert(connections, GUIUtils.OnClick(Header, function(el, input)
       Closed.Value = not Closed.Value
    end))
 
    -- On close/open
    table.insert(connections, Closed.Changed:connect(function()
-      Frame:SetAttribute("IsClosed", Closed.Value)
+      Frame:SetAttribute('IsClosed', Closed.Value)
       panel:UpdateContentSize()
 	end))
 
@@ -123,8 +125,9 @@ function Panel:Atach()
    self._atached     = true
    local connections = {}
 
-   self.Frame.BackgroundTransparency = 1
    self.Frame.Size 			          = UDim2.new(1, 0, 0, 250)
+   self.Frame.BackgroundTransparency = 1
+   self.LabelText.TextXAlignment     = Enum.TextXAlignment.Left
 
    local Chevron = GUIUtils.CreateImageLabel(Constants.ICON_CHEVRON)
    Chevron.Name 			            = "Chevron"
@@ -132,7 +135,7 @@ function Panel:Atach()
    Chevron.Size 			            = UDim2.new(0, 5, 0, 5)
    Chevron.ImageColor3              = Constants.LABEL_COLOR
    Chevron.Rotation                 = 90
-   Chevron.Parent = self.TitleFrame
+   Chevron.Parent = self.Header
 
    local function onCloseChange()
       if self.Closed.Value then
@@ -154,6 +157,7 @@ function Panel:Detach()
    if self._atached == true then 
       self._disconnectAtach()
    end
+   
    if self._detached == true then 
       return
    end
@@ -164,6 +168,14 @@ function Panel:Detach()
    ROOT_PANELS[self.Frame] = self
 
    self.Frame.BackgroundTransparency = 0.9
+   self.LabelText.TextXAlignment     = Enum.TextXAlignment.Center
+
+   local InnerShadow = GUIUtils.CreateImageLabel('rbxassetid://6704730899')
+   InnerShadow.Name 			   = "Shadow"
+   InnerShadow.Position 		= UDim2.new(0, 0, 1, 0)
+   InnerShadow.Size 			   = UDim2.new(1, 0, 0, 20)
+   InnerShadow.ImageColor3    = Color3.fromRGB(0, 0, 0)
+   InnerShadow.Parent = self.Header
 
    -- Resizable
    local ResizeHandle = GUIUtils.CreateFrame()
@@ -217,10 +229,12 @@ function Panel:Detach()
       self:_checkConstraints()
       self:_updateSnapInfo()
    end
+
    onCloseChange()
+
    table.insert(connections, self.Closed.Changed:Connect(onCloseChange))
 
-   table.insert(connections, GUIUtils.OnDrag(self.TitleFrame, function(el, event, startPos, position, delta)
+   table.insert(connections, GUIUtils.OnDrag(self.Header, function(el, event, startPos, position, delta)
       if event == 'start' then
          framePosStart = Vector2.new(self.Frame.Position.X.Offset, self.Frame.Position.Y.Offset)
 
@@ -292,7 +306,8 @@ function Panel:Detach()
 
    self._disconnectDetach = Misc.DisconnectFn(connections, function()
       self._detached          = false
-      ResizeHandle.Parent   = nil
+      ResizeHandle.Parent     = nil
+      InnerShadow.Parent           = nil
 
       if SNAP_PANELS[self] then 
          SNAP_PANELS[self] = nil
@@ -381,8 +396,6 @@ function Panel:Resize(width, height)
    self:_updateSnapInfo()
 
    self:UpdateContentSize()
-
-   
 end
 
 function Panel:Move(left, top)

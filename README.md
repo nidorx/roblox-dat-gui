@@ -151,6 +151,8 @@ npm run build
 - [ ] AddChart
 - [ ] AddCurve (curve controller)
 - [ ] Color e Enum tem de ser popup, pois o container agora vai fazer crop dos descendentes
+- [ ] Panel Order
+- [ ] Save preferences
 
 
 ## Feedback, Requests and Roadmap
