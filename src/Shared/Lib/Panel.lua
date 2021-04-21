@@ -17,6 +17,7 @@ local HEADER_HEIGHT  = 30
 local SNAP_TOLERANCE = 15
 
 local PANEL_ID_SEQ         = 0
+local PANEL_ZINDEX         = 0
 
 -- os painéis que servem de guia para movimentação e resize
 local SNAP_PANELS = {}
@@ -112,11 +113,18 @@ function Panel.new()
       child.LayoutOrder = layoutOrder
       child:SetAttribute('LayoutOrderOnPanel_'..ID, layoutOrder)
    end))
+
+   table.insert(connections, GUIUtils.OnMousedown(Header, function(el, input)
+      if panel._detached == true then
+         PANEL_ZINDEX = PANEL_ZINDEX + 1
+         Frame.ZIndex = PANEL_ZINDEX
+      end
+   end))
    
    table.insert(connections, GUIUtils.OnClick(Header, function(el, input)
       Closed.Value = not Closed.Value
    end))
-
+   
    -- On close/open
    table.insert(connections, Closed.Changed:connect(function()
       Frame:SetAttribute('IsClosed', Closed.Value)
@@ -169,6 +177,7 @@ function Panel:AttachTo(parent)
    self.Frame.Size 			            = UDim2.new(1, 0, 0, 250)
    self.Frame.Visible                  = true
    self.Frame.BackgroundTransparency   = 1
+   self.Frame.ZIndex                   = 0
    self.Content.Size 			         = UDim2.new(1, -5, 0, -HEADER_HEIGHT)
    self.Content.Position 			      = UDim2.new(0, 5, 0, HEADER_HEIGHT)
    self.LabelText.TextXAlignment       = Enum.TextXAlignment.Left
@@ -246,6 +255,9 @@ function Panel:Detach(closeable)
    self.Frame.BackgroundTransparency   = 0.95
    self.LabelText.TextXAlignment       = Enum.TextXAlignment.Center
    self.Content.Position 			      = UDim2.new(0, 0, 0, 0)
+
+   PANEL_ZINDEX = PANEL_ZINDEX + 1
+   self.Frame.ZIndex = PANEL_ZINDEX
    
    local InnerShadow = GUIUtils.CreateImageLabel('rbxassetid://6704730899')
    InnerShadow.Name 			      = 'Shadow'

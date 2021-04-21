@@ -150,9 +150,10 @@ npm run build
 - [ ] AddLog
 - [ ] AddChart
 - [ ] AddCurve (curve controller)
-- [ ] Color e Enum tem de ser popup, pois o container agora vai fazer crop dos descendentes
+- [x] Color e Enum tem de ser popup, pois o container agora vai fazer crop dos descendentes
 - [x] Panel Order
 - [x] Panel Close (Destroy)
+- [x] Panel Zindex
 - [ ] Save preferences
 
 

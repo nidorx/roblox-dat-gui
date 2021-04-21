@@ -346,8 +346,6 @@ local OptionsObject = {
 
 local guiOthersOptions  = guiOthers.addFolder('Options')
 
-guiOthersOptions = guiLighAppearance
-
 guiOthersOptions.add(OptionsObject, 'OptionsEnum', Enum.ScaleType).listen().onChange(function(value, text)
    print('OptionsEnum = ', value, text)
    assert(OptionsObject.OptionsEnum == value)

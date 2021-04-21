@@ -7,6 +7,7 @@ local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
 local Popover           = require(Lib:WaitForChild("Popover"))
 local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local Scrollbar         = require(Lib:WaitForChild("Scrollbar"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
@@ -32,54 +33,59 @@ local function CreateGUI()
    SelectContainer.Size 			         = UDim2.new(1, -2, 1, -8)
    SelectContainer.Parent = Control
 
-   local popover = Popover.new(SelectContainer, Vector2.new(122, 102), 'bottom', -SelectContainer.AbsoluteSize.Y)
 
+   local itemHeight = SelectContainer.AbsoluteSize.Y
+
+   local popover = Popover.new(SelectContainer, Vector2.new(122, itemHeight), 'bottom', -itemHeight)
+   
    local List = GUIUtils.CreateFrame()
    List.Name 			            = "List"
    List.BackgroundTransparency   = 1
    List.Parent = popover.Frame
 
+   popover.Frame.ClipsDescendants = true
+   local scrollbar   = Scrollbar.new(popover.Frame, List, 0)
+
    local ListLayout = Instance.new("UIListLayout")
-   ListLayout.Name 			         = "Layout"
-   ListLayout.Archivable            = true
-   ListLayout.FillDirection         = Enum.FillDirection.Vertical
-   ListLayout.HorizontalAlignment   = Enum.HorizontalAlignment.Left
-   ListLayout.SortOrder             = Enum.SortOrder.LayoutOrder
-   ListLayout.VerticalAlignment     = Enum.VerticalAlignment.Top
+   ListLayout.Name 			               = "Layout"
+   ListLayout.Archivable                  = true
+   ListLayout.FillDirection               = Enum.FillDirection.Vertical
+   ListLayout.HorizontalAlignment         = Enum.HorizontalAlignment.Left
+   ListLayout.SortOrder                   = Enum.SortOrder.LayoutOrder
+   ListLayout.VerticalAlignment           = Enum.VerticalAlignment.Top
    ListLayout.Parent = List
 
    local DefaultOption = GUIUtils.CreateFrame()
-   DefaultOption.Name 			           = "Item"
-   DefaultOption.BackgroundColor3        = Constants.INPUT_COLOR
-   DefaultOption.BackgroundTransparency  = 0
-   DefaultOption.Size 			           = UDim2.new(1, 0, 0, 21)
-   DefaultOption.Visible                 = true
+   DefaultOption.Name 			            = "Item"
+   DefaultOption.BackgroundColor3         = Constants.INPUT_COLOR
+   DefaultOption.BackgroundTransparency   = 0
+   DefaultOption.Size 			            = UDim2.new(1, 0, 0, itemHeight)
+   DefaultOption.Visible                  = true
    DefaultOption.Parent = SelectContainer
 
-   local DefaultText = GUIUtils.CreateLabel()
-   DefaultText.Name 			            = "Text"
-   DefaultText.Position 			      = UDim2.new(0, 2, 0, 0)
-   DefaultText.Size 			            = UDim2.new(1, -4, 1, 0)
-   DefaultText.Text                    = 'Option'
-   DefaultText.TextColor3 			      = Constants.STRING_COLOR
-   DefaultText.Parent = DefaultOption
+   local DefaultLabel = GUIUtils.CreateLabel()
+   DefaultLabel.Name 			            = "Label"
+   DefaultLabel.Position 			         = UDim2.new(0, 2, 0, 0)
+   DefaultLabel.Size 			            = UDim2.new(1, -4, 1, 0)
+   DefaultLabel.Text                      = 'Option'
+   DefaultLabel.TextColor3                = Constants.STRING_COLOR
+   DefaultLabel.Parent = DefaultOption
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
+   local labels
    local connections          = {}
    local connectionsItems     = {}
    local itemsSize			   = 0
-   local labels
    local isPopoverHover 	   = false
    local isListHover 	      = false
    local listCanBeOpen	      = false
+   local numItems             = 1
 
-   local optionsItens = {}
-   
    local function checkVisibility()      
       if listCanBeOpen and (isListHover or isPopoverHover) then
-         List.Size = UDim2.new(1, 0, 0, itemsSize)		
-         popover:Resize(Vector2.new(SelectContainer.AbsoluteSize.X, 50))
+         popover:Resize(Vector2.new(SelectContainer.AbsoluteSize.X, math.min(itemHeight*numItems, itemHeight*4)))
+         scrollbar:Update()
          popover:Show()
       else
          popover:Hide()
@@ -101,17 +107,37 @@ local function CreateGUI()
       end
       checkVisibility()
    end))
+
+   local function setItemColor(item, itemLabel)
+      if Selected.Value == item:GetAttribute('OptionIndex') then 
+         itemLabel.TextColor3  = Constants.INPUT_COLOR
+         item.BackgroundColor3 = Constants.STRING_COLOR
+      else
+         itemLabel.TextColor3 = Constants.INPUT_COLOR
+         item.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS_TXT
+      end
+   end
    
    -- On change value (safe)
    table.insert(connections, Selected.Changed:connect(function()
+
+      -- set default value
       if labels ~= nil then
          for index, label in pairs(labels) do
             if Selected.Value == index then 
-               DefaultText.Text = label
+               DefaultLabel.Text = label
                break
             end
          end
       end
+
+      -- reset list colors
+      for _, item in pairs(List:GetChildren()) do
+         if item:IsA('Frame') then
+            setItemColor(item, item:WaitForChild('Label'))
+         end
+      end
+
       checkVisibility()
    end))
    
@@ -123,53 +149,53 @@ local function CreateGUI()
       end
       table.clear(connectionsItems)
       
-      local height = 0
-      for index, label in pairs(labels) do
-         local item = DefaultOption:Clone()		
-         item.Name = 'item_'..index
-         item.Parent = List
-         item.LayoutOrder = index
+      numItems = 0
 
-         local Text = item:WaitForChild('Text')
-         Text.Text         = label
-         Text.TextColor3   = Constants.INPUT_COLOR_FOCUS_TXT
+      for index, label in pairs(labels) do
+
+         local item = DefaultOption:Clone()		
+         item.Name               = 'item_'..index
+         item.LayoutOrder        = index
+         item.BackgroundColor3   = Constants.INPUT_COLOR_FOCUS_TXT
+         item:SetAttribute('OptionIndex', index)
+
+         
+         local itemLabel = item:WaitForChild('Label')
+         itemLabel.Text          = label
+         itemLabel.TextColor3    = Constants.INPUT_COLOR
+         
+         item.Parent = List
+
+         numItems = numItems + 1
 
          if Selected.Value == index then 
-            DefaultText.Text = label
+            DefaultLabel.Text = label
          end
-
+         
          table.insert(connectionsItems, GUIUtils.OnHover(item, function(hover)
             if hover then 
-               Text.TextColor3 = Constants.STRING_COLOR
-               item.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
+               itemLabel.TextColor3    = Constants.INPUT_COLOR_HOVER
+               item.BackgroundColor3   = Constants.INPUT_COLOR_PLACEHOLDER
             else
-               Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
-               if Selected.Value == index then 
-                  Text.TextColor3 = Constants.STRING_COLOR
-               end
-               item.BackgroundColor3 = Constants.INPUT_COLOR
+               setItemColor(item, itemLabel)
             end
          end, true))
-         
-         height = height + Text.AbsoluteSize.Y
 
          table.insert(connectionsItems, GUIUtils.OnClick(item, function(el, input)
-            Selected.Value = index
-            DefaultText.Text = label
-            listCanBeOpen = false
+            Selected.Value    = index
+            DefaultLabel.Text = label
+            listCanBeOpen     = false
             checkVisibility()
          end))
       end
-      
-      itemsSize = height
 
-      height = math.min(120, height)
-      
+      List.Size = UDim2.new(1, 0, 0, itemHeight*numItems)
       checkVisibility()
    end))
    
    return Controller, Misc.DisconnectFn(connections, Misc.DisconnectFn(connectionsItems), function()
       popover:Destroy()
+      scrollbar:Destroy()
    end)
 end
 

@@ -709,7 +709,6 @@ function GUIUtils.OnFocus(element, callback)
    end)
 end
 
-
 --[[
    Adiciona um evento de onClick em um elemento
 ]]
@@ -730,6 +729,47 @@ function GUIUtils.OnClick(element, callback)
 
       ContextActionService:BindAction(actionName, function(actionName, inputState, input)
          if not isHover or inputState ~= Enum.UserInputState.End then
+            return Enum.ContextActionResult.Pass
+         end
+   
+         callback(element, input)
+         
+         return Enum.ContextActionResult.Sink
+      end, false, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
+   end
+   
+   table.insert(connections, GUIUtils.OnHover(element, function(hover)
+      isHover = hover
+      if hover then
+         bindAction()
+      else
+         isBinded = false
+         ContextActionService:UnbindAction(actionName)
+      end
+   end))
+   
+   return Misc.DisconnectFnEvent(connections, function()
+      ContextActionService:UnbindAction(actionName)
+   end)
+end
+
+function GUIUtils.OnMousedown(element, callback)
+
+   EVENT_SEQ = EVENT_SEQ+1
+
+   local actionName  = 'dat.Gui.OnMousedown_'..EVENT_SEQ
+   local isHover     = false
+   local isBinded    = false
+   local connections = {}
+
+   local function bindAction()
+      if isBinded then 
+         return
+      end
+      isBinded = true
+
+      ContextActionService:BindAction(actionName, function(actionName, inputState, input)
+         if not isHover or inputState ~= Enum.UserInputState.Begin then
             return Enum.ContextActionResult.Pass
          end
    
