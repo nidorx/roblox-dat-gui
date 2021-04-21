@@ -55,6 +55,7 @@ return {
    ['INPUT_COLOR_PLACEHOLDER']   = Color3.fromRGB(117, 117, 117),
    -- icons
    ['ICON_CHEVRON']              = 'rbxassetid://6690562401',
+   ['ICON_CLOSE']                = 'rbxassetid://6690641420',
    ['ICON_CHECKMARK']            = 'rbxassetid://6690588631',
    ['ICON_RESIZE']               = 'rbxassetid://6690641141',
    ['ICON_DRAG']                 = 'rbxassetid://6690641345',

@@ -5,16 +5,16 @@ local UserInputService  = game:GetService("UserInputService")
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
+local Popover           = require(Lib:WaitForChild("Popover"))
 local GUIUtils          = require(Lib:WaitForChild("GUI"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent 
-      = GUIUtils.CreateControllerWrapper({
-         Name  = 'OptionController',
-         Color = Constants.STRING_COLOR
-      })
+   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+      Name  = 'OptionController',
+      Color = Constants.STRING_COLOR
+   })
 
    local Selected = Instance.new('IntValue')
    Selected.Name     = 'Selected'
@@ -26,191 +26,151 @@ local function CreateGUI()
    Options.Parent   = Controller
 
    local SelectContainer = GUIUtils.CreateFrame()
-   SelectContainer.Name 			         = "items-container"
+   SelectContainer.Name 			         = "Select"
    SelectContainer.BackgroundTransparency = 1
    SelectContainer.Position 			      = UDim2.new(0, 0, 0, 4)
    SelectContainer.Size 			         = UDim2.new(1, -2, 1, -8)
    SelectContainer.Parent = Control
 
-   local SelectList = GUIUtils.CreateFrame()
-   SelectList.Name 			            = "inner"
-   SelectList.BackgroundTransparency   = 1
-   SelectList.Parent = SelectContainer
+   local popover = Popover.new(SelectContainer, Vector2.new(122, 102), 'bottom', -SelectContainer.AbsoluteSize.Y)
 
-   local List = Instance.new("UIListLayout")
-   List.Name 			         = "list"
-   List.Archivable            = true
-   List.FillDirection         = Enum.FillDirection.Vertical
-   List.HorizontalAlignment   = Enum.HorizontalAlignment.Left
-   List.SortOrder             = Enum.SortOrder.LayoutOrder
-   List.VerticalAlignment     = Enum.VerticalAlignment.Top
-   List.Parent = SelectList
+   local List = GUIUtils.CreateFrame()
+   List.Name 			            = "List"
+   List.BackgroundTransparency   = 1
+   List.Parent = popover.Frame
 
-   local ItemTemplate = GUIUtils.CreateFrame()
-   ItemTemplate.Name 			         = "item"
-   ItemTemplate.BackgroundColor3       = Constants.INPUT_COLOR
-   ItemTemplate.BackgroundTransparency = 0
-   ItemTemplate.Size 			         = UDim2.new(1, 0, 0, 21)
-   ItemTemplate.Visible                = false
-   ItemTemplate.Parent = SelectContainer
+   local ListLayout = Instance.new("UIListLayout")
+   ListLayout.Name 			         = "Layout"
+   ListLayout.Archivable            = true
+   ListLayout.FillDirection         = Enum.FillDirection.Vertical
+   ListLayout.HorizontalAlignment   = Enum.HorizontalAlignment.Left
+   ListLayout.SortOrder             = Enum.SortOrder.LayoutOrder
+   ListLayout.VerticalAlignment     = Enum.VerticalAlignment.Top
+   ListLayout.Parent = List
 
-   local Text = Instance.new("TextButton")
-   Text.Name 			            = "TextButton"
-   Text.Active                   = true
-   Text.AutoButtonColor          = true
-   Text.AnchorPoint	            = Vector2.new(0, 0)
-   Text.BackgroundTransparency   = 1
-   Text.BorderColor3             = Color3.fromRGB(27, 42, 53)
-   Text.BorderMode 			      = Enum.BorderMode.Outline
-   Text.BorderSizePixel 			= 1
-   Text.Position 			         = UDim2.new(0, 2, 0, 0)
-   Text.Size 			            = UDim2.new(1, -4, 1, 0)
-   Text.SizeConstraint 			   = Enum.SizeConstraint.RelativeXY
-   Text.Visible                  = true
-   Text.ZIndex                   = 1
-   Text.Archivable               = true
-   Text.Font                     = Enum.Font.SourceSans
-   Text.LineHeight               = 1
-   Text.RichText                 = false
-   Text.Text                     = 'Option'
-   Text.TextColor3 			      = Constants.STRING_COLOR
-   Text.TextScaled               = false
-   Text.TextSize                 = 14
-   Text.TextStrokeColor3 		   = Color3.fromRGB(0, 0, 0)
-   Text.TextStrokeTransparency   = 1
-   Text.TextTransparency         = 0
-   Text.TextTruncate             = Enum.TextTruncate.None
-   Text.TextWrapped              = false
-   Text.TextXAlignment           = Enum.TextXAlignment.Left
-   Text.TextYAlignment           = Enum.TextYAlignment.Center
-   Text.Parent = ItemTemplate
+   local DefaultOption = GUIUtils.CreateFrame()
+   DefaultOption.Name 			           = "Item"
+   DefaultOption.BackgroundColor3        = Constants.INPUT_COLOR
+   DefaultOption.BackgroundTransparency  = 0
+   DefaultOption.Size 			           = UDim2.new(1, 0, 0, 21)
+   DefaultOption.Visible                 = true
+   DefaultOption.Parent = SelectContainer
+
+   local DefaultText = GUIUtils.CreateLabel()
+   DefaultText.Name 			            = "Text"
+   DefaultText.Position 			      = UDim2.new(0, 2, 0, 0)
+   DefaultText.Size 			            = UDim2.new(1, -4, 1, 0)
+   DefaultText.Text                    = 'Option'
+   DefaultText.TextColor3 			      = Constants.STRING_COLOR
+   DefaultText.Parent = DefaultOption
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
    local connections          = {}
    local connectionsItems     = {}
    local itemsSize			   = 0
-   local isHover 	            = false
-   local isListHover 	         = false
-   local listIsOpen	         = false
+   local labels
+   local isPopoverHover 	   = false
+   local isListHover 	      = false
+   local listCanBeOpen	      = false
+
+   local optionsItens = {}
    
-   local function checkVisibility()
-      -- if locked then
-      --    listIsOpen = false
-      --    SelectList.Size = UDim2.new(1, 0, 1, 0)
-      -- else
-         SelectList.Size = UDim2.new(1, 0, 0, itemsSize)		
-      -- end
-      
-      if listIsOpen then
-         
-         SelectContainer.ZIndex = 100
-         SelectContainer.ClipsDescendants = false		
-         
-         for _, item in pairs(SelectList:GetChildren()) do
-            if item:isA("Frame") then
-               item.Visible = true
-            end
-         end
+   local function checkVisibility()      
+      if listCanBeOpen and (isListHover or isPopoverHover) then
+         List.Size = UDim2.new(1, 0, 0, itemsSize)		
+         popover:Resize(Vector2.new(SelectContainer.AbsoluteSize.X, 50))
+         popover:Show()
       else
-         SelectContainer.ZIndex = 1		
-         SelectContainer.ClipsDescendants = true		
-         
-         for index, item in pairs(SelectList:GetChildren()) do
-            if item:isA("Frame") then
-               if item.Name ==  "item_"..Selected.Value then
-                  item.Visible = true
-               else
-                  item.Visible = false
-               end
-            end
-         end
+         popover:Hide()
       end
    end
 
-   table.insert(connections, GUIUtils.OnHover(Controller, function(hover)
-      isHover = hover
+   table.insert(connections, GUIUtils.OnMouseEnter(List, function(hover)
+      isPopoverHover = hover
+      if hover then 
+         listCanBeOpen = true
+      end
       checkVisibility()
    end))
 
-   table.insert(connections, GUIUtils.OnHover(SelectList, function(hover)
+   table.insert(connections, GUIUtils.OnHover(SelectContainer, function(hover)
       isListHover = hover
-
-      if not isListHover then 
-         listIsOpen = false
+      if hover then 
+         listCanBeOpen = true
       end
-
       checkVisibility()
    end))
    
    -- On change value (safe)
    table.insert(connections, Selected.Changed:connect(function()
+      if labels ~= nil then
+         for index, label in pairs(labels) do
+            if Selected.Value == index then 
+               DefaultText.Text = label
+               break
+            end
+         end
+      end
       checkVisibility()
    end))
-
-   local function ItemScript(Item, connections)
-      -- controls focus effect
-      local Text = Item:WaitForChild("TextButton")
-
-      table.insert(connections, GUIUtils.OnHover(Text, function(hover)
-         if hover then 
-            Text.TextColor3 = Constants.STRING_COLOR
-            Item.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
-         else
-            Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
-            Item.BackgroundColor3 = Constants.INPUT_COLOR
-         end
-      end))
-
-      -- table.insert(connections, OnLock:Connect(function()
-      --    Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
-      --    Item.BackgroundColor3 = Constants.INPUT_COLOR
-      -- end))
-   end
    
    table.insert(connections, Options.Changed:Connect(function()
-      local labels = HttpService:JSONDecode(Options.Value)
+      labels = HttpService:JSONDecode(Options.Value)
 
       for _, conn in ipairs(connectionsItems) do
          conn:Disconnect()
       end
       table.clear(connectionsItems)
       
-      local size = 0
+      local height = 0
       for index, label in pairs(labels) do
-         local item = ItemTemplate:Clone()		
-         item.Name = "item_"..index
-         item.Visible = true
-         item.Parent = SelectList
+         local item = DefaultOption:Clone()		
+         item.Name = 'item_'..index
+         item.Parent = List
          item.LayoutOrder = index
-         
-         -- enable script
-         ItemScript(item, connectionsItems)
-         
-         local Text = item:WaitForChild("TextButton")
-         Text.Text = label
-         
-         size = size + Text.AbsoluteSize.Y
-         
-         Text.MouseButton1Click:Connect(function()
-            if listIsOpen then				
-               Selected.Value = index
-               listIsOpen = false
-               checkVisibility()
-               
+
+         local Text = item:WaitForChild('Text')
+         Text.Text         = label
+         Text.TextColor3   = Constants.INPUT_COLOR_FOCUS_TXT
+
+         if Selected.Value == index then 
+            DefaultText.Text = label
+         end
+
+         table.insert(connectionsItems, GUIUtils.OnHover(item, function(hover)
+            if hover then 
+               Text.TextColor3 = Constants.STRING_COLOR
+               item.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
             else
-               
-               listIsOpen = true
-               checkVisibility()
+               Text.TextColor3 = Constants.INPUT_COLOR_FOCUS_TXT
+               if Selected.Value == index then 
+                  Text.TextColor3 = Constants.STRING_COLOR
+               end
+               item.BackgroundColor3 = Constants.INPUT_COLOR
             end
-         end)
+         end, true))
+         
+         height = height + Text.AbsoluteSize.Y
+
+         table.insert(connectionsItems, GUIUtils.OnClick(item, function(el, input)
+            Selected.Value = index
+            DefaultText.Text = label
+            listCanBeOpen = false
+            checkVisibility()
+         end))
       end
       
-      itemsSize = size
+      itemsSize = height
+
+      height = math.min(120, height)
+      
       checkVisibility()
    end))
    
-   return Controller, Misc.DisconnectFn(connections, Misc.DisconnectFn(connectionsItems))
+   return Controller, Misc.DisconnectFn(connections, Misc.DisconnectFn(connectionsItems), function()
+      popover:Destroy()
+   end)
 end
 
 ---Checks if a table is used as an array. That is: the keys start with one and are sequential numbers

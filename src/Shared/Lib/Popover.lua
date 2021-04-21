@@ -2,10 +2,10 @@ local Camera 	            = workspace.CurrentCamera
 
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
-local GUIUtils             = require(Lib:WaitForChild("GUI"))
-local Constants            = require(Lib:WaitForChild("Constants"))
+local GUIUtils    = require(Lib:WaitForChild("GUI"))
+local Constants   = require(Lib:WaitForChild("Constants"))
 
-local POPOVER_SEQ    = 0
+local POPOVER_SEQ = 0
 
 local Popover = {}
 Popover.__index = Popover
@@ -20,7 +20,6 @@ function Popover.new(reference, size, position, offset)
    frame.BackgroundTransparency  = 1
    frame.Visible                 = false
    frame.ZIndex                  = 1000
-   -- frame.Active                  = true
 
    if position == nil or position == '' then 
       position = 'top'
@@ -38,7 +37,13 @@ function Popover.new(reference, size, position, offset)
    }, Popover)
 end
 
--- @TODO: ESTOU AQUI, CRIANDO UM POPOVER
+function Popover:Resize(size)
+   self.Frame.Size = UDim2.new(0, size.X, 0, size.Y)
+   if self.Frame.Visible then
+      self:Show()
+   end
+end
+
 function Popover:Show()
    local refPos = self._reference.AbsolutePosition
    local refSiz = self._reference.AbsoluteSize
@@ -103,8 +108,6 @@ function Popover:Show()
 
    self.Frame.Position  = UDim2.new(0, posX, 0, posY+Constants.GUI_INSET)
    self.Frame.Visible   = true
-
-   -- on Change _reference property Show Again
 end
 
 function Popover:Hide()

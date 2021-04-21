@@ -295,7 +295,7 @@ function Panel:Detach(closeable)
 
    if closeable  == true then
       local Close = GUIUtils.CreateFrame()
-      Close.Name 			            = 'Atach'
+      Close.Name 			            = 'Close'
       Close.Position 			      = UDim2.new(1, -HEADER_HEIGHT, 0, 0)
       Close.Size 			            = UDim2.new(0,  HEADER_HEIGHT, 0, HEADER_HEIGHT)
       Close.BackgroundColor3        = Constants.CLOSE_COLOR
@@ -303,7 +303,7 @@ function Panel:Detach(closeable)
       Close.ZIndex                  = 2
       Close.Parent = self.Header
    
-      local CloseIcon = GUIUtils.CreateImageLabel(Constants.ICON_CHECKMARK)
+      local CloseIcon = GUIUtils.CreateImageLabel(Constants.ICON_CLOSE)
       CloseIcon.Name 			      = 'Icon'
       CloseIcon.Position 			   = UDim2.new(0, 10, 0, 10)
       CloseIcon.Size 			      = UDim2.new(0, 10, 0, 10)
@@ -690,15 +690,8 @@ function Panel:UpdateContentSize()
             local layoutOrders = {}
             local layoutOrdersChild = {}
 
-            local HUGE = 9999999999
-
             for _, child in pairs(content:GetChildren()) do
                local layoutOrder = child:GetAttribute('LayoutOrderOnPanel_'..panelId)
-               if layoutOrder == nil then 
-                  print('NÃO DEVERIA ENTRAR AQUI', child)
-                  layoutOrder = HUGE
-                  HUGE = HUGE + 1
-               end
                table.insert(layoutOrders, layoutOrder)
                layoutOrdersChild[layoutOrder] = child
             end

@@ -568,17 +568,50 @@ local function checkForHoverAfterDrag()
    for _, ref in ipairs(HOVER_ELEMENTS_REF) do
       if ref.Element == TOPMOST_HOVER_ELM then
          ref.Callback(true)
-         return
       end
    end
+end
+
+function GUIUtils.OnMouseEnter(element, callback)
+
+   local connections = {}
+
+   table.insert(connections, element.MouseEnter:Connect(function()
+      callback(true)
+   end))
+   
+   table.insert(connections, element.MouseLeave:Connect(function()
+      callback(false)
+   end))
+
+   -- init check
+   spawn(function()
+      local pos = element.AbsolutePosition
+      local siz = element.AbsoluteSize
+      local tx = pos.X
+      local ty = pos.Y
+      if
+         Mouse.X >= tx and
+         Mouse.Y >= ty and
+         Mouse.X <= tx + siz.X and
+         Mouse.Y <= ty + siz.Y
+      then
+         callback(true)
+      end
+   end)
+
+   return Misc.DisconnectFnEvent(connections)
 end
 
 function GUIUtils.OnHover(element, callback, ignoreZindex)
 
    local connections = {}
 
-   local reference = { Element = element, Callback = callback }
-   table.insert(HOVER_ELEMENTS_REF, reference)
+   local reference
+   if ignoreZindex ~= true then 
+      reference = { Element = element, Callback = callback }
+      table.insert(HOVER_ELEMENTS_REF, reference)
+   end
 
    table.insert(connections, element.MouseEnter:Connect(function()
       if IS_DRAGGING then
@@ -626,9 +659,11 @@ function GUIUtils.OnHover(element, callback, ignoreZindex)
    end)
 
    return Misc.DisconnectFnEvent(connections, function()
-      local idx = table.find(HOVER_ELEMENTS_REF, reference)
-      if idx ~= nil then
-         table.remove(HOVER_ELEMENTS_REF, idx)
+      if ignoreZindex ~= true then 
+         local idx = table.find(HOVER_ELEMENTS_REF, reference)
+         if idx ~= nil then
+            table.remove(HOVER_ELEMENTS_REF, idx)
+         end
       end
    end)
 end
@@ -637,23 +672,37 @@ function GUIUtils.OnFocus(element, callback)
 
    EVENT_SEQ = EVENT_SEQ+1
 
-   local actionName  = 'dat.Gui.OnClick_'..EVENT_SEQ
+   local actionName  = 'dat.Gui.OnFocus_'..EVENT_SEQ
    local isHover     = false
+   local isBinded    = false
    local connections = {}
+
+   local function bindAction()
+      if isBinded then 
+         return
+      end
+      isBinded = true
+
+      ContextActionService:BindAction(actionName, function(actionName, inputState, input)
+         if not isHover or inputState ~= Enum.UserInputState.End then
+            return Enum.ContextActionResult.Pass
+         end
+         
+         callback(element, input)
+         
+         return Enum.ContextActionResult.Sink
+      end, false, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
+   end
    
    table.insert(connections,  GUIUtils.OnHover(element, function(hover)
       isHover = hover
-   end))
-   
-   ContextActionService:BindAction(actionName, function(actionName, inputState, input)
-      if not isHover or inputState ~= Enum.UserInputState.End then
-         return Enum.ContextActionResult.Pass
+      if hover then
+         bindAction()
+      else
+         isBinded = false
+         ContextActionService:UnbindAction(actionName)
       end
-
-      callback(element, input)
-      
-      return Enum.ContextActionResult.Sink
-   end, false, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
+   end))
 
    return Misc.DisconnectFnEvent(connections, function()
       ContextActionService:UnbindAction(actionName)
@@ -670,22 +719,36 @@ function GUIUtils.OnClick(element, callback)
 
    local actionName  = 'dat.Gui.OnClick_'..EVENT_SEQ
    local isHover     = false
+   local isBinded    = false
    local connections = {}
+
+   local function bindAction()
+      if isBinded then 
+         return
+      end
+      isBinded = true
+
+      ContextActionService:BindAction(actionName, function(actionName, inputState, input)
+         if not isHover or inputState ~= Enum.UserInputState.End then
+            return Enum.ContextActionResult.Pass
+         end
    
-   table.insert(connections,  GUIUtils.OnHover(element, function(hover)
+         callback(element, input)
+         
+         return Enum.ContextActionResult.Sink
+      end, false, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
+   end
+   
+   table.insert(connections, GUIUtils.OnHover(element, function(hover)
       isHover = hover
+      if hover then
+         bindAction()
+      else
+         isBinded = false
+         ContextActionService:UnbindAction(actionName)
+      end
    end))
    
-   ContextActionService:BindAction(actionName, function(actionName, inputState, input)
-      if not isHover or inputState ~= Enum.UserInputState.End then
-         return Enum.ContextActionResult.Pass
-      end
-
-      callback(element, input)
-      
-      return Enum.ContextActionResult.Sink
-   end, false, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
-
    return Misc.DisconnectFnEvent(connections, function()
       ContextActionService:UnbindAction(actionName)
    end)
@@ -700,10 +763,34 @@ function GUIUtils.OnScroll(element, callback)
 
    local actionName  = 'dat.Gui.OnScroll_'..EVENT_SEQ
    local isHover     = false
+   local isBinded    = false
    local connections = {}
+
+   local function bindAction()
+      if isBinded then 
+         return
+      end
+      isBinded = true
+
+      ContextActionService:BindActionAtPriority(actionName, function(actionName, inputState, input)
+         if not isHover or input.UserInputState ~= Enum.UserInputState.Change then
+            return Enum.ContextActionResult.Pass
+         end
+   
+         callback(element, input.Position.Z*50)
+         
+         return Enum.ContextActionResult.Sink
+      end, false, 999999999, Enum.UserInputType.MouseWheel)
+   end
    
    table.insert(connections, GUIUtils.OnHover(element, function(hover)
       isHover = hover
+      if hover then
+         bindAction()
+      else
+         isBinded = false
+         ContextActionService:UnbindAction(actionName)
+      end
    end, true))
 
    -- for mobile
@@ -720,16 +807,6 @@ function GUIUtils.OnScroll(element, callback)
          posY = position.Y
       end
    end, 20))
-   
-   ContextActionService:BindActionAtPriority(actionName, function(actionName, inputState, input)
-      if not isHover or input.UserInputState ~= Enum.UserInputState.Change then
-         return Enum.ContextActionResult.Pass
-      end
-
-      callback(element, input.Position.Z*50)
-      
-      return Enum.ContextActionResult.Sink
-   end, false, 999999999, Enum.UserInputType.MouseWheel)
 
    return Misc.DisconnectFnEvent(connections, function()
       ContextActionService:UnbindAction(actionName)
@@ -745,10 +822,10 @@ function GUIUtils.OnDrag(element, callback, offset)
 
    local actionName  = 'dat.Gui.OnDrag_'..EVENT_SEQ
    local isHover     = false
-   local isDragging  = false
+   local isStarted   = false
    local connections = {}
    local startPos    = nil
-   local hasBegin    = true
+   local isBinded    = false
 
    if offset == nil then 
       offset = 0
@@ -757,53 +834,66 @@ function GUIUtils.OnDrag(element, callback, offset)
    local reference = { Element = element, Callback = callback }
    table.insert(DRAG_ELEMENTS_REF, reference)
 
-   table.insert(connections, GUIUtils.OnHover(element, function(hover)
-      isHover = hover
-   end, true))
+   local function bindAction()
+      if isBinded then 
+         return
+      end
+      isBinded = true
 
-   ContextActionService:BindActionAtPriority(actionName, function(actionName, inputState, input)
-      if isDragging  then
-
-         if inputState == Enum.UserInputState.End then
-            
-            local wasDragging = IS_DRAGGING
-
-            isDragging = false
-            IS_DRAGGING = false
-            checkForHoverAfterDrag()
-
-            if wasDragging then
-               callback(element, 'end')
-               return Enum.ContextActionResult.Sink
-            else
-               return Enum.ContextActionResult.Pass
+      ContextActionService:BindActionAtPriority(actionName, function(actionName, inputState, input)
+         if isStarted  then
+            if inputState == Enum.UserInputState.End then
+               
+               local wasDragging = IS_DRAGGING
+   
+               isStarted   = false
+               IS_DRAGGING = false
+               checkForHoverAfterDrag()
+   
+               if wasDragging then
+                  callback(element, 'end')
+                  return Enum.ContextActionResult.Sink
+               else
+                  return Enum.ContextActionResult.Pass
+               end
             end
-         end
-         
-         local position = Vector2.new(input.Position.X, input.Position.Y)
-         local delta    = position - startPos
-         
-         if IS_DRAGGING then
-            callback(element, 'drag', startPos, position, delta)
-            return Enum.ContextActionResult.Sink
-         else
-            -- start real drag after offset
-            if math.abs(delta.X) > offset or math.abs(delta.Y) > offset then
-               IS_DRAGGING = true
-               callback(element, 'start', startPos)
+            
+            local position = Vector2.new(input.Position.X, input.Position.Y)
+            local delta    = position - startPos
+            
+            if IS_DRAGGING then
                callback(element, 'drag', startPos, position, delta)
                return Enum.ContextActionResult.Sink
+            else
+               -- start real drag after offset
+               if math.abs(delta.X) > offset or math.abs(delta.Y) > offset then
+                  IS_DRAGGING = true
+                  callback(element, 'start', startPos)
+                  callback(element, 'drag', startPos, position, delta)
+                  return Enum.ContextActionResult.Sink
+               end
+            end
+         elseif inputState == Enum.UserInputState.Begin and input.UserInputType ~= Enum.UserInputType.MouseMovement then
+            if isHover and TOPMOST_DRAG_ELM == element then
+               isStarted  = true
+               startPos = Vector2.new(input.Position.X, input.Position.Y)
             end
          end
-      elseif inputState == Enum.UserInputState.Begin and input.UserInputType ~= Enum.UserInputType.MouseMovement then
-         if isHover and TOPMOST_DRAG_ELM == element then
-            isDragging  = true
-            startPos = Vector2.new(input.Position.X, input.Position.Y)
-         end
+         
+         return Enum.ContextActionResult.Pass
+      end, false, 999999999, Enum.UserInputType.MouseMovement, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
+   end
+
+   table.insert(connections, GUIUtils.OnHover(element, function(hover)
+      isHover = hover
+      if hover then
+         bindAction()
+      elseif not IS_DRAGGING then
+         isBinded = false
+         isStarted = false
+         ContextActionService:UnbindAction(actionName)
       end
-      
-      return Enum.ContextActionResult.Pass
-   end, false, 999999999, Enum.UserInputType.MouseMovement, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
+   end, true))
 
    return Misc.DisconnectFnEvent(connections, function()
       ContextActionService:UnbindAction(actionName)

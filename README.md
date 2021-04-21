@@ -152,7 +152,7 @@ npm run build
 - [ ] AddCurve (curve controller)
 - [ ] Color e Enum tem de ser popup, pois o container agora vai fazer crop dos descendentes
 - [x] Panel Order
-- [ ] Panel Close (Destroy)
+- [x] Panel Close (Destroy)
 - [ ] Save preferences
 
 
