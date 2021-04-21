@@ -249,6 +249,66 @@ guiPresets.add(presets, 'Tranquil')
 --- Other tests
 local guiOthers 			= gui.addFolder('Other')
 
+
+--------------------------
+-- Custom controller
+--------------------------
+local customRemoved = false
+local customFrame = Instance.new("Frame")
+customFrame.Size = UDim2.new(1, 0, 0, 200)
+
+coroutine.wrap(function()
+   local TweenService = game:GetService("TweenService")
+
+   -- how much confetti per second
+   local rate = 1
+
+   while true do
+      local confetti = Instance.new("Frame")
+      confetti.ZIndex            = 1
+      confetti.AnchorPoint       = Vector2.new(0.5, 0.5)
+      confetti.Rotation          = math.random(-360,360)
+      confetti.Size              = UDim2.new(0.02, 0, 0.04, 0)
+      confetti.Position          = UDim2.new(math.random(3,97)/100, 0, -0.1, 0)
+      confetti.BackgroundColor3  = Color3.fromRGB(math.random(150,255), math.random(150,255), math.random(150,255))
+      confetti.Parent = customFrame
+
+      local lifetime = math.random(7,15)/10
+
+      TweenService:Create(confetti,  TweenInfo.new(lifetime, Enum.EasingStyle.Linear), {
+         Size     = UDim2.new(0, 0, 0, 0), 
+         Rotation = math.random(-360,360),
+         Position = UDim2.new(confetti.Position.X.Scale, 0, 1.1, 0)
+      }):Play()
+
+      -- game.Debris:AddItem(confetti, lifetime)
+
+      if customRemoved then 
+         break
+      else 
+         wait(2)
+         -- wait(1/rate)
+      end
+   end
+end)()
+
+-- coroutine.wrap(function()
+--    while true do
+--        --// Code
+--        wait(2);
+--    end
+-- end)()
+
+guiOthers.addCustom('CustomController', {
+   Frame = customFrame,
+   Height = 200,
+   OnRemove = function()
+      customRemoved = true
+   end
+})
+--------------------------
+
+
 --- Bool
 local boolValue = Instance.new('BoolValue')
 local BooleansObject = {

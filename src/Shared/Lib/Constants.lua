@@ -53,6 +53,8 @@ return {
    ['INPUT_COLOR_FOCUS']         = Color3.fromRGB(73, 73, 73),
    ['INPUT_COLOR_FOCUS_TXT']     = Color3.fromRGB(255, 255, 255),
    ['INPUT_COLOR_PLACEHOLDER']   = Color3.fromRGB(117, 117, 117),
+   -- custom
+   ['CUSTOM_COLOR'] 	            = Color3.fromRGB(160, 32, 240),
    -- icons
    ['ICON_CHEVRON']              = 'rbxassetid://6690562401',
    ['ICON_CLOSE']                = 'rbxassetid://6690641420',

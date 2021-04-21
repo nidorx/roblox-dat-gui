@@ -51,6 +51,7 @@ local ColorController			= require(Controllers:WaitForChild("ColorController"))
 local OptionController 			= require(Controllers:WaitForChild("OptionController"))
 local StringController 			= require(Controllers:WaitForChild("StringController"))
 local BooleanController 		= require(Controllers:WaitForChild("BooleanController"))
+local CustomController	      = require(Controllers:WaitForChild("CustomController"))
 local NumberController 			= require(Controllers:WaitForChild("NumberController"))
 local FunctionController 		= require(Controllers:WaitForChild("FunctionController"))
 local NumberSliderController	= require(Controllers:WaitForChild("NumberSliderController"))
@@ -123,7 +124,64 @@ function DatGUI.new(params)
       panel:AttachTo(gui.parent.Content)
 	end
 
-   
+   local function configureController(controller, property)
+
+      table.insert(gui.children, controller)
+		
+		-------------------------------------------------------------------------------
+		-- UI Lock mechanism
+		-- @see https://devforum.roblox.com/t/guis-sink-input-even-when-covered/343684
+		-------------------------------------------------------------------------------
+		local frame       = controller.frame
+		frame.Name 		   = property
+		controller.name   = property
+		
+      frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
+      
+      GUIUtils.OnHover(frame, function(hover)
+         if hover then
+            frame.BackgroundColor3 = Constants.BACKGROUND_COLOR_HOVER
+         else
+            frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
+         end
+      end)
+		
+		-------------------------------------------------------------------------------
+		
+		-- adds readonly/disabled method
+		controller._isReadonly = false
+		controller.readonly = function(option)
+			if option == nil then
+				option = true
+			end
+			
+			controller._isReadonly = option
+			
+			if controller.label ~= nil then
+				if controller._isReadonly then
+					local lineThrough = Instance.new('Frame')
+					lineThrough.Size                    = UDim2.new(0, controller.label.TextBounds.X, 0, 1)
+					lineThrough.Position                = UDim2.new(0, 0, 0.5, 0)
+					lineThrough.BackgroundColor3        = Constants.LABEL_COLOR_DISABLED
+					lineThrough.BackgroundTransparency  = 0.4
+					lineThrough.BorderSizePixel         = 0
+					lineThrough.Name                    = "LineThrough"
+					lineThrough.Parent = controller.label
+					
+					controller.label.TextColor3 = Constants.LABEL_COLOR_DISABLED					
+				else
+					controller.label.TextColor3 = Constants.LABEL_COLOR					
+					if controller.label:FindFirstChild("LineThrough") ~= nil then
+						controller.label:FindFirstChild("LineThrough").Parent = nil
+					end
+				end
+			end
+			
+			return controller
+		end
+		
+		return controller
+   end
 
 	--[[
       Adds a new Controller to the GUI. The type of controller created is inferred from the 
@@ -215,62 +273,25 @@ function DatGUI.new(params)
 			return error("It was not possible to identify the controller builder, check the parameters")
 		end
 		
-		table.insert(gui.children, controller)
-		
-		-------------------------------------------------------------------------------
-		-- UI Lock mechanism
-		-- @see https://devforum.roblox.com/t/guis-sink-input-even-when-covered/343684
-		-------------------------------------------------------------------------------
-		local frame = controller.frame
-		frame.Name 		= property
-		controller.name = property
-		
-      GUIUtils.OnHover(frame, function(hover)
-         if hover then
-            frame.BackgroundColor3 = Constants.BACKGROUND_COLOR_HOVER
-         else
-            frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
-         end
-      end)
-		
-		frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
-		
-		-------------------------------------------------------------------------------
-		
-		-- adds readonly/disabled method
-		controller._isReadonly = false
-		controller.readonly = function(option)
-			if option == nil then
-				option = true
-			end
-			
-			controller._isReadonly = option
-			
-			if controller.label ~= nil then
-				if controller._isReadonly then
-					local lineThrough = Instance.new('Frame')
-					lineThrough.Size = UDim2.new(0, controller.label.TextBounds.X, 0, 1)
-					lineThrough.Position = UDim2.new(0, 0, 0.5, 0)
-					lineThrough.BackgroundColor3 = Constants.LABEL_COLOR_DISABLED
-					lineThrough.BackgroundTransparency = 0.4
-					lineThrough.BorderSizePixel = 0
-					lineThrough.Name = "LineThrough"
-					lineThrough.Parent = controller.label
-					
-					controller.label.TextColor3 = Constants.LABEL_COLOR_DISABLED					
-				else
-					controller.label.TextColor3 = Constants.LABEL_COLOR					
-					if controller.label:FindFirstChild("LineThrough") ~= nil then
-						controller.label:FindFirstChild("LineThrough").Parent = nil
-					end
-				end
-			end
-			
-			return controller
-		end
-		
-		return controller
+		return configureController(controller, property)
 	end
+
+   --[[
+      Adiciona um elemento personalizado
+
+      @param name (string)    O label do controller
+      @param config (object)  As configurações desse controller
+         {
+            Frame    = Frame,
+            Color    = Color3,
+            OnRemove = function
+            Height   = number,
+            Methods  = { [Name:String] => function }
+         }
+   ]]
+   function gui.addCustom(name, config)      
+      return configureController(CustomController(gui, name, config), name)
+   end
 	
 	--[[
       Creates a new subfolder GUI instance.

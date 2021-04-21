@@ -128,20 +128,17 @@ npm run build
 
 ##  @TODO
 - [ ] Improve documentation (1 example of each type)
-- [ ] ability to move the gui window around by dragging (or at least have some parameters to control where it’s placed)
-- [ ] linethrough effect should be optional (maybe another method like readonly and disabled)
-- [ ] BUG (making the first option of the dropdown the current value)
-- [ ] BUG (Sometimes a controller does not unlock the UI)
-- [ ] ability to set the color of text for folders (Themes)
-- [ ] Allow adding multiple GUI (tab system maybe)
-- [ ] Allow custom controllers (Controller Factory)
+- [x] Ability to move the gui window around by dragging (or at least have some parameters to control where it’s placed)
+- [ ] Linethrough effect should be optional (maybe another method like readonly and disabled)
+- [x] BUG (making the first option of the dropdown the current value)
+- [x] BUG (Sometimes a controller does not unlock the UI)
+- [x] Ability to set the color of text for folders (Themes)
+- [x] Allow adding multiple GUI (tab system maybe)
 - [ ] Add CFrame controller (number & slider)
-- [ ] Remove duplicate codes
-- [ ] Fix Roblox library icon
-- [ ] Resize
-- [ ] Move
-- [ ] Custom Elements
-- [ ] .help()
+- [x] Remove duplicate codes
+- [x] Resize
+- [x] Move
+- [ ] Custom Elements - Allow custom controllers (Controller Factory)
 - [ ] .help()
 - [ ] AddTextInfo
 - [ ] AddTextWarn

@@ -614,11 +614,13 @@ function GUIUtils.OnHover(element, callback, ignoreZindex)
    end
 
    table.insert(connections, element.MouseEnter:Connect(function()
+      -- print('MouseEnter IS_DRAGGING', element, IS_DRAGGING)
       if IS_DRAGGING then
          return
       end
       
       if TOPMOST_HOVER_ELM == element or ignoreZindex == true then
+         -- print('MouseEnter', element)
          callback(true)
       end
    end))
@@ -629,6 +631,7 @@ function GUIUtils.OnHover(element, callback, ignoreZindex)
       end
       
       if TOPMOST_HOVER_ELM == element or ignoreZindex == true then
+         -- print('MouseMoved', element)
          callback(true)
       end
    end))
@@ -659,6 +662,7 @@ function GUIUtils.OnHover(element, callback, ignoreZindex)
    end)
 
    return Misc.DisconnectFnEvent(connections, function()
+      -- print('\n\n\n DESCONECTOU TUDO \n\n\n--------------------------------------------------------------', debug.traceback())
       if ignoreZindex ~= true then 
          local idx = table.find(HOVER_ELEMENTS_REF, reference)
          if idx ~= nil then
@@ -907,6 +911,9 @@ function GUIUtils.OnDrag(element, callback, offset)
             else
                -- start real drag after offset
                if math.abs(delta.X) > offset or math.abs(delta.Y) > offset then
+                  if isStarted and not isHover then 
+                     print('BUGGGG - ', isStarted, isHover)
+                  end
                   IS_DRAGGING = true
                   callback(element, 'start', startPos)
                   callback(element, 'drag', startPos, position, delta)
