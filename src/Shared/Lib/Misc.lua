@@ -11,16 +11,24 @@ Misc.AXES   = { 'X', 'Y', 'Z' }
 ]]
 function Misc.DisconnectFn(connections, ...)
 
-   local disconnectFns = {...}
+   local extraConn = {...}
 
    return function()
 
-      for _, disconnect in ipairs(disconnectFns) do
-         disconnect()
+      for _, conn in ipairs(extraConn) do
+         if type(conn) == 'function' then 
+            conn()
+         else
+            conn:Disconnect()
+         end
       end
 
       for _, conn in ipairs(connections) do
-         conn:Disconnect()
+         if type(conn) == 'function' then 
+            conn()
+         else
+            conn:Disconnect()
+         end
       end
 
       table.clear(connections)

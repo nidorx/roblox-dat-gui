@@ -4,6 +4,7 @@ local TweenService 		   = game:GetService("TweenService")
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc                 = require(Lib:WaitForChild("Misc"))
 local GUIUtils             = require(Lib:WaitForChild("GUI"))
+local GuiEvents            = require(Lib:WaitForChild("GuiEvents"))
 local Constants            = require(Lib:WaitForChild("Constants"))
 
 local Scrollbar = {}
@@ -112,8 +113,8 @@ function Scrollbar.new(parent, content, contentOffset)
    }, Scrollbar)
 
    self._disconnect = Misc.DisconnectFn(connections, function()
-      if self._onScroll ~= nil then 
-         self._onScroll:Disconnect()
+      if self._cancelOnScroll ~= nil then 
+         self._cancelOnScroll()
       end
 
       if self._tween ~= nil then
@@ -141,9 +142,9 @@ end
 function Scrollbar:Update()
 
    -- remove events
-   if self._onScroll ~= nil then 
-      self._onScroll:Disconnect()
-      self._onScroll = nil
+   if self._cancelOnScroll ~= nil then 
+      self._cancelOnScroll()
+      self._cancelOnScroll = nil
    end
 	
 	local frameHeight      = self._parent.Size.Y.Offset
@@ -174,7 +175,7 @@ function Scrollbar:Update()
 			self._contentPosition.Value = -newPosition
 		end
 
-      self._onScroll = GUIUtils.OnScroll(self._parent, function(el, z)
+      self._cancelOnScroll = GuiEvents.OnScroll(self._parent, function(el, z)
 
          local newPosition = math.min(math.max(self._content.Position.Y.Offset + (z), maxPosition), 0)
 				

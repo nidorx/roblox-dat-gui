@@ -43,6 +43,7 @@ local Camera 	      = workspace.CurrentCamera
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Panel          = require(Lib:WaitForChild("Panel"))
 local GUIUtils       = require(Lib:WaitForChild("GUI"))
+local GuiEvents      = require(Lib:WaitForChild("GuiEvents"))
 local Constants      = require(Lib:WaitForChild("Constants"))
 
 -- controllers
@@ -138,7 +139,7 @@ function DatGUI.new(params)
 		
       frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
       
-      GUIUtils.OnHover(frame, function(hover)
+      GuiEvents.OnHover(frame, function(hover)
          if hover then
             frame.BackgroundColor3 = Constants.BACKGROUND_COLOR_HOVER
          else

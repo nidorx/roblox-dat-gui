@@ -5,6 +5,7 @@ local UserInputService  = game:GetService("UserInputService")
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
 local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GuiEvents         = require(Lib:WaitForChild("GuiEvents"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
@@ -28,7 +29,7 @@ local function CreateGUI()
 
    local connections = {}
 
-   table.insert(connections, GUIUtils.OnClick(Controller, function(el, input)
+   table.insert(connections, GuiEvents.OnClick(Controller, function()
       OnClickEvent:Fire()
    end))
 

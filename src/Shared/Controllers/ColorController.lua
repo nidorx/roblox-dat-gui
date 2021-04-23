@@ -6,6 +6,7 @@ local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
 local Popover           = require(Lib:WaitForChild("Popover"))
 local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GuiEvents         = require(Lib:WaitForChild("GuiEvents"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
 local WHITE = Color3.fromRGB(255, 255, 255)
@@ -369,17 +370,17 @@ local function CreateGUI()
       updateColorValue()
    end))
 
-   table.insert(connections, GUIUtils.OnHover(TextFrame, function(hover)
+   table.insert(connections, GuiEvents.OnHover(TextFrame, function(hover)
       controlHover = hover
       checkVisibility()
    end))
 
-   table.insert(connections, GUIUtils.OnHover(popover.Frame, function(hover)
+   table.insert(connections, GuiEvents.OnHover(popover.Frame, function(hover)
       selectorHover = hover
       checkVisibility()
    end))
 
-   table.insert(connections, GUIUtils.OnHover(SatLumSelector, function(hover)
+   table.insert(connections, GuiEvents.OnHover(SatLumSelector, function(hover)
       satLumHover = hover
       if hover then 
          selectorHover = true
@@ -387,7 +388,7 @@ local function CreateGUI()
       checkVisibility()
    end))
 
-   table.insert(connections, GUIUtils.OnHover(HueSelector, function(hover)
+   table.insert(connections, GuiEvents.OnHover(HueSelector, function(hover)
       hueHover = hover
       if hover then 
          selectorHover = true
@@ -395,7 +396,7 @@ local function CreateGUI()
       checkVisibility()
    end))
 
-   table.insert(connections, GUIUtils.OnDrag(SatLumSelector, function(el, event, startPos, position, delta)
+   table.insert(connections, GuiEvents.OnDrag(SatLumSelector, function(event, startPos, position, delta)
       if event == 'start' then
          satLumMouseDown = true
          checkVisibility()
@@ -411,7 +412,7 @@ local function CreateGUI()
       end
    end))
 
-   table.insert(connections, GUIUtils.OnDrag(HueSelector, function(el, event, startPos, position, delta)
+   table.insert(connections, GuiEvents.OnDrag(HueSelector, function(event, startPos, position, delta)
       if event == 'start' then
          hueMouseDown = true
          checkVisibility()
@@ -426,6 +427,7 @@ local function CreateGUI()
          })
       end
    end))
+   
 
    return Controller, Misc.DisconnectFn(connections, DisconnectParent, DisconnectText, function()
       popover:Destroy()

@@ -7,6 +7,7 @@ local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc                 = require(Lib:WaitForChild('Misc'))
 local Timer                = require(Lib:WaitForChild('Timer'))
 local Constants            = require(Lib:WaitForChild('Constants'))
+local GuiEvents            = require(Lib:WaitForChild('GuiEvents'))
 local GUIUtils             = require(Lib:WaitForChild('GUI'))
 local Scrollbar            = require(Lib:WaitForChild('Scrollbar'))
 
@@ -114,14 +115,14 @@ function Panel.new()
       child:SetAttribute('LayoutOrderOnPanel_'..ID, layoutOrder)
    end))
 
-   table.insert(connections, GUIUtils.OnMousedown(Header, function(el, input)
+   table.insert(connections, GuiEvents.OnDown(Header, function(el, input)
       if panel._detached == true then
          PANEL_ZINDEX = PANEL_ZINDEX + 1
          Frame.ZIndex = PANEL_ZINDEX
       end
    end))
    
-   table.insert(connections, GUIUtils.OnClick(Header, function(el, input)
+   table.insert(connections, GuiEvents.OnClick(Header, function()
       Closed.Value = not Closed.Value
    end))
    
@@ -219,11 +220,11 @@ function Panel:AttachTo(parent)
 
    table.insert(connections, self.Closed.Changed:Connect(onCloseChange))
 
-   table.insert(connections, GUIUtils.OnHover(Detach, function(hover)
+   table.insert(connections, GuiEvents.OnHover(Detach, function(hover)
       DetachIcon.ImageTransparency = hover and 0 or 0.95
    end))
 
-   table.insert(connections, GUIUtils.OnClick(Detach, function(el, input)
+   table.insert(connections, GuiEvents.OnClick(Detach, function()
       self:Detach()
    end))
 
@@ -323,12 +324,12 @@ function Panel:Detach(closeable)
       CloseIcon.ImageTransparency  = 0.95
       CloseIcon.Parent = Close
 
-      table.insert(connections, GUIUtils.OnHover(Close, function(hover)
+      table.insert(connections, GuiEvents.OnHover(Close, function(hover)
          Close.BackgroundTransparency = hover and 0 or 1
          CloseIcon.ImageTransparency  = hover and 0 or 0.95
       end))
    
-      table.insert(connections, GUIUtils.OnClick(Close, function(el, input)
+      table.insert(connections, GuiEvents.OnClick(Close, function()
          self:Destroy()
       end))
    end
@@ -352,11 +353,11 @@ function Panel:Detach(closeable)
       DetachIcon.ImageTransparency  = 0.95
       DetachIcon.Parent = Atach
 
-      table.insert(connections, GUIUtils.OnHover(Atach, function(hover)
+      table.insert(connections, GuiEvents.OnHover(Atach, function(hover)
          DetachIcon.ImageTransparency = hover and 0 or 0.95
       end))
    
-      table.insert(connections, GUIUtils.OnClick(Atach, function(el, input)
+      table.insert(connections, GuiEvents.OnClick(Atach, function()
          self:AttachTo(origin)
       end))
 
@@ -391,7 +392,7 @@ function Panel:Detach(closeable)
 
    table.insert(connections, self.Closed.Changed:Connect(onCloseChange))
 
-   table.insert(connections, GUIUtils.OnDrag(self.Header, function(el, event, startPos, position, delta)
+   table.insert(connections, GuiEvents.OnDrag(self.Header, function(event, startPos, position, delta)
       if event == 'start' then
          framePosStart = Vector2.new(self.Frame.Position.X.Offset, self.Frame.Position.Y.Offset)
 
@@ -417,7 +418,7 @@ function Panel:Detach(closeable)
       end
    end
 
-   table.insert(connections, GUIUtils.OnHover(ResizeHandle, function(hover)
+   table.insert(connections, GuiEvents.OnHover(ResizeHandle, function(hover)
       isHover = hover
 
       if hover then 
@@ -426,7 +427,7 @@ function Panel:Detach(closeable)
       updateMouseOnResize()
    end))
 
-   table.insert(connections, GUIUtils.OnDrag(ResizeHandle, function(el, event, startPos, position, delta)
+   table.insert(connections, GuiEvents.OnDrag(ResizeHandle, function(event, startPos, position, delta)
       if event == 'start' then
          isScaling = true
          sizeStart = Vector2.new(self.Frame.Size.X.Offset, self.Frame.Size.Y.Offset)

@@ -7,6 +7,7 @@ local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
 local Popover           = require(Lib:WaitForChild("Popover"))
 local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GuiEvents         = require(Lib:WaitForChild("GuiEvents"))
 local Scrollbar         = require(Lib:WaitForChild("Scrollbar"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
@@ -92,15 +93,15 @@ local function CreateGUI()
       end
    end
 
-   table.insert(connections, GUIUtils.OnMouseEnter(List, function(hover)
-      isPopoverHover = hover
-      if hover then 
+   table.insert(connections, GuiEvents.OnEnter(List, function(enter)
+      isPopoverHover = enter
+      if enter then 
          listCanBeOpen = true
       end
       checkVisibility()
    end))
 
-   table.insert(connections, GUIUtils.OnHover(SelectContainer, function(hover)
+   table.insert(connections, GuiEvents.OnHover(SelectContainer, function(hover)
       isListHover = hover
       if hover then 
          listCanBeOpen = true
@@ -172,16 +173,16 @@ local function CreateGUI()
             DefaultLabel.Text = label
          end
          
-         table.insert(connectionsItems, GUIUtils.OnHover(item, function(hover)
+         table.insert(connectionsItems, GuiEvents.OnHover(item, function(hover)
             if hover then 
                itemLabel.TextColor3    = Constants.INPUT_COLOR_HOVER
                item.BackgroundColor3   = Constants.INPUT_COLOR_PLACEHOLDER
             else
                setItemColor(item, itemLabel)
             end
-         end, true))
+         end))
 
-         table.insert(connectionsItems, GUIUtils.OnClick(item, function(el, input)
+         table.insert(connectionsItems, GuiEvents.OnClick(item, function()
             Selected.Value    = index
             DefaultLabel.Text = label
             listCanBeOpen     = false

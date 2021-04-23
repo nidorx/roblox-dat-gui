@@ -4,9 +4,10 @@ local UserInputService  = game:GetService("UserInputService")
 
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
-local GUIUtils          = require(Lib:WaitForChild("GUI"))
-local Constants         = require(Lib:WaitForChild("Constants"))
 local Misc              = require(Lib:WaitForChild("Misc"))
+local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GuiEvents         = require(Lib:WaitForChild("GuiEvents"))
+local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
@@ -60,12 +61,12 @@ local function CreateGUI()
       updateCheckbox()
    end))
 
-   table.insert(connections, GUIUtils.OnHover(Controller, function(hover)
+   table.insert(connections, GuiEvents.OnHover(Controller, function(hover)
       isHover = hover
       updateCheckbox()
    end))
    
-   table.insert(connections, GUIUtils.OnClick(Controller, function(el, input)
+   table.insert(connections, GuiEvents.OnClick(Controller, function(el, input)
       Value.Value = not Value.Value
    end))
 
