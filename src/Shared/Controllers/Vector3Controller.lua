@@ -8,12 +8,11 @@ local Constants   = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent 
-      = GUIUtils.CreateControllerWrapper({
-         Name                 = 'Vector3Controller',
-         Color                = Constants.NUMBER_COLOR,
-         Height               = 50
-      })
+   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+      ['Name']    = 'Vector3Controller',
+      ['Color']   = Constants.NUMBER_COLOR,
+      ['Height']  = 50
+   })
   
    local Value = Instance.new('Vector3Value')
    Value.Name     = 'Value'
@@ -54,7 +53,7 @@ local function CreateGUI()
       TextContainer.Name 			            = axis
       TextContainer.BackgroundTransparency   = 1
       TextContainer.Position 			         = position
-      TextContainer.Size 			            = UDim2.new(0.333, -4, 1, -28)
+      TextContainer.Size 			            = UDim2.new(0.333, 0, 1, -28)
       TextContainer.Parent = Control
 
       local Label = GUIUtils.CreateLabel()
@@ -73,6 +72,7 @@ local function CreateGUI()
       local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
          ['Color']    = Constants.NUMBER_COLOR,
          ['Render']   = RenderText,
+         ['Readonly']   = Controller:WaitForChild('Readonly'),
          ['Parse']    = function (text, value)
             if string.len(text) == 0 then
                -- no changes
@@ -108,7 +108,7 @@ local function CreateGUI()
    for i, axis in ipairs(Misc.AXES) do
       local pos = (i-1)*0.333
       local posOffset = (i-1)*2
-      local TextValue, RenderText, DisconnectText =  CreateAxisController(axis, UDim2.new(pos, posOffset, 0, 4))
+      local TextValue, RenderText, DisconnectText =  CreateAxisController(axis, UDim2.new(pos, posOffset, 0, 3))
       Axes[axis] = {
          TextValue = TextValue,
          RenderText  = RenderText,
@@ -175,12 +175,12 @@ local function Vector3Controller(gui, object, property, min, max, step, isVector
 	local frame, DisconnectGUI = CreateGUI()
 	frame.Parent = gui.Content
 	
-	local labelValue 	   = frame:WaitForChild("Label")	
 	local minValue 		= frame:WaitForChild("Min")
 	local maxValue 		= frame:WaitForChild("Max")
 	local stepValue 	   = frame:WaitForChild("Step")
 	local vector3Value   = frame:WaitForChild("Value")    -- Safe value
 	local valueInValue   = frame:WaitForChild("ValueIn")	-- Input value, unsafe
+   local readonly       = frame:WaitForChild("Readonly")
 	
 	-- The function to be called on change.
 	local onChange
@@ -188,7 +188,6 @@ local function Vector3Controller(gui, object, property, min, max, step, isVector
 	
 	local controller = {
 		frame = frame,
-		label = frame:WaitForChild("LabelText"),
 		height = frame.AbsoluteSize.Y
 	}
 	
@@ -196,7 +195,7 @@ local function Vector3Controller(gui, object, property, min, max, step, isVector
 	-- Configure events
 	------------------------------------------------------------------
 	vector3Value.Changed:connect(function()	
-		if not controller._isReadonly then
+		if not readonly.Value then
          if isVector3Value then
             object[property].Value = vector3Value.Value;
          else 
@@ -312,16 +311,9 @@ local function Vector3Controller(gui, object, property, min, max, step, isVector
 		return controller
 	end
 	
-	-- Sets the name of the controller.
-	function controller.name(name)
-		labelValue.Value = name
-		return controller
-	end
-	
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = property
 
    controller.setValue(controller.getValue())
 	

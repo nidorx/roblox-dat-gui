@@ -9,12 +9,13 @@ local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent 
-      = GUIUtils.CreateControllerWrapper({
-         Name                 = 'Vector3SliderController',
-         Color                = Constants.NUMBER_COLOR,
-         Height               = 90
-      })
+   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+      ['Name']    = 'Vector3SliderController',
+      ['Color']   = Constants.NUMBER_COLOR,
+      ['Height']  = 90
+   })
+
+   local Readonly = Controller:WaitForChild('Readonly')
   
    local Value = Instance.new('Vector3Value')
    Value.Name     = 'Value'
@@ -67,8 +68,8 @@ local function CreateGUI()
       local TextContainer = GUIUtils.CreateFrame()
       TextContainer.Name 			            = 'TextContainer'
       TextContainer.BackgroundTransparency   = 1
-      TextContainer.Position 			         = UDim2.new(0.66, 5, 0, 4)
-      TextContainer.Size 			            = UDim2.new(0.33, -6, 1, -8)
+      TextContainer.Position 			         = UDim2.new(0.66, 3, 0, 3)
+      TextContainer.Size 			            = UDim2.new(0.33, -2, 1, -6)
       TextContainer.Parent = Frame
 
       local AxisPrecision = Instance.new('IntValue')
@@ -78,9 +79,10 @@ local function CreateGUI()
       local  RenderText = Misc.CreateTextNumberFn(AxisPrecision)
       
       local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
-         ['Color']    = Constants.NUMBER_COLOR,
-         ['Render']   = RenderText,
-         ['Parse']    = function (text, value)
+         ['Color']      = Constants.NUMBER_COLOR,
+         ['Render']     = RenderText,
+         ['Readonly']   = Readonly,
+         ['Parse']      = function (text, value)
             if string.len(text) == 0 then
                -- no changes
                return '0'
@@ -101,12 +103,12 @@ local function CreateGUI()
       local SliderContainer = GUIUtils.CreateFrame()
       SliderContainer.Name                   = 'slider-container'
       SliderContainer.BackgroundTransparency = 1
-      SliderContainer.Position 			      = UDim2.new(0, 12, 0, 4)
-      SliderContainer.Size 			         = UDim2.new(0.66, -12, 1, -8)
+      SliderContainer.Position 			      = UDim2.new(0, 12, 0, 3)
+      SliderContainer.Size 			         = UDim2.new(0.66, -12, 1, -6)
       SliderContainer.Parent = Frame
    
       local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.CreateSlider({
-         
+         ['Readonly'] = Readonly
       })
       SliderFrame.Parent = SliderContainer
 
@@ -228,8 +230,8 @@ local function Vector3SliderController(gui, object, property, min, max, step, is
 	
 	local frame, valueValue, valueInValue, minValue, maxValue, stepValue,  DisconnectGUI = CreateGUI()
 	frame.Parent = gui.Content
-	
-	local labelValue 	   = frame:WaitForChild("Label")	
+
+   local readonly       = frame:WaitForChild("Readonly")
 	
 	-- The function to be called on change.
 	local onChange
@@ -237,7 +239,6 @@ local function Vector3SliderController(gui, object, property, min, max, step, is
 	
 	local controller = {
 		frame = frame,
-		label = frame:WaitForChild("LabelText"),
 		height = frame.AbsoluteSize.Y
 	}
 	
@@ -245,7 +246,7 @@ local function Vector3SliderController(gui, object, property, min, max, step, is
 	-- Configure events
 	------------------------------------------------------------------
 	valueValue.Changed:connect(function()	
-		if not controller._isReadonly then
+		if not readonly.Value then
          if isVector3Value then
             object[property].Value = valueValue.Value;
          else
@@ -360,16 +361,9 @@ local function Vector3SliderController(gui, object, property, min, max, step, is
 		return controller
 	end
 	
-	-- Sets the name of the controller.
-	function controller.name(name)
-		labelValue.Value = name
-		return controller
-	end
-	
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = property
 
    controller.setValue(controller.getValue())
 	

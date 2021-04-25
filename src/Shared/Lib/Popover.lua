@@ -44,7 +44,7 @@ function Popover:Resize(size)
    end
 end
 
-function Popover:Show()
+function Popover:Show(chevron, chevronColor)
    local refPos = self._reference.AbsolutePosition
    local refSiz = self._reference.AbsoluteSize
    local scrSiz = Camera.ViewportSize
@@ -56,6 +56,8 @@ function Popover:Show()
 
    local offset = self._offset
 
+   local realPosition = self._position
+
    if self._position == 'top' then
       posX = refPos.X + (refSiz.X/2) - size.X/2
 
@@ -63,6 +65,7 @@ function Popover:Show()
       if posY < -Constants.GUI_INSET then 
          -- on bottom
          posY = refPos.Y + refSiz.Y + self._offset
+         realPosition = 'bottom'
       end
 
    elseif self._position == 'bottom' then
@@ -72,6 +75,7 @@ function Popover:Show()
       if (posY + size.Y) > scrSiz.Y - Constants.GUI_INSET then 
          -- on top
          posY = refPos.Y - size.Y - self._offset
+         realPosition = 'top'
       end
       
    elseif self._position == 'left' then
@@ -87,6 +91,7 @@ function Popover:Show()
       if posX  < 0 then 
          -- on right
          posX = refPos.X + refSiz.X + self._offset
+         realPosition = 'right'
       end
    
    else
@@ -103,11 +108,49 @@ function Popover:Show()
       if (posX + size.X) > scrSiz.X then 
          -- on left
          posX = refPos.X - size.X - self._offset
+         realPosition = 'left'
       end
    end
 
    self.Frame.Position  = UDim2.new(0, posX, 0, posY+Constants.GUI_INSET)
    self.Frame.Visible   = true
+
+   if chevron == true then
+      local SIZE = 10
+      if self._chevron == nil then 
+         self._chevron = GUIUtils.CreateImageLabel(Constants.ICON_CHEVRON)
+         self._chevron.Name 			= 'Chevron'         
+         self._chevron.Size 			= UDim2.new(0, SIZE, 0, SIZE)
+         self._chevron.ImageColor3  = Constants.LABEL_COLOR
+         self._chevron.Parent = self.Frame
+      end
+
+      if chevronColor ~= nil then
+         self._chevron.ImageColor3 = chevronColor
+      end
+
+      if realPosition == 'top' then 
+         self._chevron.Position = UDim2.new(0.5, -SIZE/2, 1, 0)
+         self._chevron.Rotation = 90
+
+      elseif realPosition == 'bottom' then
+         self._chevron.Position = UDim2.new(0.5, -SIZE/2, 0, -SIZE)
+         self._chevron.Rotation = -90
+
+      elseif realPosition == 'left' then 
+         self._chevron.Position = UDim2.new(1, 0, 0.5, -SIZE/2)
+         self._chevron.Rotation = 0
+
+      else
+         self._chevron.Position = UDim2.new(0, -SIZE, 0.5, -SIZE/2)
+         self._chevron.Rotation = -180
+         
+      end
+   else
+      if self._chevron ~= nil then 
+         self._chevron.Parent = nil
+      end
+   end
 end
 
 function Popover:Hide()

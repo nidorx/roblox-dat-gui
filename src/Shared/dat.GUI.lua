@@ -42,6 +42,8 @@ local Camera 	      = workspace.CurrentCamera
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Panel          = require(Lib:WaitForChild("Panel"))
+local Popover        = require(Lib:WaitForChild("Popover"))
+local Scrollbar      = require(Lib:WaitForChild("Scrollbar"))
 local GUIUtils       = require(Lib:WaitForChild("GUI"))
 local GuiEvents      = require(Lib:WaitForChild("GuiEvents"))
 local Constants      = require(Lib:WaitForChild("Constants"))
@@ -129,16 +131,128 @@ function DatGUI.new(params)
 
       table.insert(gui.children, controller)
 		
-		-------------------------------------------------------------------------------
-		-- UI Lock mechanism
-		-- @see https://devforum.roblox.com/t/guis-sink-input-even-when-covered/343684
-		-------------------------------------------------------------------------------
 		local frame       = controller.frame
 		frame.Name 		   = property
 		controller.name   = property
+      
+      local labelText      = frame:WaitForChild("LabelText")
+      local labelVisible   = frame:WaitForChild("LabelVisible")
+      local OnRemove       = Instance.new('BindableEvent')
+
+      local oldRemoveFn
+
+      -- allows to be informed when the controller is removed
+      controller.onRemove = function(callback)
+         -- changes the behavior of the original remove from the controller
+         if oldRemoveFn == nil then
+            oldRemoveFn = controller.remove
+            controller.remove = function()
+               if controller._is_removing_parent then
+                  return
+               end
+               OnRemove:Fire()
+      
+               oldRemoveFn()
+            end
+         end
+
+         return OnRemove.Event:Connect(callback)
+      end
+      
+      -- show/hide label
+      controller.label = function(visible)
+         labelVisible.Value = visible ~= false
+         return controller
+      end
+      
+      -- Sets the name of the controller
+      if type(controller.name) ~= 'function' then  
+         local labelValue 	   = frame:WaitForChild("Label")
+         labelValue.Value     = property
+
+         function controller.name(name)
+            labelValue.Value = name
+            return controller
+         end
+      end
+
+      -- help text
+      local helpPopover
+      local helpText
+      local helpTitle
+      function controller.help(text)
+         if helpPopover == nil then
+            helpPopover = Popover.new(frame, Vector2.new(200, 60), 'left', 3)
+            helpPopover.Frame.BorderColor3      = Constants.LABEL_COLOR
+            helpPopover.Frame.BorderSizePixel   = 1
+            helpPopover.Frame.BackgroundTransparency = 0
+
+            local helpContent = GUIUtils.CreateFrame()
+            helpContent.Name     = "Content"
+            helpContent.Size 	   = UDim2.new(1, 0, 1, 0)
+            helpContent.ClipsDescendants  = true
+            helpContent.Parent   = helpPopover.Frame
+
+            local helpContentInner = GUIUtils.CreateFrame()
+            helpContentInner.Name     = "Inner"
+            helpContentInner.Parent   = helpContent
+
+            helpTitle = GUIUtils.CreateLabel()
+            helpTitle.Name       = 'Title'
+            helpTitle.TextColor3 = Constants.NUMBER_COLOR
+            helpTitle.Size 	   = UDim2.new(1, -6, 0, 16)
+            helpTitle.Position   = UDim2.new(0, 3, 0, 0)
+            helpTitle.Parent = helpContentInner
+
+            helpText = GUIUtils.CreateLabel()
+            helpText.Name        = 'Text'
+            helpText.TextWrapped = true
+            helpText.RichText    = true
+            helpText.Size 	      = UDim2.new(1, -6, 1, 0)
+            helpText.Position    = UDim2.new(0, 3, 0, 16)
+            helpText.Parent = helpContentInner
+           
+            local scrollbar  = Scrollbar.new(helpContent, helpContentInner, 0)
+
+            local isPopoverHover = false
+            local isControllerHover = false
+
+            local function updatePopover()
+               if isControllerHover or isPopoverHover then
+                  helpContentInner.Size = UDim2.new(1, 0, 0, helpText.TextBounds.Y + 16)
+                  helpText.Size = UDim2.new(1, 0, 1, -16)
+
+                  helpTitle.Text = labelText.Text
+                  scrollbar:Update()
+                  helpPopover:Show(true, Constants.LABEL_COLOR)
+               else
+                  helpPopover:Hide()
+               end
+            end
+
+            local cancelOnEnter = GuiEvents.OnEnter(frame, function(hover)
+               isControllerHover = hover
+               updatePopover()
+            end)
+
+            local cancelOnEnter = GuiEvents.OnHover(helpPopover.Frame, function(hover)
+               isPopoverHover = hover
+               updatePopover()
+            end)
+
+            controller.onRemove(function()
+               cancelOnEnter()
+               scrollbar:Destroy()
+               helpPopover:Destroy()
+            end)
+         end
+
+         helpText.Text = text         
+         
+         return controller
+      end
 		
       frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
-      
       GuiEvents.OnHover(frame, function(hover)
          if hover then
             frame.BackgroundColor3 = Constants.BACKGROUND_COLOR_HOVER
@@ -147,40 +261,44 @@ function DatGUI.new(params)
          end
       end)
 		
-		-------------------------------------------------------------------------------
-		
 		-- adds readonly/disabled method
-		controller._isReadonly = false
-		controller.readonly = function(option)
-			if option == nil then
-				option = true
-			end
-			
-			controller._isReadonly = option
-			
-			if controller.label ~= nil then
-				if controller._isReadonly then
+      local Readonly = frame:WaitForChild("Readonly")
+      
+      Readonly.Changed:Connect(function(isReadonly)
+         if labelText ~= nil then
+				if isReadonly then
 					local lineThrough = Instance.new('Frame')
-					lineThrough.Size                    = UDim2.new(0, controller.label.TextBounds.X, 0, 1)
+					lineThrough.Size                    = UDim2.new(0, labelText.TextBounds.X, 0, 1)
 					lineThrough.Position                = UDim2.new(0, 0, 0.5, 0)
 					lineThrough.BackgroundColor3        = Constants.LABEL_COLOR_DISABLED
 					lineThrough.BackgroundTransparency  = 0.4
 					lineThrough.BorderSizePixel         = 0
 					lineThrough.Name                    = "LineThrough"
-					lineThrough.Parent = controller.label
+					lineThrough.Parent = labelText
 					
-					controller.label.TextColor3 = Constants.LABEL_COLOR_DISABLED					
+					labelText.TextColor3 = Constants.LABEL_COLOR_DISABLED					
 				else
-					controller.label.TextColor3 = Constants.LABEL_COLOR					
-					if controller.label:FindFirstChild("LineThrough") ~= nil then
-						controller.label:FindFirstChild("LineThrough").Parent = nil
+					labelText.TextColor3 = Constants.LABEL_COLOR					
+					if labelText:FindFirstChild("LineThrough") ~= nil then
+						labelText:FindFirstChild("LineThrough").Parent = nil
 					end
 				end
 			end
-			
+      end)
+
+		controller.readonly = function(value)
+			if value == nil then
+				value = true
+			end
+         Readonly.Value = value
 			return controller
 		end
 		
+      ------------------------------------------------------------------
+      -- Set initial values
+      ------------------------------------------------------------------
+      
+
 		return controller
    end
 

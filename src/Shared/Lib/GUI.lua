@@ -21,8 +21,8 @@ function GUIUtils.CreateImageLabel(image)
    Check.BackgroundTransparency  = 1
    Check.BorderSizePixel 			= 0
    Check.Selectable              = false
-   Check.Position 			      = UDim2.new(0, 4, 0, 4)
-   Check.Size 			            = UDim2.new(1, -8, 1, -8)
+   Check.Position 			      = UDim2.new(0, 4, 0, 3)
+   Check.Size 			            = UDim2.new(1, -8, 1, -6)
    Check.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
    Check.Visible                 = true
    Check.ZIndex                  = 2
@@ -131,30 +131,40 @@ function GUIUtils.CreateControllerWrapper(config)
    end
 
    local Controller = GUIUtils.CreateFrame()   
-   Controller.Name 			            = config.Name
-   Controller.Size 			            = UDim2.new(1, 0, 0, config.Height)
+   Controller.Name   = config.Name
+   Controller.Size 	= UDim2.new(1, 0, 0, config.Height)
+
+   local Readonly = Instance.new('BoolValue')
+   Readonly.Name   = 'Readonly'
+   Readonly.Value  = false
+   Readonly.Parent = Controller
+
+   local LabelVisible = Instance.new('BoolValue')
+   LabelVisible.Name   = 'LabelVisible'
+   LabelVisible.Value  = true
+   LabelVisible.Parent = Controller
 
    local LabelValue = Instance.new('StringValue')
-   LabelValue.Name = 'Label'
+   LabelValue.Name   = 'Label'
    LabelValue.Parent = Controller
 
    local LabelText = GUIUtils.CreateLabel()
-   LabelText.Position 			      = UDim2.new(0, 10, 0, 0)
-   LabelText.Size 			         = UDim2.new(0.4, -10, 1, -1)
+   LabelText.Position   = UDim2.new(0, 6, 0, 0)
+   LabelText.Size 		= UDim2.new(0.4, -6, 1, -1)
    LabelText.Parent = Controller
 
    local borderBottom = GUIUtils.CreateFrame()
-   borderBottom.Name 			         = "BorderBottom"
-   borderBottom.BackgroundColor3       = Constants.BORDER_COLOR
-   borderBottom.Position 			      = UDim2.new(0, 0, 1, -1)
-   borderBottom.Size 			         = UDim2.new(1, 0, 0, 1)
+   borderBottom.Name 			   = "BorderBottom"
+   borderBottom.BackgroundColor3 = Constants.BORDER_COLOR
+   borderBottom.Position 			= UDim2.new(0, 0, 1, -1)
+   borderBottom.Size 			   = UDim2.new(1, 0, 0, 1)
    borderBottom.Parent = Controller
 
    local borderLeft = GUIUtils.CreateFrame()
-   borderLeft.Name 			            = "BorderLeft"
-   borderLeft.BackgroundColor3         = config.Color
-   borderLeft.Size 			            = UDim2.new(0, 3, 1, 0)
-   borderLeft.ZIndex                   = 2
+   borderLeft.Name 			      = "BorderLeft"
+   borderLeft.BackgroundColor3   = config.Color
+   borderLeft.Size 			      = UDim2.new(0, 3, 1, 0)
+   borderLeft.ZIndex             = 2
    borderLeft.Parent = Controller
 
    local Control = GUIUtils.CreateFrame()
@@ -171,6 +181,18 @@ function GUIUtils.CreateControllerWrapper(config)
    table.insert(connections, LabelValue.Changed:Connect(function()
       LabelText.Text = LabelValue.Value
    end))
+
+   table.insert(connections, LabelVisible.Changed:Connect(function()
+      LabelText.Visible = LabelVisible.Value
+      if LabelVisible.Value then 
+         Control.Position 			         = UDim2.new(0.4, 0, 0, 0)
+         Control.Size 			            = UDim2.new(0.6, 0, 1, -1)
+      else
+         Control.Position 			         = UDim2.new(0, 6, 0, 0)
+         Control.Size 			            = UDim2.new(1, -6, 1, -1)
+      end
+   end))
+
 
    return Controller, Control, Misc.DisconnectFn(connections)
 end
@@ -227,8 +249,6 @@ function GUIUtils.CreateInput(config)
    if config.ChangeColors == nil then
       config.ChangeColors = true
    end
-
-   
 
    local Value = Instance.new('StringValue')
    Value.Name     = 'Value'
@@ -288,44 +308,21 @@ function GUIUtils.CreateInput(config)
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
   
    local connections    = {}
-   local focused        = false
+   local isFocused      = false
+   local isHover        = false
    local OnFocused      = Instance.new('BindableEvent')
    local OnFocusLost    = Instance.new('BindableEvent')
+   local isReadOnly     
 
-   table.insert(connections, Value.Changed:Connect(function()
-      Text.Text      = config.Render(Value.Value)
-      TextFake.Text  = Text.Text
-   end))
+   local function updateVisibility()
 
-   table.insert(connections, Text.Focused:Connect(function()
-      focused = true
-
-      if config.ChangeColors then
-         Text.TextColor3            = Constants.INPUT_COLOR_FOCUS_TXT
-         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS	
-      end
-
-      OnFocused:Fire()
-   end))
-   
-   table.insert(connections, Text.FocusLost:Connect(function(enterPressed, input)
-      focused        = false
-
-      if config.ChangeColors then
-         Text.TextColor3            = config.Color
-         TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
-      end
-      
-      Value.Value    = config.Parse(Text.Text, Value)
-      Text.Text      = config.Render(Value.Value)
-      TextFake.Text  = Text.Text
-
-      OnFocusLost:Fire()
-   end))
-
-   table.insert(connections, GuiEvents.OnHover(TextFrame, function(hover)
-      if not focused then
-         if hover then 
+      if isFocused and not config.Readonly.Value then
+         if config.ChangeColors then
+            Text.TextColor3            = Constants.INPUT_COLOR_FOCUS_TXT
+            TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS	
+         end
+      else
+         if isHover and not config.Readonly.Value then 
             TextFake.ZIndex   = -1
             TextFake.Visible  = false
             Text.Selectable   = true
@@ -340,15 +337,44 @@ function GUIUtils.CreateInput(config)
             Text.TextEditable = false
             Text.Active       = false
          end
-
+         
          if config.ChangeColors then
-            if hover then 
+            if isHover and not config.Readonly.Value then 
                TextFrame.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
             else
+               Text.TextColor3            = config.Color
                TextFrame.BackgroundColor3 = Constants.INPUT_COLOR
             end
          end
       end
+   end
+
+   table.insert(connections, Value.Changed:Connect(function()
+      Text.Text      = config.Render(Value.Value)
+      TextFake.Text  = Text.Text
+   end))
+
+   table.insert(connections, Text.Focused:Connect(function()
+      isFocused = true
+      updateVisibility()
+
+      OnFocused:Fire()
+   end))
+   
+   table.insert(connections, Text.FocusLost:Connect(function(enterPressed, input)
+      isFocused = false
+      updateVisibility()
+      
+      Value.Value    = config.Parse(Text.Text, Value)
+      Text.Text      = config.Render(Value.Value)
+      TextFake.Text  = Text.Text
+
+      OnFocusLost:Fire()
+   end))
+
+   table.insert(connections, GuiEvents.OnHover(TextFrame, function(hover)
+      isHover = hover
+      updateVisibility()
    end))
    
    return Value, TextFrame, OnFocused.Event, OnFocusLost.Event, Misc.DisconnectFn(connections)
@@ -425,7 +451,7 @@ function GUIUtils.CreateSlider(config)
    local OnFocusLost    = Instance.new('BindableEvent')
 
    local function updateColors()
-      if isHover or isDragging then 
+      if not config.Readonly.Value and (isHover or isDragging) then 
          Slider.BackgroundColor3    = Constants.INPUT_COLOR_HOVER
          SliderFG.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
       else
@@ -440,6 +466,10 @@ function GUIUtils.CreateSlider(config)
    end))
 
    table.insert(connections, GuiEvents.OnDrag(Slider, function(event, startPos, position, delta)
+      if config.Readonly.Value then 
+         return
+      end
+
       if event == 'start' then
          isDragging = true
          updateColors()
@@ -516,49 +546,5 @@ function GUIUtils.CreateSlider(config)
 
    return Slider, Value, Min, Max, Percent, OnFocused.Event, OnFocusLost.Event, Misc.DisconnectFn(connections)
 end
-
-local EVENT_SEQ               = 0
-
-function GUIUtils.OnFocus(element, callback)
-
-   EVENT_SEQ = EVENT_SEQ+1
-
-   local actionName  = 'dat.Gui.OnFocus_'..EVENT_SEQ
-   local isHover     = false
-   local isBinded    = false
-   local connections = {}
-
-   local function bindAction()
-      if isBinded then 
-         return
-      end
-      isBinded = true
-
-      ContextActionService:BindAction(actionName, function(actionName, inputState, input)
-         if not isHover or inputState ~= Enum.UserInputState.End then
-            return Enum.ContextActionResult.Pass
-         end
-         
-         callback(element, input)
-         
-         return Enum.ContextActionResult.Sink
-      end, false, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
-   end
-   
-   table.insert(connections,  GuiEvents.OnHover(element, function(hover)
-      isHover = hover
-      if hover then
-         bindAction()
-      else
-         isBinded = false
-         ContextActionService:UnbindAction(actionName)
-      end
-   end))
-
-   return Misc.DisconnectFnEvent(connections, function()
-      ContextActionService:UnbindAction(actionName)
-   end)
-end
-
 
 return GUIUtils

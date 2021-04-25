@@ -14,8 +14,8 @@ local Constants         = require(Lib:WaitForChild("Constants"))
 local function CreateGUI()
 
    local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
-      Name  = 'OptionController',
-      Color = Constants.STRING_COLOR
+      ['Name']  = 'OptionController',
+      ['Color'] = Constants.STRING_COLOR
    })
 
    local Selected = Instance.new('IntValue')
@@ -30,8 +30,8 @@ local function CreateGUI()
    local SelectContainer = GUIUtils.CreateFrame()
    SelectContainer.Name 			         = "Select"
    SelectContainer.BackgroundTransparency = 1
-   SelectContainer.Position 			      = UDim2.new(0, 0, 0, 4)
-   SelectContainer.Size 			         = UDim2.new(1, -2, 1, -8)
+   SelectContainer.Position 			      = UDim2.new(0, 0, 0, 3)
+   SelectContainer.Size 			         = UDim2.new(1, 0, 1, -6)
    SelectContainer.Parent = Control
 
 
@@ -187,6 +187,7 @@ local function CreateGUI()
             DefaultLabel.Text = label
             listCanBeOpen     = false
             checkVisibility()
+            return false
          end))
       end
 
@@ -226,9 +227,9 @@ local function OptionController(gui, object, property,  options)
 	local frame, DisconnectGUI = CreateGUI()
 	frame.Parent = gui.Content
 	
-	local labelValue 		= frame:WaitForChild("Label")	
 	local optionsValue 	= frame:WaitForChild("Options")
 	local selectedValue 	= frame:WaitForChild("Selected")
+   local readonly       = frame:WaitForChild("Readonly")
 	
 	-- The function to be called on change.
 	local onChange
@@ -251,7 +252,6 @@ local function OptionController(gui, object, property,  options)
 	
 	local controller = {
 		frame 	= frame,
-		label = frame:WaitForChild("LabelText"),
 		height 	= frame.AbsoluteSize.Y
 	}
 	
@@ -320,7 +320,7 @@ local function OptionController(gui, object, property,  options)
 	-- Configure events
 	------------------------------------------------------------------
 	selectedValue.Changed:connect(function()		
-		if not controller._isReadonly then
+		if not readonly.Value then
 			object[property] = keyValue[selectedValue.Value]
 		end
 		
@@ -419,17 +419,11 @@ local function OptionController(gui, object, property,  options)
 		return controller
 	end
 	
-	-- Sets the name of the controller.
-	function controller.name(name)
-		labelValue.Value = name
-		return controller
-	end
-	
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------	
 	extractKeys()
-	labelValue.Value = property	
+
 	selectedValue.Value = currentIndex
 	
 	return controller

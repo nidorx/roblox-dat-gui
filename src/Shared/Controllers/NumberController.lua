@@ -8,11 +8,12 @@ local Constants   = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent 
-      = GUIUtils.CreateControllerWrapper({
-         Name                 = 'NumberController',
-         Color                = Constants.NUMBER_COLOR
-      })
+   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+      ['Name']                 = 'NumberController',
+      ['Color']                = Constants.NUMBER_COLOR
+   })
+
+   local Readonly    = Controller:WaitForChild('Readonly')
 
    local ValueIn = Instance.new('NumberValue')
    ValueIn.Name     = 'ValueIn'
@@ -42,9 +43,10 @@ local function CreateGUI()
    local RenderText = Misc.CreateTextNumberFn(Precision)
 
    local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText =  GUIUtils.CreateInput({
-      ['Color']    = Constants.NUMBER_COLOR,
-      ['Render']   = RenderText,
-      ['Parse']    = function (text, value)
+      ['Color']      = Constants.NUMBER_COLOR,
+      ['Render']     = RenderText,
+      ['Readonly']   = Readonly,
+      ['Parse']      = function (text, value)
          if string.len(text) == 0 then
             -- no changes
             return '0'
@@ -64,8 +66,8 @@ local function CreateGUI()
    local TextContainer = GUIUtils.CreateFrame()
    TextContainer.Name 			            = 'TextContainer'
    TextContainer.BackgroundTransparency   = 1
-   TextContainer.Position 			         = UDim2.new(0, 0, 0, 4)
-   TextContainer.Size 			            = UDim2.new(1, -2, 1, -8)
+   TextContainer.Position 			         = UDim2.new(0, 0, 0, 3)
+   TextContainer.Size 			            = UDim2.new(1, 0, 1, -6)
    TextContainer.Parent = Control
    TextFrame.Parent     = TextContainer
 
@@ -75,9 +77,6 @@ local function CreateGUI()
 
    local connections       = {}
 
-   table.insert(connections, OnFocused:Connect(function()
-   end))
-   
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()	
       Precision.Value = Misc.CountDecimals(Step.Value)
@@ -107,12 +106,12 @@ local function NumberController(gui, object, property, min, max, step, isNumberV
 	local frame, DisconnectGUI = CreateGUI()
 	frame.Parent = gui.Content
 	
-	local labelValue 	   = frame:WaitForChild("Label")	
 	local minValue 		= frame:WaitForChild("Min")
 	local maxValue 		= frame:WaitForChild("Max")
 	local stepValue 	   = frame:WaitForChild("Step")
 	local stringValue 	= frame:WaitForChild("Value")		   -- Safe value
 	local valueInValue   = frame:WaitForChild("ValueIn")		-- Input value, unsafe
+   local readonly       = frame:WaitForChild("Readonly")
 	
 	-- The function to be called on change.
 	local onChange
@@ -120,7 +119,6 @@ local function NumberController(gui, object, property, min, max, step, isNumberV
 	
 	local controller = {
 		frame = frame,
-		label = frame:WaitForChild("LabelText"),
 		height = frame.AbsoluteSize.Y
 	}
 	
@@ -128,7 +126,7 @@ local function NumberController(gui, object, property, min, max, step, isNumberV
 	-- Configure events
 	------------------------------------------------------------------
 	stringValue.Changed:connect(function()		
-		if not controller._isReadonly then
+		if not readonly.Value then
          if isNumberValue then
             object[property].Value = tonumber(stringValue.Value)
          else
@@ -232,16 +230,9 @@ local function NumberController(gui, object, property, min, max, step, isNumberV
 		return controller
 	end
 	
-	-- Sets the name of the controller.
-	function controller.name(name)
-		labelValue.Value = name
-		return controller
-	end
-	
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = property
 
    controller.setValue(controller.getValue())
 

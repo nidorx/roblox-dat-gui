@@ -129,7 +129,7 @@ npm run build
 ##  @TODO
 - [ ] Improve documentation (1 example of each type)
 - [x] Ability to move the gui window around by dragging (or at least have some parameters to control where it’s placed)
-- [ ] Linethrough effect should be optional (maybe another method like readonly and disabled)
+- [x] Linethrough effect should be optional (maybe another method like readonly and disabled)
 - [x] BUG (making the first option of the dropdown the current value)
 - [x] BUG (Sometimes a controller does not unlock the UI)
 - [x] Ability to set the color of text for folders (Themes)
@@ -138,8 +138,10 @@ npm run build
 - [x] Remove duplicate codes
 - [x] Resize
 - [x] Move
-- [ ] Custom Elements - Allow custom controllers (Controller Factory)
-- [ ] .help()
+- [x] Custom Elements - Allow custom controllers (Controller Factory)
+- [x] Hide label
+- [x] On Remove
+- [x] .help()
 - [ ] AddTextInfo
 - [ ] AddTextWarn
 - [ ] AddLogo

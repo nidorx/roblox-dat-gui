@@ -5,47 +5,10 @@ local Players              = game:GetService('Players')
 local Player               = Players.LocalPlayer or Players:GetPropertyChangedSignal('LocalPlayer'):Wait()
 local PlayerGui            = Player:WaitForChild("PlayerGui")
 
+local Lib = game.ReplicatedStorage:WaitForChild('Lib')
+local Timer                = require(Lib:WaitForChild('Timer'))
+
 local GuiEvents = {}
-
-local ON_ENTER = Instance.new('BindableEvent')
-local ON_CLICK = Instance.new('BindableEvent')
-
-local EVENT_SEQ               = 0
-local IS_DRAGGING             = false
-local HOVER_ELEMENTS_REF      = {}
-local DRAG_ELEMENTS_REF       = {}
-local TOPMOST_HOVER_ELM       = nil
-local TOPMOST_DRAG_ELM        = nil
-
--- local function updateTopmost(x, y)
---    local objects = Player.PlayerGui:GetGuiObjectsAtPosition(x, y)
---    TOPMOST_HOVER_ELM = nil
---    TOPMOST_DRAG_ELM = nil
---    for _, obj in ipairs(objects) do
---       if TOPMOST_HOVER_ELM == nil then
---          for _, ref in ipairs(HOVER_ELEMENTS_REF) do
---             if ref.Element == obj then
---                TOPMOST_HOVER_ELM = obj
---                break
---             end
---          end
---       end
-
---       if TOPMOST_DRAG_ELM == nil then
---          for _, ref in ipairs(DRAG_ELEMENTS_REF) do
---             if ref.Element == obj then
---                TOPMOST_DRAG_ELM = obj
---                break
---             end
---          end
---       end
-
---       if TOPMOST_DRAG_ELM ~= nil and TOPMOST_HOVER_ELM ~= nil then 
---          break
---       end
---    end
--- end
-
 
 local EL_EVENTS                     = {
    ['*'] = {
@@ -57,10 +20,12 @@ local EL_EVENTS                     = {
       ['OnMove']        = {},
    }
 }
+
+local CURRENT_INPUT_POSITION        = nil
 local CURRENT_ENTER_OBJECTS         = {}
 local NEW_ENTER_OBJECTS             = {}
 local CURRENT_TOP_MOST_HOVER        = nil
-local CURRENT_DRAG_OBJ   = nil
+local IS_DRAGGING                   = false
 
 -- usado no onclick, que deve casar o mousedown com o mouseup
 local LAST_MOUSE_DOWN_SEQ         = 0
@@ -92,7 +57,32 @@ local function addListener(element, event, callback)
    end
 end
 
+local function isEnter(element)
+   if CURRENT_INPUT_POSITION == nil then 
+      return false
+   else 
+      local objects = Player.PlayerGui:GetGuiObjectsAtPosition(CURRENT_INPUT_POSITION.X, CURRENT_INPUT_POSITION.Y)
+      return table.find(objects, element) ~= nil
+   end
+end
+
+local function forceHoverFalse()
+   -- call OnHover(false)
+   if CURRENT_TOP_MOST_HOVER ~= nil then 
+      local element = EL_EVENTS[CURRENT_TOP_MOST_HOVER]
+      for _, callback in ipairs(element.OnHover) do
+         callback(false)
+      end
+      CURRENT_TOP_MOST_HOVER = nil
+   end
+end
+
 local function checkEnter()
+   if CURRENT_INPUT_POSITION == nil then 
+      NEW_ENTER_OBJECTS = {}
+   else 
+      NEW_ENTER_OBJECTS = Player.PlayerGui:GetGuiObjectsAtPosition(CURRENT_INPUT_POSITION.X, CURRENT_INPUT_POSITION.Y)
+   end
 
    -- elementos que irão receber o evento onLeave
    local toLeave = CURRENT_ENTER_OBJECTS
@@ -115,7 +105,7 @@ local function checkEnter()
       end
 
       if events ~= nil and #events.OnHover > 0 then
-         if topMostHover == nil then 
+         if not IS_DRAGGING and topMostHover == nil then 
             topMostHover = obj
          end
       end
@@ -304,48 +294,9 @@ local function onMove(posX, posY)
    return intecepted
 end
 
--- local DRAG_START_POS 
-
--- local function checkDrag(posX, posY)
---    local intecepted = false
-
---    if CURRENT_DRAG_OBJ == nil then
---       for _, obj in ipairs(CURRENT_ENTER_OBJECTS) do
---          local element = EL_EVENTS[obj]
---          if element ~= nil and element.LastMouseDown == LAST_MOUSE_DOWN_SEQ and #element.OnDrag > 0 then
-   
---             intecepted = true
---             CURRENT_DRAG_OBJ = obj
-
---             local position    = Vector2.new(posX, posY)
---             local delta       = Vector2.new(0, 0)
---             DRAG_START_POS    = position
-   
---             for _, callback in ipairs(element.OnDrag) do
---                callback('start', DRAG_START_POS, position, delta)
---             end
-
---             break
---          end
---       end
---    else
---       local element = EL_EVENTS[CURRENT_DRAG_OBJ]
---       if element ~= nil and element.LastMouseDown == LAST_MOUSE_DOWN_SEQ and #element.OnDrag > 0 then
---          intecepted = true
---          local position    = Vector2.new(posX, posY)
---          local delta       = DRAG_START_POS - position
---          for _, callback in ipairs(element.OnDrag) do
---             callback('drag', DRAG_START_POS, position, delta)
---          end
---       end
---    end
-
---    return intecepted
--- end
-
 ContextActionService:BindActionAtPriority('GuiEventsMouseMovement', function(action, state, input)
    if input.UserInputState == Enum.UserInputState.Begin or input.UserInputState == Enum.UserInputState.Change then
-      NEW_ENTER_OBJECTS = Player.PlayerGui:GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
+      CURRENT_INPUT_POSITION = input.Position
       checkEnter()
 
       if input.UserInputState == Enum.UserInputState.Change then
@@ -356,7 +307,7 @@ ContextActionService:BindActionAtPriority('GuiEventsMouseMovement', function(act
 
    else
       -- out of screen
-      NEW_ENTER_OBJECTS = {}
+      CURRENT_INPUT_POSITION = nil
       checkEnter()
    end
 
@@ -364,7 +315,6 @@ ContextActionService:BindActionAtPriority('GuiEventsMouseMovement', function(act
 end, false, 999999, Enum.UserInputType.MouseMovement)
 
 ContextActionService:BindActionAtPriority('GuiEventsMouseButton1', function(action, state, input)
-   print(action, input.UserInputState, input.Position)
    
    if input.UserInputState == Enum.UserInputState.Begin then
       if checkDown() then
@@ -381,7 +331,7 @@ end, false, 999998, Enum.UserInputType.MouseButton1)
 
 ContextActionService:BindActionAtPriority('GuiEventsTouch', function(action, state, input)
    if input.UserInputState == Enum.UserInputState.Begin or input.UserInputState == Enum.UserInputState.Change then
-      NEW_ENTER_OBJECTS = Player.PlayerGui:GetGuiObjectsAtPosition(input.Position.X, input.Position.Y)
+      CURRENT_INPUT_POSITION = input.Position
       checkEnter()
 
       if input.UserInputState == Enum.UserInputState.Begin then
@@ -396,13 +346,13 @@ ContextActionService:BindActionAtPriority('GuiEventsTouch', function(action, sta
    else
       if input.UserInputState == Enum.UserInputState.End then
          if checkUp() then
-            NEW_ENTER_OBJECTS = {}
+            CURRENT_INPUT_POSITION = nil
             checkEnter()
             return Enum.ContextActionResult.Sink
          end
       end
 
-      NEW_ENTER_OBJECTS = {}
+      CURRENT_INPUT_POSITION = nil
       checkEnter()
    end
 
@@ -410,42 +360,31 @@ ContextActionService:BindActionAtPriority('GuiEventsTouch', function(action, sta
 end, false, 999999, Enum.UserInputType.Touch)
 
 
--- Enum.UserInputState.Cancel
--- UserInputService.InputBegan:Connect(function(input)
--- 	if input.UserInputType == Enum.UserInputType.Touch then
--- 		updateTopmost(input.Position.X, input.Position.Y)
--- 	end
--- end)
-
--- UserInputService.InputChanged:Connect(function(input)
--- 	if input.UserInputType == Enum.UserInputType.MouseMovement then
---       updateTopmost(input.Position.X, input.Position.Y)
--- 	end
--- end)
-
--- ContextActionService:BindAction('GuiEvents', function(actionName, inputState, input)
---    -- inputState ~= Enum.UserInputState.End
-   
---    return Enum.ContextActionResult.Pass
---    return Enum.ContextActionResult.Sink
--- end, false, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
-
-
-
--- Enum.UserInputType.MouseWheel, Enum.UserInputType.MouseMovement, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch,  Enum.UserInputType.MouseMovement
+local timerNewCheck
 
 --[[
    Disparado sempre que o mouse está sobre o elemento (ou quando inicia um evento touch)
 ]]
 function GuiEvents.OnEnter(element, callback)
-   return addListener(element, 'OnEnter', callback)
+   local cancel = addListener(element, 'OnEnter', callback)
+
+   if isEnter(element) then 
+      callback(true)
+   end
+   
+   return cancel
 end
 
 --[[
    Disparado quando o mouse está sobre o elemento e este é o elemento com o Z-index mais alto
 ]]
 function GuiEvents.OnHover(element, callback)
-   return addListener(element, 'OnHover', callback)
+   local cancel = addListener(element, 'OnHover', callback)
+
+   Timer.Clear(timerNewCheck)
+   timerNewCheck = Timer.SetTimeout(checkEnter, 10)
+
+   return cancel
 end
 
 function GuiEvents.OnDown(element, callback)
@@ -490,6 +429,8 @@ function GuiEvents.OnDrag(element, callback, offset)
             callback('drag', startPosition, position, delta)
 
          elseif not isDragging and (math.abs(delta.X) >= offset or math.abs(delta.Y) >= offset) then 
+            IS_DRAGGING = true
+            forceHoverFalse()
             isDragging = true
             callback('start', startPosition)
          end
@@ -507,6 +448,8 @@ function GuiEvents.OnDrag(element, callback, offset)
          end
 
          if isDragging then 
+            IS_DRAGGING = false
+            checkEnter()
             callback('end')
          end
 
@@ -518,6 +461,13 @@ function GuiEvents.OnDrag(element, callback, offset)
    end)
 
    return function()
+
+      if isDragging then 
+         IS_DRAGGING = false
+         checkEnter()
+         callback('end')
+      end
+
       cancelDown()
       if cancelUp ~= nil then 
          cancelUp()
@@ -533,7 +483,6 @@ local EVENT_SEQ = 1
 function GuiEvents.OnScroll(element, callback)
 
    local cancelDrag
-   local mouseWheelConn
 
    EVENT_SEQ = EVENT_SEQ+1
    local actionName  = 'dat.Gui.OnScroll_'..EVENT_SEQ
@@ -553,7 +502,7 @@ function GuiEvents.OnScroll(element, callback)
                return Enum.ContextActionResult.Pass
             end
       
-            callback(element, input.Position.Z*50)
+            callback(input.Position.Z*50)
             
             return Enum.ContextActionResult.Sink
          end, false, 999999999, Enum.UserInputType.MouseWheel)
@@ -568,7 +517,7 @@ function GuiEvents.OnScroll(element, callback)
                posY = nil
       
             elseif event == 'drag' then
-               callback(element, (position.Y - posY)*3)
+               callback((position.Y - posY)*3)
                posY = position.Y
             end
          end, 20)      
@@ -579,7 +528,7 @@ function GuiEvents.OnScroll(element, callback)
       cancelEnter()
 
       ContextActionService:UnbindAction(actionName)
-      
+
       if cancelDrag ~= nil then 
          cancelDrag()
          cancelDrag = nil
@@ -587,98 +536,98 @@ function GuiEvents.OnScroll(element, callback)
    end
 end
 
-local TweenService = game:GetService('TweenService')
-local GUI = Instance.new("ScreenGui")
-GUI.Name 			   = "teste"
-GUI.IgnoreGuiInset	= true -- fullscreen
-GUI.ZIndexBehavior 	= Enum.ZIndexBehavior.Sibling
-GUI.DisplayOrder    = 10
-GUI.Parent 			= PlayerGui
+-- local TweenService = game:GetService('TweenService')
+-- local GUI = Instance.new("ScreenGui")
+-- GUI.Name 			   = "teste"
+-- GUI.IgnoreGuiInset	= true -- fullscreen
+-- GUI.ZIndexBehavior 	= Enum.ZIndexBehavior.Sibling
+-- GUI.DisplayOrder    = 10
+-- GUI.Parent 			= PlayerGui
 
-for a = 0, 4 do 
-   local frame = Instance.new('Frame')
-   frame.Size 			            = UDim2.new(0, 250, 0, 100)
-   frame.Position 			      = UDim2.new(0.5, -100 + a*20, 0.5, -50 + a*20)
-   frame.BackgroundColor3        = Color3.fromRGB(255, 255, 255)
-   frame.BackgroundTransparency  = 0
-   frame.BorderMode 			      = Enum.BorderMode.Outline
-   frame.BorderSizePixel 			= 1
-   frame.Draggable 			      = false
-   frame.Selectable              = false
-   frame.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
-   frame.Style 			         = Enum.FrameStyle.Custom
-   frame.ZIndex                  = 1
-   frame.Visible                 = true
-   frame.Archivable              = true
-   frame.Parent = GUI
+-- for a = 0, 4 do 
+--    local frame = Instance.new('Frame')
+--    frame.Size 			            = UDim2.new(0, 250, 0, 100)
+--    frame.Position 			      = UDim2.new(0.5, -100 + a*20, 0.5, -50 + a*20)
+--    frame.BackgroundColor3        = Color3.fromRGB(255, 255, 255)
+--    frame.BackgroundTransparency  = 0
+--    frame.BorderMode 			      = Enum.BorderMode.Outline
+--    frame.BorderSizePixel 			= 1
+--    frame.Draggable 			      = false
+--    frame.Selectable              = false
+--    frame.SizeConstraint 			= Enum.SizeConstraint.RelativeXY
+--    frame.Style 			         = Enum.FrameStyle.Custom
+--    frame.ZIndex                  = 1
+--    frame.Visible                 = true
+--    frame.Archivable              = true
+--    frame.Parent = GUI
 
-   local isEnter     = false
-   local isHover     = false
+--    local isEnter     = false
+--    local isHover     = false
 
-   -- stop propagation on item 2
-   local propagate = a ~= 2 
+--    -- stop propagation on item 2
+--    local propagate = a ~= 2 
 
-   local function update()
-      if isHover then
-         frame.BackgroundColor3 = Color3.fromRGB(255, 0, 255)
+--    local function update()
+--       if isHover then
+--          frame.BackgroundColor3 = Color3.fromRGB(255, 0, 255)
 
-      elseif isEnter then
-         frame.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+--       elseif isEnter then
+--          frame.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
 
-      else
-         frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-      end
-   end
+--       else
+--          frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+--       end
+--    end
 
-   local function blink(color)
-      local tween = TweenService:Create(frame, TweenInfo.new(1), {BackgroundColor3 = color})
-      tween.Completed:Connect(function(playbackState)
-         update()
-      end)
-      tween:Play()
-   end
+--    local function blink(color)
+--       local tween = TweenService:Create(frame, TweenInfo.new(1), {BackgroundColor3 = color})
+--       tween.Completed:Connect(function(playbackState)
+--          update()
+--       end)
+--       tween:Play()
+--    end
 
-   GuiEvents.OnEnter(frame, function(enter)
-      isEnter = enter
-      print('#'..a..' OnEnter ', enter)
-      update()
-   end)
+--    GuiEvents.OnEnter(frame, function(enter)
+--       isEnter = enter
+--       print('#'..a..' OnEnter ', enter)
+--       update()
+--    end)
 
-   GuiEvents.OnHover(frame, function(hover)
-      isHover = hover
-      print('#'..a..' OnHover ', hover)
-      update()
-   end)
+--    GuiEvents.OnHover(frame, function(hover)
+--       isHover = hover
+--       print('#'..a..' OnHover ', hover)
+--       update()
+--    end)
 
-   GuiEvents.OnDown(frame, function()
-      print('#'..a..' MouseDown')
-      blink(Color3.fromRGB(0, 0, 255))
-      return propagate
-   end)
+--    GuiEvents.OnDown(frame, function()
+--       print('#'..a..' MouseDown')
+--       blink(Color3.fromRGB(0, 0, 255))
+--       return propagate
+--    end)
 
-   GuiEvents.OnUp(frame, function()
-      print('#'..a..' MouseUp')
-      blink(Color3.fromRGB(0, 255, 255))
-      return propagate
-   end)
+--    GuiEvents.OnUp(frame, function()
+--       print('#'..a..' MouseUp')
+--       blink(Color3.fromRGB(0, 255, 255))
+--       return propagate
+--    end)
 
-   GuiEvents.OnClick(frame, function()
-      print('#'..a..' Click')
-      blink(Color3.fromRGB(255, 0, 0))
-      return propagate
-   end)
+--    GuiEvents.OnClick(frame, function()
+--       print('#'..a..' Click')
+--       blink(Color3.fromRGB(255, 0, 0))
+--       return propagate
+--    end)
 
-   local startPos
-   GuiEvents.OnDrag(frame, function(event, start, pos, delta)
-      print('#'..a..' Drag', event, start, pos, delta)
-      if event == 'start' then 
-         startPos = Vector2.new(frame.Position.X.Offset, frame.Position.Y.Offset)
-      elseif event == 'drag' then 
-         local endPos = startPos + delta
-         frame.Position = UDim2.new(0.5, endPos.X, 0.5, endPos.Y)
-      end
-      return propagate
-   end, a * 10)
-end
+--    local startPos
+--    GuiEvents.OnDrag(frame, function(event, start, pos, delta)
+--       print('#'..a..' Drag', event, start, pos, delta)
+--       if event == 'start' then 
+--          startPos = Vector2.new(frame.Position.X.Offset, frame.Position.Y.Offset)
+--       elseif event == 'drag' then 
+--          local endPos = startPos + delta
+--          frame.Position = UDim2.new(0.5, endPos.X, 0.5, endPos.Y)
+--       end
+--       return propagate
+--    end, a * 10)
+-- end
 
 return GuiEvents

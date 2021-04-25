@@ -14,21 +14,22 @@ local function CreateGUI(isMultiline)
    end
 
    local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
-      Name                 = 'StringController',
-      Color                = Constants.STRING_COLOR,
-      Height               = Height
+      ['Name']    = 'StringController',
+      ['Color']   = Constants.STRING_COLOR,
+      ['Height']  = Height
    })
 
    local TextContainer = GUIUtils.CreateFrame()
    TextContainer.Name 			            = 'TextContainer'
    TextContainer.BackgroundTransparency   = 1
-   TextContainer.Position 			         = UDim2.new(0, 0, 0, 4)
-   TextContainer.Size 			            = UDim2.new(1, -2, 1, -8)
+   TextContainer.Position 			         = UDim2.new(0, 0, 0, 3)
+   TextContainer.Size 			            = UDim2.new(1, 0, 1, -6)
    TextContainer.Parent = Control
 
    local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText = GUIUtils.CreateInput({
-      Color       = Constants.STRING_COLOR,
-      MultiLine   = isMultiline
+      ['Color']       = Constants.STRING_COLOR,
+      ['MultiLine']   = isMultiline,
+      ['Readonly']    = Controller:WaitForChild('Readonly')
    })
 
    Value.Parent         = Controller
@@ -47,8 +48,8 @@ local function StringController(gui, object, property, isMultiline, isStringValu
 	local frame, DisconnectGUI = CreateGUI(isMultiline)
 	frame.Parent = gui.Content
 	
+   local readonly    = frame:WaitForChild("Readonly")
 	local stringValue = frame:WaitForChild("Value")
-	local labelValue 	= frame:WaitForChild("Label")
 	
 	-- The function to be called on change.
 	local onChange
@@ -56,7 +57,6 @@ local function StringController(gui, object, property, isMultiline, isStringValu
 	
 	local controller = {
 		frame = frame,
-		label = frame:WaitForChild("LabelText"),
 		height = frame.AbsoluteSize.Y
 	}
 	
@@ -64,7 +64,7 @@ local function StringController(gui, object, property, isMultiline, isStringValu
 	-- Configure events
 	------------------------------------------------------------------
 	stringValue.Changed:connect(function()		
-		if not controller._isReadonly then
+		if not readonly.Value then
          if isStringValue then
             object[property].Value = stringValue.Value
          else 
@@ -155,16 +155,9 @@ local function StringController(gui, object, property, isMultiline, isStringValu
 		return controller
 	end
 	
-	-- Sets the name of the controller.
-	function controller.name(name)
-		labelValue.Value = name
-		return controller
-	end
-	
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = property
    
    controller.setValue(controller.getValue())
 	

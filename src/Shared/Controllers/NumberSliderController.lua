@@ -9,11 +9,12 @@ local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, ControllerDisconnect 
-      = GUIUtils.CreateControllerWrapper({
-         Name                 = 'NumberSliderController',
-         Color                = Constants.NUMBER_COLOR
-      })
+   local Controller, Control, ControllerDisconnect = GUIUtils.CreateControllerWrapper({
+      ['Name']                 = 'NumberSliderController',
+      ['Color']                = Constants.NUMBER_COLOR
+   })
+
+   local Readonly    = Controller:WaitForChild('Readonly')
 
    local ValueIn = Instance.new('NumberValue')
    ValueIn.Name     = 'ValueIn'
@@ -34,16 +35,17 @@ local function CreateGUI()
    local TextContainer = GUIUtils.CreateFrame()
    TextContainer.Name 			            = 'TextContainer'
    TextContainer.BackgroundTransparency   = 1
-   TextContainer.Position 			         = UDim2.new(0.66, 5, 0, 4)
-   TextContainer.Size 			            = UDim2.new(0.33, -6, 1, -8)
+   TextContainer.Position 			         = UDim2.new(0.66, 3, 0, 3)
+   TextContainer.Size 			            = UDim2.new(0.33, -2, 1, -6)
    TextContainer.Parent = Control
 
    local IsControllerActive = Instance.new('BoolValue')
 
    local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
-      ['Color']    = Constants.NUMBER_COLOR,
-      ['Render']   = RenderText,
-      ['Parse']    = function (text, value)
+      ['Color']      = Constants.NUMBER_COLOR,
+      ['Render']     = RenderText,
+      ['Readonly']   = Readonly,
+      ['Parse']      = function (text, value)
          if string.len(text) == 0 then
             -- no changes
             return '0'
@@ -63,11 +65,12 @@ local function CreateGUI()
 
    local SliderContainer = GUIUtils.CreateFrame()
    SliderContainer.BackgroundTransparency = 1
-   SliderContainer.Position 			      = UDim2.new(0, 0, 0, 4)
-   SliderContainer.Size 			         = UDim2.new(0.66, 0, 1, -8)
+   SliderContainer.Position 			      = UDim2.new(0, 0, 0, 3)
+   SliderContainer.Size 			         = UDim2.new(0.66, 0, 1, -6)
    SliderContainer.Parent = Control
 
    local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.CreateSlider({
+      ['Readonly'] = Readonly
    })
    SliderFrame.Parent = SliderContainer
 
@@ -132,8 +135,8 @@ local function NumberSliderController(gui, object, property, min, max, step, isN
 	
 	local frame, valueValue, valueInValue, minValue, maxValue, stepValue, DisconnectGUI = CreateGUI()
 	frame.Parent = gui.Content
-	
-	local labelValue 	   = frame:WaitForChild("Label")
+
+   local readonly       = frame:WaitForChild("Readonly")
 	
 	-- The function to be called on change.
 	local onChange
@@ -141,7 +144,6 @@ local function NumberSliderController(gui, object, property, min, max, step, isN
 	
 	local controller = {
 		frame = frame,
-		label = frame:WaitForChild("LabelText"),
 		height = frame.AbsoluteSize.Y
 	}
 	
@@ -149,7 +151,7 @@ local function NumberSliderController(gui, object, property, min, max, step, isN
 	-- Configure events
 	------------------------------------------------------------------
 	valueValue.Changed:connect(function()	
-		if not controller._isReadonly then
+		if not readonly.Value then
          if isNumberValue then
             object[property].Value = valueValue.Value
          else
@@ -251,19 +253,11 @@ local function NumberSliderController(gui, object, property, min, max, step, isN
 		end
 		
 		return controller
-	end
-	
-	-- Sets the name of the controller.
-	function controller.name(name)
-		labelValue.Value = name
-		return controller
-	end
-	
+	end	
 	
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = property
 
    controller.setValue(controller.getValue())
 

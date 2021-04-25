@@ -23,7 +23,7 @@ local PANEL_ZINDEX         = 0
 -- os painéis que servem de guia para movimentação e resize
 local SNAP_PANELS = {}
 
-local ROOT_PANELS = {}
+local PANEL_BY_ID = {}
 
 local Panel = {}
 Panel.__index = Panel
@@ -124,6 +124,7 @@ function Panel.new()
    
    table.insert(connections, GuiEvents.OnClick(Header, function()
       Closed.Value = not Closed.Value
+      return false
    end))
    
    -- On close/open
@@ -136,9 +137,18 @@ function Panel.new()
       LabelText.Text = Label.Value
    end))
 
+   local function updateContentSize()
+      panel:UpdateContentSize()
+   end
+
+   table.insert(connections, Content.ChildAdded:Connect(updateContentSize))
+   table.insert(connections, Content.ChildRemoved:Connect(updateContentSize))
+
    panel._disconnect = Misc.DisconnectFn(connections, function()
       Frame.Parent = nil
    end)
+
+   PANEL_BY_ID[panel._id] = panel
 
    return panel
 end
@@ -157,6 +167,7 @@ function Panel:Destroy()
    end
 
    self._onDestroy:Fire()
+   PANEL_BY_ID[self._id] = nil
 end
 
 --[[
@@ -179,8 +190,8 @@ function Panel:AttachTo(parent)
    self.Frame.Visible                  = true
    self.Frame.BackgroundTransparency   = 1
    self.Frame.ZIndex                   = 0
-   self.Content.Size 			         = UDim2.new(1, -5, 0, -HEADER_HEIGHT)
-   self.Content.Position 			      = UDim2.new(0, 5, 0, HEADER_HEIGHT)
+   -- self.Content.Position 			      = UDim2.new(0, 5, 0, HEADER_HEIGHT)
+   self.Content.Position               = UDim2.new(0, 5, 0, 0)
    self.LabelText.TextXAlignment       = Enum.TextXAlignment.Left
 
    local Detach = GUIUtils.CreateFrame()
@@ -214,6 +225,7 @@ function Panel:AttachTo(parent)
       else
          ChevronIcon.Rotation = 90
       end
+      self:UpdateContentSize()
    end
 
    onCloseChange()
@@ -226,6 +238,7 @@ function Panel:AttachTo(parent)
 
    table.insert(connections, GuiEvents.OnClick(Detach, function()
       self:Detach()
+      return false
    end))
 
    self._disconnectAtach = Misc.DisconnectFn(connections, function()
@@ -250,12 +263,10 @@ function Panel:Detach(closeable)
    self._detached    = true
    local connections = {}
 
-   ROOT_PANELS[self.Frame] = self
-
    self.Frame.Visible                  = false
    self.Frame.BackgroundTransparency   = 0.95
    self.LabelText.TextXAlignment       = Enum.TextXAlignment.Center
-   self.Content.Position 			      = UDim2.new(0, 0, 0, 0)
+   self.Content.Position 	            = UDim2.new(0, 0, 0, 0)
 
    PANEL_ZINDEX = PANEL_ZINDEX + 1
    self.Frame.ZIndex = PANEL_ZINDEX
@@ -285,25 +296,13 @@ function Panel:Detach(closeable)
 
    local function onCloseChange()
 
-      local frame = self.Frame
-
       if self.Closed.Value then
          ResizeHandle.Visible = false
-         frame.Size = UDim2.new(0, frame.Size.X.Offset, 0, HEADER_HEIGHT)
       else
          ResizeHandle.Visible = true
-         local width    = frame.Size.X.Offset
-         local height   = MIN_HEIGHT
-
-         if self._size then
-            width    = self._size.Width
-            height   = self._size.Height            
-         end
-         frame.Size = UDim2.new(0, width, 0, height)
       end
       
-      self:_checkConstraints()
-      self:_updateSnapInfo()
+      self:UpdateContentSize()
    end
 
    if closeable  == true then
@@ -331,6 +330,7 @@ function Panel:Detach(closeable)
    
       table.insert(connections, GuiEvents.OnClick(Close, function()
          self:Destroy()
+         return false
       end))
    end
 
@@ -359,6 +359,7 @@ function Panel:Detach(closeable)
    
       table.insert(connections, GuiEvents.OnClick(Atach, function()
          self:AttachTo(origin)
+         return false
       end))
 
       local width  = self.Frame.AbsoluteSize.X
@@ -443,25 +444,13 @@ function Panel:Detach(closeable)
          self:Resize(frameSize.X, frameSize.Y)
       end
    end))
-
-   local updateTimeout
-   local function updateContentSize()
-      Timer.Clear(updateTimeout)
-      updateTimeout = Timer.SetTimeout(function()
-         self:UpdateContentSize()
-      end, 10)
-   end
-
-   updateContentSize()
-
-   table.insert(connections, self.Content.DescendantAdded:Connect(updateContentSize))
-   table.insert(connections, self.Content.DescendantRemoving:Connect(updateContentSize))
-
+   
    self._scrollbar = Scrollbar.new(self.Frame, self.Content, HEADER_HEIGHT)
+   
+   self:UpdateContentSize()
 
    self._disconnectDetach = Misc.DisconnectFn(connections, function()
       self._scrollbar:Destroy()
-      Timer.Clear(updateTimeout)
 
       ResizeHandle.Parent     = nil
       InnerShadow.Parent      = nil
@@ -476,7 +465,6 @@ function Panel:Detach(closeable)
       
       self._openSize          = nil
       
-      ROOT_PANELS[self.Frame] = nil
       self._detached          = false
    end)
 
@@ -676,82 +664,94 @@ end
 
 function Panel:UpdateContentSize()
 
-   local rootFrame = self:_getRootFrame()
-
-   local updateTimeout = rootFrame:GetAttribute('UpdateContentSizeTimeout')
-   Timer.Clear(updateTimeout)
-
-   updateTimeout = Timer.SetTimeout(function()
-      local rootPanel = ROOT_PANELS[rootFrame]
-      if rootPanel == nil then 
-         return
-      end
+   Timer.Clear(self._updateContentSizeTimeout)
+   self._updateContentSizeTimeout = Timer.SetTimeout(function()
+      
+      local oldHeight = self.Frame.AbsoluteSize.Y
+      local newHeight = oldHeight
       
       -- itera sobre todos os elementos ajustando suas posições relativas e contabilizando o tamanho total do conteúdo
-      local function iterate(frame, position)
-         position = position + HEADER_HEIGHT
-         local content = frame:FindFirstChild('Content')
-         local panelId = frame:GetAttribute('PanelId')
-         if frame:GetAttribute('IsClosed') == true then
-            content.Visible = false
-         else
-            content.Visible = true
+      if self.Closed.Value == true then
+         self.Content.Visible = false
+         newHeight = HEADER_HEIGHT
+      else
+         self.Content.Visible = true
 
-            -- sort by layout order
-            -- use https://developer.roblox.com/en-us/api-reference/class/UIListLayout ?
-
-            local layoutOrders = {}
-            local layoutOrdersChild = {}
-
-            for _, child in pairs(content:GetChildren()) do
-               local layoutOrder = child:GetAttribute('LayoutOrderOnPanel_'..panelId)
-               table.insert(layoutOrders, layoutOrder)
-               layoutOrdersChild[layoutOrder] = child
-            end
-
-            table.sort(layoutOrders)
-
-            for _, layoutOrder in ipairs(layoutOrders) do
-               local child = layoutOrdersChild[layoutOrder]
-               if child:GetAttribute('IsPanel') == true then
-                  child.Position = UDim2.new(0, 0, 0, position)
-                  position = position + iterate(child, 0)
-               else
-                  child.Position = UDim2.new(0, 0, 0, position)
-                  position = position + child.AbsoluteSize.Y
-               end
-            end
+         -- sort by layout order
+         -- use https://developer.roblox.com/en-us/api-reference/class/UIListLayout ?
+         
+         local layoutOrders = {}
+         local layoutOrdersChild = {}
+         
+         for _, child in pairs(self.Content:GetChildren()) do
+            local layoutOrder = child:GetAttribute('LayoutOrderOnPanel_'..self._id)
+            table.insert(layoutOrders, layoutOrder)
+            layoutOrdersChild[layoutOrder] = child
          end
          
-         if rootFrame ~= frame then
-            -- title height
-            frame.Size = UDim2.new(1, 0, 0, position)
-         else
-            -- root auto size while not resized by user
-            -- frame.Size = UDim2.new(0, frame.Size.X.Offset, 0, math.min(position, frame.Parent.AbsoluteSize.Y))
-            content.Size = UDim2.new(1, 0, 0, position)
-         end
+         table.sort(layoutOrders)
          
-         return position
+         local position = HEADER_HEIGHT
+         for _, layoutOrder in ipairs(layoutOrders) do
+            local child = layoutOrdersChild[layoutOrder]
+            child.Position = UDim2.new(0, 0, 0, position)
+            position = position + child.AbsoluteSize.Y
+         end
+         newHeight = position
+
+         if self._detached == true then
+            newHeight = math.max(MIN_HEIGHT, newHeight)
+         end
       end
       
-      iterate(rootFrame, 0)
+      self.Frame.Visible = true
+      if oldHeight ~= newHeight then
+         if self._detached == true then
+            self.Content.Size       = UDim2.new(1, 0, 0, newHeight)
+            
+            local frame = self.Frame
 
-      rootFrame.Visible = true
+            if self.Closed.Value then
+               frame.Size = UDim2.new(0, frame.Size.X.Offset, 0, HEADER_HEIGHT)
+            else
+               local width    = frame.Size.X.Offset
+               local height   = math.max(MIN_HEIGHT, newHeight)
 
-      rootPanel._scrollbar:Update()
+               if self._size then
+                  width    = self._size.Width
+                  height   = self._size.Height    
+               end
+               frame.Size = UDim2.new(0, width, 0, height)
+            end
+            self:_checkConstraints()
+            self:_updateSnapInfo()
+
+            Timer.SetTimeout(function()
+               self._scrollbar:Update()
+            end, 10)
+         else
+            self.Frame.Size   = UDim2.new(1, 0, 0, newHeight)
+            self.Content.Size = UDim2.new(1, -5, 1, 0)
+
+            local parent = self:_getParentPanel()
+            if parent ~= nil then 
+               parent:UpdateContentSize()
+            end
+         end
+      end
    end, 10)
-
-   rootFrame:SetAttribute('UpdateContentSizeTimeout', updateTimeout)
 end
 
-function Panel:_getRootFrame()
-   local frame = self.Frame;
-   while frame.Parent ~= Constants.SCREEN_GUI do
+function Panel:_getParentPanel()
+   local frame = self.Frame.Parent;
+   while frame ~= nil and frame ~= Constants.SCREEN_GUI do
+      if frame:GetAttribute('IsPanel') == true then
+         return PANEL_BY_ID[frame:GetAttribute('PanelId')]
+      end
       frame = frame.Parent;
    end
-   return frame;
 end
+
 
 --[[
    Quando o painel não está preso, verifica se o mesmo está  dentro da tela, fazendo as movimentações necessárias

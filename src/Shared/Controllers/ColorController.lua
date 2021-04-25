@@ -14,11 +14,12 @@ local WHITE = Color3.fromRGB(255, 255, 255)
 local function CreateGUI()
 
    local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
-      Name                 = 'ColorController',
-      Color                = Constants.BACKGROUND_COLOR
+      ['Name']                 = 'ColorController',
+      ['Color']                = Constants.BACKGROUND_COLOR
    })
 
-   local BorderLeft = Controller:WaitForChild('BorderLeft')
+   local Readonly    = Controller:WaitForChild('Readonly')
+   local BorderLeft  = Controller:WaitForChild('BorderLeft')
 
    local Value = Instance.new('Color3Value')
    Value.Name     = 'Value'
@@ -57,29 +58,15 @@ local function CreateGUI()
       end
    end
 
-   local TextValue, TextFrame, OnFocused, OnFocusLost, DisconnectText =  GUIUtils.CreateInput({
-      Color          = Constants.NUMBER_COLOR,
-      Active         = IsTextActive,
-      -- Render         = RenderText,
-      ChangeColors   = false,
-      -- Parse          = function (text, value)
-      --    if string.len(text) == 0 then
-      --       return '#000000'
-      --    else
-      --       local color = Misc.Color3FromString(text)
-      --       if color == nil then
-      --          -- invalid color
-      --          return '#000000'
-      --       else
-      --          -- valid color
-      --          return string.format("#%.2X%.2X%.2X", color.R * 255, color.G * 255, color.B * 255)
-      --       end
-      --    end
-      -- end,
+   local TextValue, TextFrame, OnFocused, OnFocusLost, DisconnectText = GUIUtils.CreateInput({
+      ['Color']         = Constants.NUMBER_COLOR,
+      ['Active']        = IsTextActive,
+      ['ChangeColors']  = false,
+      ['Readonly']      = Readonly
    })
 
-   TextFrame.Position 			         = UDim2.new(0, 0, 0, 4)
-   TextFrame.Size 			            = UDim2.new(1, -2, 1, -8)
+   TextFrame.Position 			         = UDim2.new(0, 0, 0, 3)
+   TextFrame.Size 			            = UDim2.new(1, 0, 1, -6)
    TextFrame.Parent = Control
 
    local TextFake = TextFrame:WaitForChild('TextBoxFake')
@@ -254,9 +241,9 @@ local function CreateGUI()
 
    -- Checks the selector's visibility
    local function checkVisibility()
-      if textFocused then
+      if textFocused or Readonly.Value then
          popover:Hide()
-      elseif controlHover or selectorHover or hueHover or satLumHover or hueMouseDown or satLumMouseDown then
+      elseif controlHover or selectorHover or hueHover or satLumHover or hueMouseDown  or satLumMouseDown then
          popover:Show()
       else
          popover:Hide()
@@ -382,17 +369,11 @@ local function CreateGUI()
 
    table.insert(connections, GuiEvents.OnHover(SatLumSelector, function(hover)
       satLumHover = hover
-      if hover then 
-         selectorHover = true
-      end
       checkVisibility()
    end))
 
    table.insert(connections, GuiEvents.OnHover(HueSelector, function(hover)
       hueHover = hover
-      if hover then 
-         selectorHover = true
-      end
       checkVisibility()
    end))
 
@@ -427,7 +408,6 @@ local function CreateGUI()
          })
       end
    end))
-   
 
    return Controller, Misc.DisconnectFn(connections, DisconnectParent, DisconnectText, function()
       popover:Destroy()
@@ -441,7 +421,7 @@ local function ColorController(gui, object, property, isColor3Value)
 	frame.Parent = gui.Content
 	
 	local colorValue 	= frame:WaitForChild("Value")
-	local labelValue 	= frame:WaitForChild("Label")
+   local readonly    = frame:WaitForChild("Readonly")
 	
 	-- The function to be called on change.
 	local onChange
@@ -449,7 +429,6 @@ local function ColorController(gui, object, property, isColor3Value)
 	
 	local controller = {
 		frame = frame,
-		label = frame:WaitForChild("LabelText"),
 		height = frame.AbsoluteSize.Y
 	}
 	
@@ -457,7 +436,7 @@ local function ColorController(gui, object, property, isColor3Value)
 	-- Configure events
 	------------------------------------------------------------------
 	colorValue.Changed:Connect(function()		
-		if not controller._isReadonly then
+		if not readonly.Value then
          if isColor3Value then
             object[property].Value = colorValue.Value
          else 
@@ -547,16 +526,9 @@ local function ColorController(gui, object, property, isColor3Value)
 		return controller
 	end
 	
-	-- Sets the name of the controller.
-	function controller.name(name)
-		labelValue.Value = name
-		return controller
-	end
-	
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = property	
 	
    controller.setValue(controller.getValue())
 	

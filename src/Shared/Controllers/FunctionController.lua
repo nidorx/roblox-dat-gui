@@ -10,11 +10,10 @@ local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent 
-      = GUIUtils.CreateControllerWrapper({
-         Name  = 'FunctionController',
-         Color = Constants.FUNCTION_COLOR
-      })
+   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+      ['Name']  = 'FunctionController',
+      ['Color'] = Constants.FUNCTION_COLOR
+   })
 
    local OnClickEvent = Instance.new('BindableEvent')
    OnClickEvent.Name     = 'OnClick'
@@ -31,6 +30,7 @@ local function CreateGUI()
 
    table.insert(connections, GuiEvents.OnClick(Controller, function()
       OnClickEvent:Fire()
+      return false
    end))
 
    return Controller, Misc.DisconnectFn(connections, DisconnectParent)
@@ -43,15 +43,15 @@ local function FunctionController(gui, object, property, text)
 	local frame, DisconnectGUI =  CreateGUI()
 	frame.Parent = gui.Content
 	
-	local onClickEvent 	= frame:WaitForChild("OnClick")
-	local labelValue 	= frame:WaitForChild("Label")	
+	local onClickEvent   = frame:WaitForChild("OnClick")
+	local labelValue 	   = frame:WaitForChild("Label")	
+   local readonly       = frame:WaitForChild("Readonly")
 	
 	-- The function to be called on change.
 	local onChange
 	
 	local controller = {
 		frame = frame,
-		label = frame:WaitForChild("LabelText"),
 		height = frame.AbsoluteSize.Y
 	}
 	
@@ -59,7 +59,7 @@ local function FunctionController(gui, object, property, text)
 	-- Configure events
 	------------------------------------------------------------------
 	onClickEvent.Event:connect(function()	
-		if not controller._isReadonly then
+		if not readonly.Value then
 			if onChange ~= nil then
 				onChange();
 			end
@@ -77,7 +77,7 @@ local function FunctionController(gui, object, property, text)
 	end	
 	
 	function controller.setValue(value)
-		if not controller._isReadonly then
+		if not readonly.Value then
 			object[property] = value
 		end
 		

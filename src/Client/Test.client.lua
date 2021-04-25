@@ -32,8 +32,9 @@ local guiLigh		 	= gui.addFolder('Lighting')
 
 local guiLighAppearance 	= guiLigh.addFolder('Appearance')
 guiLighAppearance.add(Lighting, 'Ambient').listen()
-guiLighAppearance.add(Lighting, 'Brightness', 0, 10, 0.01).listen()
-guiLighAppearance.add(Lighting, 'OutdoorAmbient').listen()
+   .help('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin mollis molestie sollicitudin. Quisque efficitur sapien dui. Mauris non nibh lorem. Quisque ut neque quis ipsum elementum tincidunt a aliquet justo')
+guiLighAppearance.add(Lighting, 'Brightness', 0, 10, 0.01).readonly().listen()
+guiLighAppearance.add(Lighting, 'OutdoorAmbient').readonly().listen()
 
 local guiLighData	= guiLigh.addFolder('Data')
 guiLighData.add(Lighting, 'ClockTime', 0, 23.9, 0.1).listen()
@@ -255,13 +256,22 @@ local guiOthers 			= gui.addFolder('Other')
 --------------------------
 local customRemoved = false
 local customFrame = Instance.new("Frame")
-customFrame.Size = UDim2.new(1, 0, 0, 200)
+customFrame.BackgroundTransparency = 1
+customFrame.BorderSizePixel = 0
+
+guiOthers.addCustom('CustomController', {
+   Frame = customFrame,
+   Height = 150,
+   OnRemove = function()
+      customRemoved = true
+   end
+})
 
 coroutine.wrap(function()
    local TweenService = game:GetService("TweenService")
 
    -- how much confetti per second
-   local rate = 1
+   local rate = 15
 
    while true do
       local confetti = Instance.new("Frame")
@@ -281,31 +291,15 @@ coroutine.wrap(function()
          Position = UDim2.new(confetti.Position.X.Scale, 0, 1.1, 0)
       }):Play()
 
-      -- game.Debris:AddItem(confetti, lifetime)
+      game.Debris:AddItem(confetti, lifetime)
 
       if customRemoved then 
          break
       else 
-         wait(2)
-         -- wait(1/rate)
+         wait(1/rate)
       end
    end
 end)()
-
--- coroutine.wrap(function()
---    while true do
---        --// Code
---        wait(2);
---    end
--- end)()
-
-guiOthers.addCustom('CustomController', {
-   Frame = customFrame,
-   Height = 200,
-   OnRemove = function()
-      customRemoved = true
-   end
-})
 --------------------------
 
 

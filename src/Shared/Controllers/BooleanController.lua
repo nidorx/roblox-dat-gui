@@ -12,9 +12,11 @@ local Constants         = require(Lib:WaitForChild("Constants"))
 local function CreateGUI()
 
    local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
-      Name  = 'BooleanController',
-      Color = Constants.BOOLEAN_COLOR
+      ['Name']  = 'BooleanController',
+      ['Color'] = Constants.BOOLEAN_COLOR
    })
+
+   local Readonly    = Controller:WaitForChild('Readonly')
 
    local Value = Instance.new('BoolValue')
    Value.Name     = 'Value'
@@ -25,8 +27,8 @@ local function CreateGUI()
    Checkbox.Name 			            = "Checkbox"
    Checkbox.BackgroundColor3        = Constants.CHECKBOX_COLOR_OFF
    Checkbox.BackgroundTransparency  = 0
-   Checkbox.Position 			      = UDim2.new(0, 0, 0, 4)
-   Checkbox.Size 			            = UDim2.new(0, 21, 1, -8)
+   Checkbox.Position 			      = UDim2.new(0, 0, 0, 3)
+   Checkbox.Size 			            = UDim2.new(0, 23, 1, -6)
    Checkbox.Parent = Control
 
    local Check = GUIUtils.CreateImageLabel(Constants.ICON_CHECKMARK)
@@ -42,15 +44,14 @@ local function CreateGUI()
    local function updateCheckbox()
       if Value.Value then
          -- checked
-         if isHover then
+         if isHover and not Readonly.Value then
             Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR_HOVER
          else
             Checkbox.BackgroundColor3 = Constants.NUMBER_COLOR
          end
-      elseif isHover then
+      elseif isHover and not Readonly.Value then
          Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_FOCUS
       else
-         -- Checkbox.BackgroundColor3 = Constants.INPUT_COLOR_HOVER
          Checkbox.BackgroundColor3 = Constants.INPUT_COLOR
       end
    end
@@ -68,6 +69,7 @@ local function CreateGUI()
    
    table.insert(connections, GuiEvents.OnClick(Controller, function(el, input)
       Value.Value = not Value.Value
+      return false
    end))
 
    return Controller, Misc.DisconnectFn(connections, DisconnectParent)
@@ -80,23 +82,23 @@ local BooleanController = function(gui, object, property, isBoolValue)
 	frame.Parent = gui.Content
 	
 	local boolValue 	= frame:WaitForChild("Value")
-	local labelValue 	= frame:WaitForChild("Label")
+   local readonly    = frame:WaitForChild("Readonly")
+   
 	
 	-- The function to be called on change.
 	local onChange	
 	local listenConnection
 	
 	local controller = {
-		frame = frame,
-		label = frame:WaitForChild("LabelText"),
-		height = frame.AbsoluteSize.Y
+		['frame'] = frame,
+		['height'] = frame.AbsoluteSize.Y
 	}
 	
 	------------------------------------------------------------------
 	-- Configure events
 	------------------------------------------------------------------
 	boolValue.Changed:connect(function()	
-		if not controller._isReadonly then
+		if not readonly.Value then
          if isBoolValue then
             object[property].Value = boolValue.Value
          else
@@ -189,16 +191,9 @@ local BooleanController = function(gui, object, property, isBoolValue)
 		return controller
 	end
 	
-	-- Sets the name of the controller.
-	function controller.name(name)
-		labelValue.Value = name
-		return controller
-	end
-	
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = property	
 
    controller.setValue(controller.getValue())
 	

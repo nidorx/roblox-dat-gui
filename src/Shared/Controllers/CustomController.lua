@@ -24,20 +24,20 @@ local CustomController = function(gui, name, config)
    end
 
    local frame, Control, DisconnectGUI = GUIUtils.CreateControllerWrapper({
-      Name     = name,
-      Color    = config.Color or Constants.CUSTOM_COLOR,
-      Height   = config.Height
+      ['Name']     = name,
+      ['Color']    = config.Color or Constants.CUSTOM_COLOR,
+      ['Height']   = config.Height
    })
 	frame.Parent = gui.Content
 
 	config.Frame.Parent = Control
-	
-	local labelValue 	= frame:WaitForChild("Label")
+
+   config.Frame.Position   = UDim2.new(0, 0, 0, 3)
+   config.Frame.Size       = UDim2.new(1, 0, 1, -6)
 	
 	local controller = {
-		frame = frame,
-		label = frame:WaitForChild("LabelText"),
-		height = frame.AbsoluteSize.Y
+		['frame'] = frame,
+		['height'] = frame.AbsoluteSize.Y
 	}
 	
 	------------------------------------------------------------------
@@ -60,29 +60,22 @@ local CustomController = function(gui, name, config)
 		
       -- avoid recursion
       controller._is_removing_parent = true
-
+      
 		gui.removeChild(controller)
 		
 		if controller.frame ~= nil then
 			controller.frame.Parent = nil
 			controller.frame = nil
 		end		
-
-      if type(config.OnRemove) == 'funtion' then
+      
+      if type(config.OnRemove) == 'function' then
 			return config.OnRemove()
 		end
-	end
-	
-	-- Sets the name of the controller.
-	function controller.name(name)
-		labelValue.Value = name
-		return controller
 	end
 	
 	------------------------------------------------------------------
 	-- Set initial values
 	------------------------------------------------------------------
-	labelValue.Value = name
 	
 	return controller
 end

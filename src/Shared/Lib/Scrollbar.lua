@@ -146,7 +146,7 @@ function Scrollbar:Update()
       self._cancelOnScroll()
       self._cancelOnScroll = nil
    end
-	
+
 	local frameHeight      = self._parent.Size.Y.Offset
 	local contentHeight    = self._content.AbsoluteSize.Y
 
@@ -175,7 +175,7 @@ function Scrollbar:Update()
 			self._contentPosition.Value = -newPosition
 		end
 
-      self._cancelOnScroll = GuiEvents.OnScroll(self._parent, function(el, z)
+      self._cancelOnScroll = GuiEvents.OnScroll(self._parent, function(z)
 
          local newPosition = math.min(math.max(self._content.Position.Y.Offset + (z), maxPosition), 0)
 				
