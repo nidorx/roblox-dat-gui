@@ -87,7 +87,7 @@ function Scrollbar.new(parent, content, contentOffset)
          end
 
          sizeTween = TweenService:Create(Thumb, TWEEN_INFO, { 
-            Size = UDim2.new(1, 0, thumbSize, 0)
+            ['Size'] = UDim2.new(1, 0, thumbSize, 0)
          })
          
          sizeTween:Play()

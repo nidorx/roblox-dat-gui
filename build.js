@@ -72,6 +72,7 @@ var DEPENDENCIES = {};
 var DEPENDECY_SEQ = 1;
 var STRINGS = {};
 var STRINGS_SEQ = 1;
+var VARS_SEQ = 1;
 
 /**
  * All Roblox services, used to define a single global call
@@ -117,7 +118,20 @@ const n2s = (function () {
    }
 })()
 
+function nextVar() {
+   return n2s(VARS_SEQ++);
+}
+
 cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, update: true }, function () {
+
+   BUILD_CONFIG.globals = (BUILD_CONFIG.globals || []).map(g => {
+      if (typeof (g) == 'string') {
+         var regx = new RegExp(`(^|[^a-zA-Z0-9_'"])(` + g.replace(/([.])/g, '\.') + `)(^|[^a-zA-Z0-9_'"])`, 'g')
+         return [g, `__g_${nextVar()}`, regx, '$1${variable}$3']
+      }
+
+      return [g[0], `__g_${nextVar()}`, g[1], g[2]]
+   })
 
    BUILD_CONFIG.entries.forEach(function (entry) {
       // clear variables
@@ -229,15 +243,12 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
             .map((k) => `local __S_${k} = game:GetService('${k}')`)
             .join('\n   ');
 
-
-
          var code, outputFile;
          if (isLast) {
             var others = chunks.concat()
             others.pop()
             // Main file
             code = [
-               'do',
                '   ___STRING_VARS___',
                '   ' + servicesVars,
                '   local __M__      = {}',
@@ -259,7 +270,6 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
                   )
                   : '',
                '   ' + chunk.join('\n').replace(/\n/g, '\n   '),
-               'end'
             ].join('\n');
 
             outputFile = path.join(__dirname, '/build/', outputDir, outputNameBase + outputExt);
@@ -268,16 +278,27 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
 
             // Chunk
             code = [
-               'do',
                '   ' + servicesVars,
                '',
                '   return function(__M__, __MF__, __MREC__, __STRINGS__)\n',
                '      ' + chunk.join('\n').replace(/\n/g, '\n      '),
                '   end',
-               'end'
             ].join('\n');
 
             outputFile = path.join(__dirname, '/build/', outputDir, outputNameBase + index + '.lua');
+         }
+
+         if (BUILD_CONFIG.minify) {
+            BUILD_CONFIG.globals.forEach((g) => {
+               let glob = g[0]
+               let vari = g[1]
+               let regx = g[2]
+               let repl = g[3]
+               if (code.match(regx)) {
+                  code = code.replace(regx, repl.replace('${variable}', vari))
+                  code = `   local ${vari} = ${glob}\n` + code
+               }
+            })
          }
 
          if (BUILD_CONFIG.compressFields) {
@@ -324,9 +345,13 @@ cpx.copy('./src/**/*.rbxmx', './build/src/', { verbose: true, preserve: true, up
 
          let stringsVars = 'local __STRINGS__ = {\n'
             + (Object.keys(STRINGS).map((s) => STRINGS[s]).filter(s => s.using).map((s) => `      ${s.id} = ${s.quote}${s.value}${s.quote}`).join(',\n'))
-            + '\n   };\n'
+            + '\n   };\n';
 
-         code = code.replace('___STRING_VARS___', stringsVars)
+         code = [
+            'do',
+            code.replace('___STRING_VARS___', stringsVars),
+            'end'
+         ].join('\n');
 
          if (BUILD_CONFIG.minify) {
             try {

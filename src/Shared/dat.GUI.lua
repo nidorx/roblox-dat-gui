@@ -37,7 +37,6 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
 ]]
-local Camera 	      = workspace.CurrentCamera
 
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
@@ -61,7 +60,6 @@ local NumberSliderController	= require(Controllers:WaitForChild("NumberSliderCon
 local Vector3Controller			= require(Controllers:WaitForChild("Vector3Controller"))
 local Vector3SliderController	= require(Controllers:WaitForChild("Vector3SliderController"))
 
-
 -- @TODO: create controllers for the most used classes
 -- https://developer.roblox.com/en-us/api-reference/data-types
 -- https://roblox.fandom.com/wiki/List_of_classes_by_category
@@ -84,9 +82,6 @@ DatGUI.__index = DatGUI
 ]]
 function DatGUI.new(params)
 	
-	-- remove game UI
-	-- game.StarterGui:SetCore("TopbarEnabled", false)
-	
 	if params == nil then
 		params = {}
 	end
@@ -97,10 +92,10 @@ function DatGUI.new(params)
    end
 
 	local gui = {
-		name 		   = name,
-		isGui 		= true,
-		parent 		= params.parent,
-		children 	= {}
+		['name'] 		= name,
+		['isGui'] 		= true,
+		['parent'] 		= params.parent,
+		['children']   = {}
 	}
 
    local width = params.width
@@ -119,8 +114,8 @@ function DatGUI.new(params)
 	
 	if gui.parent == nil then
       panel:Detach(params.closeable)
-      panel:Move(Camera.ViewportSize.X-(width + 15), 0)
-      panel:Resize(width, Camera.ViewportSize.Y)
+      panel:Move(Constants.SCREEN_GUI.AbsoluteSize.X-(width + 15), 0)
+      panel:Resize(width, Constants.SCREEN_GUI.AbsoluteSize.Y)
       panel.Frame.Name = gui.name
 	else	
 		panel.Frame.Name = gui.parent.name.."_"..gui.name
@@ -293,12 +288,7 @@ function DatGUI.new(params)
          Readonly.Value = value
 			return controller
 		end
-		
-      ------------------------------------------------------------------
-      -- Set initial values
-      ------------------------------------------------------------------
       
-
 		return controller
    end
 
@@ -329,7 +319,7 @@ function DatGUI.new(params)
 		end		
 		
 		local controller
-		local initialValue 		   = object[property];
+		local initialValue 		   = object[property]
 		local initialValueType 	   = type(initialValue)
 		local initialValueTypeOf   = typeof(initialValue)
       local isInstance           = initialValueTypeOf == "Instance" 
@@ -408,8 +398,32 @@ function DatGUI.new(params)
             Methods  = { [Name:String] => function }
          }
    ]]
-   function gui.addCustom(name, config)      
+   function gui.addCustom(name, config) 
       return configureController(CustomController(gui, name, config), name)
+   end
+
+   --[[
+      Adiciona uma imagem
+   ]]
+   function gui.addLogo(assetId, height) 
+      local frame = Instance.new('Frame')
+      frame.BorderSizePixel         = 0
+      frame.BackgroundTransparency  = 1
+
+      local image = GUIUtils.CreateImageLabel(assetId)
+      image.Name 			= 'Logo'
+      image.Position 	= UDim2.new(0, 0, 0, 0)
+      image.Size 			= UDim2.new(1, 0, 1, 0)
+      image.ScaleType   = Enum.ScaleType.Fit
+      image.Parent = frame
+
+      local controller = gui.addCustom(assetId, {
+         Frame = frame,
+         Height = height
+      }) 
+      controller.label(false)
+
+      return controller
    end
 	
 	--[[
@@ -524,8 +538,8 @@ function DatGUI.new(params)
    --[[
       Atualiza a posição da instancia
    ]]
-   function gui.move(left, top)
-      gui.Panel:Move(left, top)
+   function gui.move(hor, vert)
+      gui.Panel:Move(hor, vert)
 		return gui
 	end
 

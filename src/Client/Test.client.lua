@@ -23,9 +23,11 @@ SunRays.Parent          = Lighting
 
 -- root gui
 local gui = DatGUI.new({ 
-   closeable = true,
+   closeable = false,
    -- width = 300
 })
+
+gui.addLogo('rbxassetid://6728606847', 100)
 
 --- Lighting
 local guiLigh		 	= gui.addFolder('Lighting')
@@ -241,295 +243,310 @@ local presets = {
 	end,
 }
 
-
 guiPresets.add(presets, 'Default')
 guiPresets.add(presets, 'SaharaSunset', 'Sahara Sunset')
 guiPresets.add(presets, 'NightCove', 'Night Cove')
 guiPresets.add(presets, 'Tranquil')
 
 --- Other tests
-local guiOthers 			= gui.addFolder('Other')
+local guiOthers = gui.addFolder('Other')
 
+--[[
+   Open new panel, can be closed
+]]
+local function OpenOtherPanel()
 
---------------------------
--- Custom controller
---------------------------
-local customRemoved = false
-local customFrame = Instance.new("Frame")
-customFrame.BackgroundTransparency = 1
-customFrame.BorderSizePixel = 0
+   local gui = DatGUI.new({ 
+      closeable = true,
+      -- width = 300
+   })
 
-guiOthers.addCustom('CustomController', {
-   Frame = customFrame,
-   Height = 150,
-   OnRemove = function()
-      customRemoved = true
-   end
-})
+   gui.move('center', 'center')
+      
+   --------------------------
+   -- Custom controller
+   --------------------------
+   local customRemoved = false
+   local customFrame = Instance.new("Frame")
+   customFrame.BackgroundTransparency = 1
+   customFrame.BorderSizePixel = 0
 
-coroutine.wrap(function()
-   local TweenService = game:GetService("TweenService")
-
-   -- how much confetti per second
-   local rate = 15
-
-   while true do
-      local confetti = Instance.new("Frame")
-      confetti.ZIndex            = 1
-      confetti.AnchorPoint       = Vector2.new(0.5, 0.5)
-      confetti.Rotation          = math.random(-360,360)
-      confetti.Size              = UDim2.new(0.02, 0, 0.04, 0)
-      confetti.Position          = UDim2.new(math.random(3,97)/100, 0, -0.1, 0)
-      confetti.BackgroundColor3  = Color3.fromRGB(math.random(150,255), math.random(150,255), math.random(150,255))
-      confetti.Parent = customFrame
-
-      local lifetime = math.random(7,15)/10
-
-      TweenService:Create(confetti,  TweenInfo.new(lifetime, Enum.EasingStyle.Linear), {
-         Size     = UDim2.new(0, 0, 0, 0), 
-         Rotation = math.random(-360,360),
-         Position = UDim2.new(confetti.Position.X.Scale, 0, 1.1, 0)
-      }):Play()
-
-      game.Debris:AddItem(confetti, lifetime)
-
-      if customRemoved then 
-         break
-      else 
-         wait(1/rate)
+   gui.addCustom('CustomController', {
+      Frame = customFrame,
+      Height = 150,
+      OnRemove = function()
+         customRemoved = true
       end
-   end
-end)()
---------------------------
+   })
 
+   coroutine.wrap(function()
+      local TweenService = game:GetService("TweenService")
 
---- Bool
-local boolValue = Instance.new('BoolValue')
-local BooleansObject = {
-   Bool = true,
-   BoolValue = boolValue
-}
+      -- how much confetti per second
+      local rate = 15
 
-local guiOthersBool  = guiOthers.addFolder('Booleans')
+      while true do
+         local confetti = Instance.new("Frame")
+         confetti.ZIndex            = 1
+         confetti.AnchorPoint       = Vector2.new(0.5, 0.5)
+         confetti.Rotation          = math.random(-360,360)
+         confetti.Size              = UDim2.new(0.02, 0, 0.04, 0)
+         confetti.Position          = UDim2.new(math.random(3,97)/100, 0, -0.1, 0)
+         confetti.BackgroundColor3  = Color3.fromRGB(math.random(150,255), math.random(150,255), math.random(150,255))
+         confetti.Parent = customFrame
 
-guiOthersBool.add(BooleansObject, 'Bool').listen().onChange(function(value)
-   print('Bool = ', value)
-   assert(BooleansObject.Bool == value)
-end)
+         local lifetime = math.random(7,15)/10
 
-guiOthersBool.add(BooleansObject, 'BoolValue').listen().onChange(function(value)
-   print('BoolValue = ', value)
-   assert(BooleansObject.BoolValue.Value == value)
-end)
+         TweenService:Create(confetti,  TweenInfo.new(lifetime, Enum.EasingStyle.Linear), {
+            Size     = UDim2.new(0, 0, 0, 0), 
+            Rotation = math.random(-360,360),
+            Position = UDim2.new(confetti.Position.X.Scale, 0, 1.1, 0)
+         }):Play()
 
+         game.Debris:AddItem(confetti, lifetime)
 
---- Numbers
-local numberValue = Instance.new('NumberValue')
-
-numberValue.Value = 4.00
-
-local NumbersObject = {
-   Number = 25,
-   NumberSlider = 0.5,
-   NumberDouble = 33,
-   NumberValue = numberValue,
-   NumberValueSlider = numberValue
-}
-
-local guiOthersNumber  = guiOthers.addFolder('Numbers')
-
-guiOthersNumber.add(NumbersObject, 'Number').step(1).listen().onChange(function(value)
-   print('Number = ', value)
-   assert(NumbersObject.Number == value)
-end)
-
-guiOthersNumber.add(NumbersObject, 'NumberSlider', 0, 1).listen().onChange(function(value)
-   print('NumberSlider = ', value)
-   assert(NumbersObject.NumberSlider == value)
-end)
-
-guiOthersNumber.add(NumbersObject, 'NumberDouble').step(0.001).listen().onChange(function(value)
-   print('NumberDouble = ', value)
-   assert(NumbersObject.NumberDouble == value)
-end)
-
-guiOthersNumber.add(NumbersObject, 'NumberValue').listen().onChange(function(value)
-   print('NumberValue = ', value)
-   assert(NumbersObject.NumberValue.Value == value)
-end)
-
-guiOthersNumber.add(NumbersObject, 'NumberValueSlider', 1, 15).listen().onChange(function(value)
-   print('NumberValueSlider = ', value)
-   assert(NumbersObject.NumberValueSlider.Value == value)
-end)
-
-
---- Strings
-local stringValue = Instance.new('StringValue')
-local StringsObject = {
-   String = 'Lorem ipsum dolor',
-   StringValue = stringValue,
-   StringMultiline = 'Lorem ipsum dolor \nLorem ipsum dolor '
-}
-
-local guiOthersStrings  = guiOthers.addFolder('Strings')
-
-guiOthersStrings.add(StringsObject, 'String').listen().onChange(function(value)
-   print('String = '..value)
-   assert(StringsObject.String == value)
-end)
-
-guiOthersStrings.add(StringsObject, 'StringValue').listen().onChange(function(value)
-   print('StringValue = '..value)
-   assert(StringsObject.StringValue.Value == value)
-end)
-
-guiOthersStrings.add(StringsObject, 'StringMultiline', true).listen().onChange(function(value)
-   print('StringMultiline = '..value)
-   assert(StringsObject.StringMultiline == value)
-end)
-
-
---- Options
-local OptionsObject = {
-   OptionsEnum       = 2,
-   OptionsEnumItem   = Enum.ScaleType.Slice,
-   OptionsArray      = 1,
-   OptionsObject     = 'THREE',
-}
-
-local guiOthersOptions  = guiOthers.addFolder('Options')
-
-guiOthersOptions.add(OptionsObject, 'OptionsEnum', Enum.ScaleType).listen().onChange(function(value, text)
-   print('OptionsEnum = ', value, text)
-   assert(OptionsObject.OptionsEnum == value)
-end)
-
-guiOthersOptions.add(OptionsObject, 'OptionsEnumItem').listen().onChange(function(value, text)
-   print('OptionsEnum = ', value, text)
-   assert(OptionsObject.OptionsEnumItem == value)
-end)
-
-guiOthersOptions.add(OptionsObject, 'OptionsArray', {'One', 'Two', 'Three'}).listen().onChange(function(value, text)
-   print('OptionsEnum = ', value, text)
-   assert(OptionsObject.OptionsArray == value)
-end)
-
-guiOthersOptions.add(OptionsObject, 'OptionsObject', { ONE = 'One', TWO = 'Two', THREE = 'Three' }).listen().onChange(function(value, text)
-   print('OptionsObject = ', value, text)
-   assert(OptionsObject.OptionsObject == value)
-end)
-
---- Color3
-local color3Value = Instance.new('Color3Value')
-local Color3Object = {
-   Color3 = Color3.fromRGB(255, 0, 255),
-   Color3Value = color3Value
-}
-
-local guiOthersColor3  = guiOthers.addFolder('Color3')
-
-guiOthersColor3.add(Color3Object, 'Color3').listen().onChange(function(value)
-   print('Color3 = ', value)
-   assert(Color3Object.Color3.R == value.R)
-   assert(Color3Object.Color3.G == value.G)
-   assert(Color3Object.Color3.B == value.B)
-end)
-
-guiOthersColor3.add(Color3Object, 'Color3Value').listen().onChange(function(value)
-   print('Color3Value = ', value)
-   assert(Color3Object.Color3Value.Value.R == value.R)
-   assert(Color3Object.Color3Value.Value.G == value.G)
-   assert(Color3Object.Color3Value.Value.B == value.B)
-end)
-
---- Vector3
-local vector3Value = Instance.new('Vector3Value')
-local Vector3Object = {
-   Vector3 = Vector3.new(10, 11, 12),
-   Vector3Slider = Vector3.new(10, 11, 12),
-   Vector3Value = vector3Value
-}
-
-local guiOthersVector3  = guiOthers.addFolder('Vector3')
-
-guiOthersVector3.add(Vector3Object, 'Vector3').step(1).listen().onChange(function(value)
-   print('Vector3 = ', value)
-   assert(Vector3Object.Vector3:FuzzyEq(value))
-end)
-
-local vec3Controller = guiOthersVector3.add(Vector3Object, 'Vector3Slider', 0, 100).listen().onChange(function(value)
-   print('Vector3Slider = ', value)
-   assert(Vector3Object.Vector3Slider:FuzzyEq(value))
-end)
-
-guiOthersVector3.add(Vector3Object, 'Vector3Value', 0, 100).listen().onChange(function(value)
-   print('Vector3Value = ', value)
-   assert(Vector3Object.Vector3Value.Value:FuzzyEq(value))
-end)
-
--- Function, remove and name
-local guiOthersFunctions  = guiOthers.addFolder('Functions')
-
-local countClick = 0
-local toggleNameController
-
-local testFolder
-local testControllers = {}
-
-local FunctionsObject = {
-   ToggleName = function()
-      countClick = countClick+1
-      toggleNameController.name('Called ('..countClick..') times')
-   end,
-   AddFolder = function()
-      if testFolder == nil then
-         testFolder = guiOthersFunctions.addFolder('Test Folder')
-      end
-   end,
-   AddController = function()
-      if testFolder ~= nil then
-         table.insert(testControllers, testFolder.add({ Value = 0.5}, 'Value', 0, 1, 0.001))
-      end
-   end,
-   RemoveController = function()
-      if testFolder ~= nil then
-         local pos = table.getn(testControllers)
-         if pos > 0 then 
-            testControllers[pos].remove()
-            table.remove(testControllers, pos)
+         if customRemoved then 
+            break
+         else 
+            wait(1/rate)
          end
       end
-   end,
-   RemoveControllerByParent = function()
-      if testFolder ~= nil then
-         local pos = table.getn(testControllers)
-         if pos > 0 then 
-            testFolder.removeChild(testControllers[pos])
-            table.remove(testControllers, pos)
+   end)()
+   --------------------------
+
+
+   --- Bool
+   local boolValue = Instance.new('BoolValue')
+   local BooleansObject = {
+      Bool = true,
+      BoolValue = boolValue
+   }
+
+   local guiOthersBool  = gui.addFolder('Booleans')
+
+   guiOthersBool.add(BooleansObject, 'Bool').listen().onChange(function(value)
+      print('Bool = ', value)
+      assert(BooleansObject.Bool == value)
+   end)
+
+   guiOthersBool.add(BooleansObject, 'BoolValue').listen().onChange(function(value)
+      print('BoolValue = ', value)
+      assert(BooleansObject.BoolValue.Value == value)
+   end)
+
+
+   --- Numbers
+   local numberValue = Instance.new('NumberValue')
+
+   numberValue.Value = 4.00
+
+   local NumbersObject = {
+      Number = 25,
+      NumberSlider = 0.5,
+      NumberDouble = 33,
+      NumberValue = numberValue,
+      NumberValueSlider = numberValue
+   }
+
+   local guiOthersNumber  = gui.addFolder('Numbers')
+
+   guiOthersNumber.add(NumbersObject, 'Number').step(1).listen().onChange(function(value)
+      print('Number = ', value)
+      assert(NumbersObject.Number == value)
+   end)
+
+   guiOthersNumber.add(NumbersObject, 'NumberSlider', 0, 1).listen().onChange(function(value)
+      print('NumberSlider = ', value)
+      assert(NumbersObject.NumberSlider == value)
+   end)
+
+   guiOthersNumber.add(NumbersObject, 'NumberDouble').step(0.001).listen().onChange(function(value)
+      print('NumberDouble = ', value)
+      assert(NumbersObject.NumberDouble == value)
+   end)
+
+   guiOthersNumber.add(NumbersObject, 'NumberValue').listen().onChange(function(value)
+      print('NumberValue = ', value)
+      assert(NumbersObject.NumberValue.Value == value)
+   end)
+
+   guiOthersNumber.add(NumbersObject, 'NumberValueSlider', 1, 15).listen().onChange(function(value)
+      print('NumberValueSlider = ', value)
+      assert(NumbersObject.NumberValueSlider.Value == value)
+   end)
+
+
+   --- Strings
+   local stringValue = Instance.new('StringValue')
+   local StringsObject = {
+      String = 'Lorem ipsum dolor',
+      StringValue = stringValue,
+      StringMultiline = 'Lorem ipsum dolor \nLorem ipsum dolor '
+   }
+
+   local guiOthersStrings  = gui.addFolder('Strings')
+
+   guiOthersStrings.add(StringsObject, 'String').listen().onChange(function(value)
+      print('String = '..value)
+      assert(StringsObject.String == value)
+   end)
+
+   guiOthersStrings.add(StringsObject, 'StringValue').listen().onChange(function(value)
+      print('StringValue = '..value)
+      assert(StringsObject.StringValue.Value == value)
+   end)
+
+   guiOthersStrings.add(StringsObject, 'StringMultiline', true).listen().onChange(function(value)
+      print('StringMultiline = '..value)
+      assert(StringsObject.StringMultiline == value)
+   end)
+
+
+   --- Options
+   local OptionsObject = {
+      OptionsEnum       = 2,
+      OptionsEnumItem   = Enum.ScaleType.Slice,
+      OptionsArray      = 1,
+      OptionsObject     = 'THREE',
+   }
+
+   local guiOthersOptions  = gui.addFolder('Options')
+
+   guiOthersOptions.add(OptionsObject, 'OptionsEnum', Enum.ScaleType).listen().onChange(function(value, text)
+      print('OptionsEnum = ', value, text)
+      assert(OptionsObject.OptionsEnum == value)
+   end)
+
+   guiOthersOptions.add(OptionsObject, 'OptionsEnumItem').listen().onChange(function(value, text)
+      print('OptionsEnum = ', value, text)
+      assert(OptionsObject.OptionsEnumItem == value)
+   end)
+
+   guiOthersOptions.add(OptionsObject, 'OptionsArray', {'One', 'Two', 'Three'}).listen().onChange(function(value, text)
+      print('OptionsEnum = ', value, text)
+      assert(OptionsObject.OptionsArray == value)
+   end)
+
+   guiOthersOptions.add(OptionsObject, 'OptionsObject', { ONE = 'One', TWO = 'Two', THREE = 'Three' }).listen().onChange(function(value, text)
+      print('OptionsObject = ', value, text)
+      assert(OptionsObject.OptionsObject == value)
+   end)
+
+   --- Color3
+   local color3Value = Instance.new('Color3Value')
+   local Color3Object = {
+      Color3 = Color3.fromRGB(255, 0, 255),
+      Color3Value = color3Value
+   }
+
+   local guiOthersColor3  = gui.addFolder('Color3')
+
+   guiOthersColor3.add(Color3Object, 'Color3').listen().onChange(function(value)
+      print('Color3 = ', value)
+      assert(Color3Object.Color3.R == value.R)
+      assert(Color3Object.Color3.G == value.G)
+      assert(Color3Object.Color3.B == value.B)
+   end)
+
+   guiOthersColor3.add(Color3Object, 'Color3Value').listen().onChange(function(value)
+      print('Color3Value = ', value)
+      assert(Color3Object.Color3Value.Value.R == value.R)
+      assert(Color3Object.Color3Value.Value.G == value.G)
+      assert(Color3Object.Color3Value.Value.B == value.B)
+   end)
+
+   --- Vector3
+   local vector3Value = Instance.new('Vector3Value')
+   local Vector3Object = {
+      Vector3 = Vector3.new(10, 11, 12),
+      Vector3Slider = Vector3.new(10, 11, 12),
+      Vector3Value = vector3Value
+   }
+
+   local guiOthersVector3  = gui.addFolder('Vector3')
+
+   guiOthersVector3.add(Vector3Object, 'Vector3').step(1).listen().onChange(function(value)
+      print('Vector3 = ', value)
+      assert(Vector3Object.Vector3:FuzzyEq(value))
+   end)
+
+   local vec3Controller = guiOthersVector3.add(Vector3Object, 'Vector3Slider', 0, 100).listen().onChange(function(value)
+      print('Vector3Slider = ', value)
+      assert(Vector3Object.Vector3Slider:FuzzyEq(value))
+   end)
+
+   guiOthersVector3.add(Vector3Object, 'Vector3Value', 0, 100).listen().onChange(function(value)
+      print('Vector3Value = ', value)
+      assert(Vector3Object.Vector3Value.Value:FuzzyEq(value))
+   end)
+
+   -- Function, remove and name
+   local guiOthersFunctions  = gui.addFolder('Functions')
+
+   local countClick = 0
+   local toggleNameController
+
+   local testFolder
+   local testControllers = {}
+
+   local FunctionsObject = {
+      ToggleName = function()
+         countClick = countClick+1
+         toggleNameController.name('Called ('..countClick..') times')
+      end,
+      AddFolder = function()
+         if testFolder == nil then
+            testFolder = guiOthersFunctions.addFolder('Test Folder')
+         end
+      end,
+      AddController = function()
+         if testFolder ~= nil then
+            table.insert(testControllers, testFolder.add({ Value = 0.5}, 'Value', 0, 1, 0.001))
+         end
+      end,
+      RemoveController = function()
+         if testFolder ~= nil then
+            local pos = table.getn(testControllers)
+            if pos > 0 then 
+               testControllers[pos].remove()
+               table.remove(testControllers, pos)
+            end
+         end
+      end,
+      RemoveControllerByParent = function()
+         if testFolder ~= nil then
+            local pos = table.getn(testControllers)
+            if pos > 0 then 
+               testFolder.removeChild(testControllers[pos])
+               table.remove(testControllers, pos)
+            end
+         end
+      end,
+      RemoveFolder = function()
+         if testFolder ~= nil then
+            testFolder.remove()
+            testFolder = nil
+         end
+      end,
+      RemoveFolderByParent = function()
+         if testFolder ~= nil then
+            guiOthersFunctions.removeChild(testFolder)
+            testFolder = nil
          end
       end
-   end,
-   RemoveFolder = function()
-      if testFolder ~= nil then
-         testFolder.remove()
-         testFolder = nil
-      end
-   end,
-   RemoveFolderByParent = function()
-      if testFolder ~= nil then
-         guiOthersFunctions.removeChild(testFolder)
-         testFolder = nil
-      end
-   end
-}
+   }
 
-toggleNameController = guiOthersFunctions.add(FunctionsObject, 'ToggleName')
-guiOthersFunctions.add(FunctionsObject, 'AddFolder')
-guiOthersFunctions.add(FunctionsObject, 'AddController')
-guiOthersFunctions.add(FunctionsObject, 'RemoveController')
-guiOthersFunctions.add(FunctionsObject, 'RemoveControllerByParent')
-guiOthersFunctions.add(FunctionsObject, 'RemoveFolder')
-guiOthersFunctions.add(FunctionsObject, 'RemoveFolderByParent')
+   toggleNameController = guiOthersFunctions.add(FunctionsObject, 'ToggleName')
+   guiOthersFunctions.add(FunctionsObject, 'AddFolder')
+   guiOthersFunctions.add(FunctionsObject, 'AddController')
+   guiOthersFunctions.add(FunctionsObject, 'RemoveController')
+   guiOthersFunctions.add(FunctionsObject, 'RemoveControllerByParent')
+   guiOthersFunctions.add(FunctionsObject, 'RemoveFolder')
+   guiOthersFunctions.add(FunctionsObject, 'RemoveFolderByParent')
+end
+
+guiOthers.add({Open=OpenOtherPanel},'Open')
+
+
 
 

@@ -51,8 +51,8 @@ local function FunctionController(gui, object, property, text)
 	local onChange
 	
 	local controller = {
-		frame = frame,
-		height = frame.AbsoluteSize.Y
+		['frame'] = frame,
+		['height'] = frame.AbsoluteSize.Y
 	}
 	
 	------------------------------------------------------------------

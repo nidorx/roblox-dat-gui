@@ -1,7 +1,6 @@
 local Players              = game:GetService('Players')
 local Player               = Players.LocalPlayer or Players:GetPropertyChangedSignal('LocalPlayer'):Wait()
 local Mouse                = Player:GetMouse()
-local Camera 	            = workspace.CurrentCamera
 
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc                 = require(Lib:WaitForChild('Misc'))
@@ -13,7 +12,7 @@ local Scrollbar            = require(Lib:WaitForChild('Scrollbar'))
 
 local MIN_WIDTH      = 250
 local MAX_WIDTH      = 500
-local MIN_HEIGHT     = 100
+local MIN_HEIGHT     = 60
 local HEADER_HEIGHT  = 30
 local SNAP_TOLERANCE = 15
 
@@ -444,6 +443,11 @@ function Panel:Detach(closeable)
          self:Resize(frameSize.X, frameSize.Y)
       end
    end))
+
+   table.insert(connections, Constants.SCREEN_GUI.Changed:Connect(function()
+      local pos = self.Frame.AbsolutePosition
+      self:Move(pos.X, pos.Y)
+   end))
    
    self._scrollbar = Scrollbar.new(self.Frame, self.Content, HEADER_HEIGHT)
    
@@ -541,7 +545,7 @@ function Panel:Resize(width, height)
    end
    
    width    = math.clamp(width, MIN_WIDTH, MAX_WIDTH)
-   height   = math.clamp(height, MIN_HEIGHT, Camera.ViewportSize.Y)   
+   height   = math.clamp(height, MIN_HEIGHT, Constants.SCREEN_GUI.AbsoluteSize.Y)   
    frame.Size = UDim2.new(0, width, 0, height)
 
    self._size = {
@@ -554,15 +558,34 @@ function Panel:Resize(width, height)
    self:UpdateContentSize()
 end
 
-function Panel:Move(left, top)
+function Panel:Move(hor, vert)
    if self._detached ~= true then 
       return
    end
-
    local frame = self.Frame
+   local screenGUI = frame.Parent
 
    local width    = frame.Size.X.Offset
    local height   = frame.Size.Y.Offset
+
+   if hor == 'center' then 
+      hor = (screenGUI.AbsoluteSize.X/2) - (width/2)
+   elseif hor == 'left' then 
+      hor = 15
+   elseif hor == 'right' then 
+      hor = screenGUI.AbsoluteSize.X - (width + 15) 
+   end
+
+   if vert == 'center' then 
+      vert = (screenGUI.AbsoluteSize.Y/2) - (height/2)
+   elseif vert == 'top' then 
+      vert = 0
+   elseif vert == 'bottom' then 
+      vert = screenGUI.AbsoluteSize.Y - height
+   end
+
+   local left = hor
+   local top  = vert
 
    local x1 = left
    local x2 = left + width
@@ -650,10 +673,10 @@ function Panel:Move(left, top)
       end
    end
 
-   local screenGUI = frame.Parent
+  
    local posMaxX = screenGUI.AbsoluteSize.X - width
    local posMaxY = screenGUI.AbsoluteSize.Y - height
-   
+
    left = math.clamp(left, 0, math.max(posMaxX, 0))
    top = math.clamp(top, 0, math.max(posMaxY, 0))
    frame.Position = UDim2.new(0, left, 0, top)
@@ -783,7 +806,7 @@ function Panel:_checkConstraints()
       minHeight = HEADER_HEIGHT
    end
 
-   height   = math.clamp(height, minHeight, Camera.ViewportSize.Y)   
+   height   = math.clamp(height, minHeight, Constants.SCREEN_GUI.AbsoluteSize.Y)   
    frame.Size = UDim2.new(0, width, 0, height)
 end
 

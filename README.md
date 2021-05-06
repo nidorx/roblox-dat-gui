@@ -142,9 +142,9 @@ npm run build
 - [x] Hide label
 - [x] On Remove
 - [x] .help()
+- [x] AddLogo
 - [ ] AddTextInfo
 - [ ] AddTextWarn
-- [ ] AddLogo
 - [ ] AddImage
 - [ ] AddLog
 - [ ] AddChart
@@ -154,6 +154,8 @@ npm run build
 - [x] Panel Close (Destroy)
 - [x] Panel Zindex
 - [ ] Save preferences
+- [ ] Posicionamento por string (top, left, bottom, right)
+- [ ] Theme creator (using DatGUI)
 
 
 ## Feedback, Requests and Roadmap

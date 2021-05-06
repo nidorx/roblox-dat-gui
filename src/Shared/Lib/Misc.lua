@@ -35,15 +35,6 @@ function Misc.DisconnectFn(connections, ...)
    end
 end
 
-function Misc.DisconnectFnEvent(connections, ...)
-   local disconnectFn = Misc.DisconnectFn(connections, table.unpack({...}))
-   return {
-      Disconnect = function(self)
-         disconnectFn()
-      end
-   }
-end
-
 --[[
    Gets the number of decimals a number has
 ]]

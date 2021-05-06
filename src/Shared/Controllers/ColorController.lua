@@ -388,7 +388,7 @@ local function CreateGUI()
 
       elseif event == 'drag' then
          parseSatLumMouse({
-            Position = position
+            ['Position'] = position
          })
       end
    end))
@@ -404,7 +404,7 @@ local function CreateGUI()
 
       elseif event == 'drag' then
          parseHueMouse({
-            Position = position
+            ['Position'] = position
          })
       end
    end))
@@ -428,8 +428,8 @@ local function ColorController(gui, object, property, isColor3Value)
 	local listenConnection
 	
 	local controller = {
-		frame = frame,
-		height = frame.AbsoluteSize.Y
+		['frame'] = frame,
+		['height'] = frame.AbsoluteSize.Y
 	}
 	
 	------------------------------------------------------------------

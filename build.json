@@ -6,6 +6,26 @@
    "entries": [
       "src/Shared/dat.GUI.lua"
    ],
-   "dontIgnoreVarDir": [
+   "dontIgnoreVarDir": [],
+   "globals": [
+      "nil",
+      "true",
+      "false",
+      "ipairs",
+      "string.len",
+      "string",
+      "tonumber",
+      "table",
+      "Instance.new",
+      "TweenInfo.new",
+      "Enum",
+      "UDim2.new",
+      "Color3",
+      "Vector2.new",
+      "Vector3.new",
+      "math.abs",
+      "math.min",
+      "math.max",
+      "math.huge"
    ]
 }

@@ -4,7 +4,6 @@ local ContextActionService = game:GetService("ContextActionService")
 local Players              = game:GetService('Players')
 local Player               = Players.LocalPlayer or Players:GetPropertyChangedSignal('LocalPlayer'):Wait()
 local Mouse                = Player:GetMouse()
-local Camera 	            = workspace.CurrentCamera
 
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
@@ -197,17 +196,11 @@ function GUIUtils.CreateControllerWrapper(config)
    return Controller, Control, Misc.DisconnectFn(connections)
 end
 
-local ActiveDummy =  Instance.new('BoolValue')
-ActiveDummy.Value = true
-
 local RenderDummy = function(text)
    return text
 end
 
 local ParseDummy = RenderDummy
-
-
-local TEXT_REPLICATE_ATTRS = {}
 
 --[[
    Generic input creation

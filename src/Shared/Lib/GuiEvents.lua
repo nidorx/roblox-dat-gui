@@ -10,7 +10,7 @@ local Timer                = require(Lib:WaitForChild('Timer'))
 
 local GuiEvents = {}
 
-local EL_EVENTS                     = {
+local EL_EVENTS = {
    ['*'] = {
       ['OnEnter']       = {},
       ['OnHover']       = {},
@@ -443,13 +443,13 @@ function GuiEvents.OnDrag(element, callback, offset)
             cancelUp()
          end
 
-         if cancelMove ~= nil then 
+         if cancelMove ~= nil then
             cancelMove()
          end
 
          if isDragging then 
             IS_DRAGGING = false
-            checkEnter()
+            Timer.SetTimeout(checkEnter)
             callback('end')
          end
 
@@ -464,7 +464,7 @@ function GuiEvents.OnDrag(element, callback, offset)
 
       if isDragging then 
          IS_DRAGGING = false
-         checkEnter()
+         Timer.SetTimeout(checkEnter)
          callback('end')
       end
 
@@ -513,8 +513,8 @@ function GuiEvents.OnScroll(element, callback)
             if event == 'start' then
                posY = startPos.Y
       
-            elseif event == 'end' then
-               posY = nil
+            -- elseif event == 'end' then
+            --    posY = nil
       
             elseif event == 'drag' then
                callback((position.Y - posY)*3)

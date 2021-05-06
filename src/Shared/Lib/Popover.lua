@@ -1,4 +1,3 @@
-local Camera 	            = workspace.CurrentCamera
 
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
@@ -47,7 +46,7 @@ end
 function Popover:Show(chevron, chevronColor)
    local refPos = self._reference.AbsolutePosition
    local refSiz = self._reference.AbsoluteSize
-   local scrSiz = Camera.ViewportSize
+   local scrSiz = Vector2.new( Constants.SCREEN_GUI.AbsoluteSize.X,  Constants.SCREEN_GUI.AbsoluteSize.Y)
 
    local size = self.Frame.AbsoluteSize
 
