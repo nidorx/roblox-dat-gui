@@ -193,5 +193,7 @@ Describe as much detail as possible to get the problem reproduced and eventually
 
 This code is distributed under the terms and conditions of the [MIT license](LICENSE).
 
+Developed on [JetBrains Intellij](https://www.jetbrains.com/community/opensource/#support)
+
 
 [GitHub issues]: https://github.com/nidorx/roblox-dat-gui/issues
