@@ -479,7 +479,7 @@ function DatGUI.new(params)
 	]]
 	function gui.remove()
       
-      if gui._is_removing_parent then
+      if gui == nil or gui._is_removing_parent then
          return
       end
       
