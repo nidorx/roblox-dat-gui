@@ -4,12 +4,12 @@ local UserInputService  = game:GetService("UserInputService")
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
-local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GUIUtils          = require(Lib:WaitForChild("GUIUtils"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+   local Controller, Control, DisconnectParent = GUIUtils.createControllerWrapper({
       ['Name']    = 'Vector3SliderController',
       ['Color']   = Constants.NUMBER_COLOR,
       ['Height']  = 90
@@ -51,21 +51,21 @@ local function CreateGUI()
    local function CreateAxisController(axis, position)
       local connections = {}
 
-      local Frame = GUIUtils.CreateFrame()
+      local Frame = GUIUtils.createFrame()
       Frame.Name 			            = axis
       Frame.BackgroundTransparency  = 1
       Frame.Position 			      = position
       Frame.Size 			            = UDim2.new(1, 0, 0.333, -1)
       Frame.Parent = Control
 
-      local Label = GUIUtils.CreateLabel()
+      local Label = GUIUtils.createTextLabel()
       Label.Size 			            = UDim2.new(0, 10, 1, 0)
       Label.Text                    = axis:lower()
       Label.TextColor3 			      = Constants.INPUT_COLOR_PLACEHOLDER
       Label.TextXAlignment          = Enum.TextXAlignment.Center
       Label.Parent = Frame
 
-      local TextContainer = GUIUtils.CreateFrame()
+      local TextContainer = GUIUtils.createFrame()
       TextContainer.Name 			            = 'TextContainer'
       TextContainer.BackgroundTransparency   = 1
       TextContainer.Position 			         = UDim2.new(0.66, 3, 0, 3)
@@ -76,9 +76,9 @@ local function CreateGUI()
       AxisPrecision.Name    = 'Precision'
       AxisPrecision.Value   = Misc.NUMBER_PRECISION
 
-      local  RenderText = Misc.CreateTextNumberFn(AxisPrecision)
+      local  RenderText = Misc.createTextNumberFn(AxisPrecision)
       
-      local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
+      local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.createInput({
          ['Color']      = Constants.NUMBER_COLOR,
          ['Render']     = RenderText,
          ['Readonly']   = Readonly,
@@ -100,14 +100,14 @@ local function CreateGUI()
       })
       TextFrame.Parent = TextContainer
 
-      local SliderContainer = GUIUtils.CreateFrame()
+      local SliderContainer = GUIUtils.createFrame()
       SliderContainer.Name                   = 'slider-container'
       SliderContainer.BackgroundTransparency = 1
       SliderContainer.Position 			      = UDim2.new(0, 12, 0, 3)
       SliderContainer.Size 			         = UDim2.new(0.66, -12, 1, -6)
       SliderContainer.Parent = Frame
    
-      local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.CreateSlider({
+      local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.createSlider({
          ['Readonly'] = Readonly
       })
       SliderFrame.Parent = SliderContainer
@@ -139,7 +139,7 @@ local function CreateGUI()
          end
       end))
 
-      return TextValue, SliderValue, Min, Max, RenderText, Misc.DisconnectFn(connections, TextDisconnect, SliderDisconnect) 
+      return TextValue, SliderValue, Min, Max, RenderText, Misc.disconnectFn(connections, TextDisconnect, SliderDisconnect) 
    end
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
@@ -176,9 +176,9 @@ local function CreateGUI()
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()	
       Precision.Value = Vector3.new(
-         Misc.CountDecimals(Step.Value.X), 
-         Misc.CountDecimals(Step.Value.Y), 
-         Misc.CountDecimals(Step.Value.Z)
+         Misc.countDecimals(Step.Value.X), 
+         Misc.countDecimals(Step.Value.Y), 
+         Misc.countDecimals(Step.Value.Z)
       )
       for _, axis in ipairs(Misc.AXES) do
          local TextValue = Axes[axis].TextValue
@@ -216,7 +216,7 @@ local function CreateGUI()
       end
    end))
 
-   return Controller, Value, ValueIn, Min, Max, Step, Misc.DisconnectFn(
+   return Controller, Value, ValueIn, Min, Max, Step, Misc.disconnectFn(
       connections, 
       DisconnectParent, 
       Axes.X.Disconnect, 

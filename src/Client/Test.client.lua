@@ -32,6 +32,7 @@ gui.addLogo('rbxassetid://6728606847', 100)
 --- Lighting
 local guiLigh		 	= gui.addFolder('Lighting')
 
+
 local guiLighAppearance 	= guiLigh.addFolder('Appearance')
 guiLighAppearance.add(Lighting, 'Ambient').listen()
    .help('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin mollis molestie sollicitudin. Quisque efficitur sapien dui. Mauris non nibh lorem. Quisque ut neque quis ipsum elementum tincidunt a aliquet justo')
@@ -249,7 +250,21 @@ guiPresets.add(presets, 'NightCove', 'Night Cove')
 guiPresets.add(presets, 'Tranquil')
 
 --- Other tests
-local guiOthers = gui.addFolder('Other')
+local guiOthers = gui.addFolder('Other', { 
+   fixed = true
+})
+guiOthers.action({
+   icon = "rbxassetid://181024964",
+   title = "Add new item", 
+   Color = Color3.fromRGB(0, 255, 255),
+   ColorHover = Color3.fromRGB(0, 255, 255),
+   onHover = function(isHover)
+      
+   end,
+   onClick = function()
+      print("CLicked")
+   end
+})
 
 --[[
    Open new panel, can be closed
@@ -272,9 +287,9 @@ local function OpenOtherPanel()
    customFrame.BorderSizePixel = 0
 
    gui.addCustom('CustomController', {
-      Frame = customFrame,
-      Height = 150,
-      OnRemove = function()
+      frame = customFrame,
+      height = 150,
+      onRemove = function()
          customRemoved = true
       end
    })

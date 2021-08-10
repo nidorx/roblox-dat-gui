@@ -1,34 +1,40 @@
+--[[
+   Utility methods to facilitate interaction with interface events on elements
+]]
+
 local RunService           = game:GetService("RunService")
 local UserInputService     = game:GetService("UserInputService")
 local ContextActionService = game:GetService("ContextActionService")
 local Players              = game:GetService('Players')
 local Player               = Players.LocalPlayer or Players:GetPropertyChangedSignal('LocalPlayer'):Wait()
 local PlayerGui            = Player:WaitForChild("PlayerGui")
+local GuiService           = game:GetService("GuiService")
+local guiInset, _          = GuiService:GetGuiInset()
 
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
-local Timer                = require(Lib:WaitForChild('Timer'))
+local Timer = require(Lib:WaitForChild('Timer'))
 
 local GuiEvents = {}
 
 local EL_EVENTS = {
    ['*'] = {
-      ['OnEnter']       = {},
-      ['OnHover']       = {},
-      ['OnDown']   = {},
-      ['OnUp']     = {},
-      ['OnClick']       = {},
-      ['OnMove']        = {},
+      ['OnEnter'] = {},
+      ['OnHover'] = {},
+      ['OnDown']  = {},
+      ['OnUp']    = {},
+      ['OnClick'] = {},
+      ['OnMove']  = {},
    }
 }
 
-local CURRENT_INPUT_POSITION        = nil
-local CURRENT_ENTER_OBJECTS         = {}
-local NEW_ENTER_OBJECTS             = {}
-local CURRENT_TOP_MOST_HOVER        = nil
-local IS_DRAGGING                   = false
+local CURRENT_INPUT_POSITION  = nil
+local CURRENT_ENTER_OBJECTS   = {}
+local NEW_ENTER_OBJECTS       = {}
+local CURRENT_TOP_MOST_HOVER  = nil
+local IS_DRAGGING             = false
 
--- usado no onclick, que deve casar o mousedown com o mouseup
-local LAST_MOUSE_DOWN_SEQ         = 0
+-- used in onclick, which must match the mousedown with the mouseup
+local LAST_MOUSE_DOWN_SEQ     = 0
 
 local function addListener(element, event, callback)
    if element == nil then 
@@ -67,7 +73,7 @@ local function isEnter(element)
 end
 
 local function forceHoverFalse()
-   -- call OnHover(false)
+   -- call onHover(false)
    if CURRENT_TOP_MOST_HOVER ~= nil then 
       local element = EL_EVENTS[CURRENT_TOP_MOST_HOVER]
       for _, callback in ipairs(element.OnHover) do
@@ -84,13 +90,13 @@ local function checkEnter()
       NEW_ENTER_OBJECTS = Player.PlayerGui:GetGuiObjectsAtPosition(CURRENT_INPUT_POSITION.X, CURRENT_INPUT_POSITION.Y)
    end
 
-   -- elementos que irão receber o evento onLeave
+   -- elements that will receive the onLeave event
    local toLeave = CURRENT_ENTER_OBJECTS
 
-   -- elementos que irão receber o evento onEnter
+   -- elements that will receive the onEnter event
    local toEnter = {}
 
-   -- o elemento que possui evento onHover e está com o maior z-index
+   -- the element that has event on Hover and has the highest z-index
    local topMostHover
 
    for _, obj in ipairs(NEW_ENTER_OBJECTS) do
@@ -111,12 +117,12 @@ local function checkEnter()
       end
    end
 
-   -- call OnEnter(false)
+   -- call onEnter(false)
    for _, obj in ipairs(toLeave) do
       local element = EL_EVENTS[obj]
       if element ~= nil then
 
-         -- call OnHover(false)
+         -- call onHover(false)
          if CURRENT_TOP_MOST_HOVER == obj then 
             for _, callback in ipairs(element.OnHover) do
                callback(false)
@@ -131,7 +137,7 @@ local function checkEnter()
    end
 
    if topMostHover ~= CURRENT_TOP_MOST_HOVER and  CURRENT_TOP_MOST_HOVER ~= nil then
-      -- call OnHover(false)
+      -- call onHover(false)
       local element = EL_EVENTS[CURRENT_TOP_MOST_HOVER]
       if element ~= nil then
          for _, callback in ipairs(element.OnHover) do
@@ -140,7 +146,7 @@ local function checkEnter()
       end
    end
 
-   -- call OnEnter(true) - odem inversa
+   -- call onEnter(true) - reverse order
    for i = #toEnter, 1, -1 do
       local obj = toEnter[i]
       local element = EL_EVENTS[obj]
@@ -151,7 +157,7 @@ local function checkEnter()
       end
    end
 
-   -- call OnHover(true)
+   -- call onHover(true)
    if topMostHover ~= CURRENT_TOP_MOST_HOVER and topMostHover ~= nil then
       local element = EL_EVENTS[topMostHover]
       if element ~= nil then
@@ -169,8 +175,8 @@ local function checkDown()
 
    LAST_MOUSE_DOWN_SEQ = LAST_MOUSE_DOWN_SEQ + 1
 
-   -- executa usando principio de bubling, do elemento com maior z-index para o com menor z-index
-   -- se o callback retornar false, o evento deixa de ser disparado os callbacks dos elementos de tras
+   -- execute using bubling principle, from the element with the highest z-index to the one with the lowest z-index 
+   -- if the callback returns false, the event no longer fires the callbacks of the back elements
    for _, obj in ipairs(CURRENT_ENTER_OBJECTS) do
       local element = EL_EVENTS[obj]
       if element ~= nil then
@@ -206,8 +212,8 @@ local function checkUp()
 
    CURRENT_MOVING_CALLBACK = nil
 
-   -- executa usando principio de bubling, do elemento com maior z-index para o com menor z-index
-   -- se o callback retornar false, o evento deixa de ser disparado os callbacks dos elementos de tras
+   -- execute using bubling principle, from the element with the highest z-index to the one with the lowest z-index 
+   -- if the callback returns false, the event no longer fires the callbacks of the back elements
    for _, obj in ipairs(CURRENT_ENTER_OBJECTS) do
       local element = EL_EVENTS[obj]
       if element ~= nil then
@@ -295,12 +301,16 @@ local function onMove(posX, posY)
 end
 
 ContextActionService:BindActionAtPriority('GuiEventsMouseMovement', function(action, state, input)
-   if input.UserInputState == Enum.UserInputState.Begin or input.UserInputState == Enum.UserInputState.Change then
-      CURRENT_INPUT_POSITION = input.Position
+   if input.UserInputState == Enum.UserInputState.Begin or input.UserInputState == Enum.UserInputState.Change then      
+      CURRENT_INPUT_POSITION = Vector2.new(input.Position.X, input.Position.Y)
+
+      -- apply GuiInset
+      local position = CURRENT_INPUT_POSITION + guiInset
+
       checkEnter()
 
       if input.UserInputState == Enum.UserInputState.Change then
-         if onMove(input.Position.X, input.Position.Y) then
+         if onMove(position.X, position.Y) then
             return Enum.ContextActionResult.Sink
          end
       end
@@ -331,7 +341,11 @@ end, false, 999998, Enum.UserInputType.MouseButton1)
 
 ContextActionService:BindActionAtPriority('GuiEventsTouch', function(action, state, input)
    if input.UserInputState == Enum.UserInputState.Begin or input.UserInputState == Enum.UserInputState.Change then
-      CURRENT_INPUT_POSITION = input.Position
+      CURRENT_INPUT_POSITION = Vector2.new(input.Position.X, input.Position.Y)
+
+       -- apply GuiInset
+       local position = CURRENT_INPUT_POSITION + guiInset
+       
       checkEnter()
 
       if input.UserInputState == Enum.UserInputState.Begin then
@@ -339,7 +353,7 @@ ContextActionService:BindActionAtPriority('GuiEventsTouch', function(action, sta
             return Enum.ContextActionResult.Sink
          end
       elseif input.UserInputState == Enum.UserInputState.Change then
-         if onMove(input.Position.X, input.Position.Y) then
+         if onMove(position.X, position.Y) then
             return Enum.ContextActionResult.Sink
          end
       end
@@ -359,13 +373,15 @@ ContextActionService:BindActionAtPriority('GuiEventsTouch', function(action, sta
    return Enum.ContextActionResult.Pass
 end, false, 999999, Enum.UserInputType.Touch)
 
-
 local timerNewCheck
 
 --[[
-   Disparado sempre que o mouse está sobre o elemento (ou quando inicia um evento touch)
+   Fired whenever the mouse is over the element (or when it starts a touch event)
+
+   @param element {GUIObject|"*"}
+   @param callback {function(isEnter:bool)}
 ]]
-function GuiEvents.OnEnter(element, callback)
+function GuiEvents.onEnter(element, callback)
    local cancel = addListener(element, 'OnEnter', callback)
 
    if isEnter(element) then 
@@ -376,9 +392,12 @@ function GuiEvents.OnEnter(element, callback)
 end
 
 --[[
-   Disparado quando o mouse está sobre o elemento e este é o elemento com o Z-index mais alto
+   Fired when the mouse is over the element and this is the element with the highest Z-index
+
+   @param element {GUIObject|"*"}
+   @param callback {function(isHover:bool)}
 ]]
-function GuiEvents.OnHover(element, callback)
+function GuiEvents.onHover(element, callback)
    local cancel = addListener(element, 'OnHover', callback)
 
    Timer.Clear(timerNewCheck)
@@ -387,23 +406,55 @@ function GuiEvents.OnHover(element, callback)
    return cancel
 end
 
-function GuiEvents.OnDown(element, callback)
+--[[
+   Fired when the mouse key is pressed over element and this is the element with the highest Z-index
+
+   @param element {GUIObject|"*"}
+   @param callback {function()}
+]]
+function GuiEvents.onDown(element, callback)
    return addListener(element, 'OnDown', callback)
 end
 
-function GuiEvents.OnUp(element, callback)
+--[[
+   Fired when the mouse is released over element and this is the element with the highest Z-index
+
+   @param element {GUIObject|"*"}
+   @param callback {function()}
+]]
+function GuiEvents.onUp(element, callback)
    return addListener(element, 'OnUp', callback)
 end
 
-function GuiEvents.OnClick(element, callback)
+--[[
+   The click event is sent to an element when the mouse pointer is over the element, and the mouse button 
+   is pressed and released.
+
+   @param element {GUIObject|"*"}
+   @param callback {function()}
+]]
+function GuiEvents.onClick(element, callback)
    return addListener(element, 'OnClick', callback)
 end
 
-function GuiEvents.OnMove(element, callback)
+--[[
+   Occurs when the mouse is moving over an element
+
+   @param element {GUIObject|"*"}
+   @param callback {function(position:Vector2)}
+]]
+function GuiEvents.onMove(element, callback)
    return addListener(element, 'OnMove', callback)
 end
 
-function GuiEvents.OnDrag(element, callback, offset)
+--[[
+   Allows dragging elements
+
+   @param element {GUIObject|"*"}
+   @param callback {function(event:"start"|"drag"|"end", startPos:Vector2, position:Vector2, delta:Vector2)}
+   @param offset {number} Lets start the drag after moving a few pixels. Avoid invalid clicks
+]]
+function GuiEvents.onDrag(element, callback, offset)
 
    local isDragging = false
 
@@ -416,9 +467,9 @@ function GuiEvents.OnDrag(element, callback, offset)
 
    local startPosition
 
-   local cancelDown = GuiEvents.OnDown(element, function()
+   local cancelDown = GuiEvents.onDown(element, function()
 
-      cancelMove = GuiEvents.OnMove(element, function(position)
+      cancelMove = GuiEvents.onMove(element, function(position)
          if not isDragging and startPosition == nil then 
             startPosition = position
          end
@@ -438,7 +489,7 @@ function GuiEvents.OnDrag(element, callback, offset)
          return not isDragging
       end)
       
-      cancelUp = GuiEvents.OnUp('*', function()
+      cancelUp = GuiEvents.onUp('*', function()
          if cancelUp ~= nil then
             cancelUp()
          end
@@ -480,14 +531,20 @@ end
 
 local EVENT_SEQ = 1
 
-function GuiEvents.OnScroll(element, callback)
+--[[
+   Allows you to watch the mouse scroll over elements
+
+   @param element {GUIObject|"*"}
+   @param callback {function(z:number)}
+]]
+function GuiEvents.onScroll(element, callback)
 
    local cancelDrag
 
    EVENT_SEQ = EVENT_SEQ+1
    local actionName  = 'dat.Gui.OnScroll_'..EVENT_SEQ
 
-   local cancelEnter = GuiEvents.OnEnter(element, function(enter)
+   local cancelEnter = GuiEvents.onEnter(element, function(enter)
 
       ContextActionService:UnbindAction(actionName)
 
@@ -509,7 +566,7 @@ function GuiEvents.OnScroll(element, callback)
 
          -- for mobile
          local posY 
-         cancelDrag = GuiEvents.OnDrag(element, function(event, startPos, position, delta)
+         cancelDrag = GuiEvents.onDrag(element, function(event, startPos, position, delta)
             if event == 'start' then
                posY = startPos.Y
       
@@ -587,38 +644,38 @@ end
 --       tween:Play()
 --    end
 
---    GuiEvents.OnEnter(frame, function(enter)
+--    GuiEvents.onEnter(frame, function(enter)
 --       isEnter = enter
 --       print('#'..a..' OnEnter ', enter)
 --       update()
 --    end)
 
---    GuiEvents.OnHover(frame, function(hover)
+--    GuiEvents.onHover(frame, function(hover)
 --       isHover = hover
 --       print('#'..a..' OnHover ', hover)
 --       update()
 --    end)
 
---    GuiEvents.OnDown(frame, function()
+--    GuiEvents.onDown(frame, function()
 --       print('#'..a..' MouseDown')
 --       blink(Color3.fromRGB(0, 0, 255))
 --       return propagate
 --    end)
 
---    GuiEvents.OnUp(frame, function()
+--    GuiEvents.onUp(frame, function()
 --       print('#'..a..' MouseUp')
 --       blink(Color3.fromRGB(0, 255, 255))
 --       return propagate
 --    end)
 
---    GuiEvents.OnClick(frame, function()
+--    GuiEvents.onClick(frame, function()
 --       print('#'..a..' Click')
 --       blink(Color3.fromRGB(255, 0, 0))
 --       return propagate
 --    end)
 
 --    local startPos
---    GuiEvents.OnDrag(frame, function(event, start, pos, delta)
+--    GuiEvents.onDrag(frame, function(event, start, pos, delta)
 --       print('#'..a..' Drag', event, start, pos, delta)
 --       if event == 'start' then 
 --          startPos = Vector2.new(frame.Position.X.Offset, frame.Position.Y.Offset)

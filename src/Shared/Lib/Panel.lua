@@ -3,25 +3,29 @@ local Player               = Players.LocalPlayer or Players:GetPropertyChangedSi
 local Mouse                = Player:GetMouse()
 
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
-local Misc                 = require(Lib:WaitForChild('Misc'))
-local Timer                = require(Lib:WaitForChild('Timer'))
-local Constants            = require(Lib:WaitForChild('Constants'))
-local GuiEvents            = require(Lib:WaitForChild('GuiEvents'))
-local GUIUtils             = require(Lib:WaitForChild('GUI'))
-local Scrollbar            = require(Lib:WaitForChild('Scrollbar'))
+local Misc        = require(Lib:WaitForChild("Misc"))
+local Timer       = require(Lib:WaitForChild("Timer"))
+local Popover     = require(Lib:WaitForChild("Popover"))
+local Constants   = require(Lib:WaitForChild("Constants"))
+local GuiEvents   = require(Lib:WaitForChild("GuiEvents"))
+local GUIUtils    = require(Lib:WaitForChild("GUIUtils"))
+local Scrollbar   = require(Lib:WaitForChild("Scrollbar"))
 
-local MIN_WIDTH      = 250
-local MAX_WIDTH      = 500
-local MIN_HEIGHT     = 60
-local HEADER_HEIGHT  = 30
-local SNAP_TOLERANCE = 15
+local MIN_WIDTH         = 250
+local MAX_WIDTH         = 500
+local MIN_HEIGHT        = 60
+local HEADER_HEIGHT     = 30
+local SNAP_TOLERANCE    = 15
+local ACTION_SIZE       = 10
+local ACTION_PADDING    = 5
+local ACTION_FRAME_SIZE = ACTION_SIZE + ACTION_PADDING*2
+local ACTION_MARGIN     = (HEADER_HEIGHT-ACTION_FRAME_SIZE)/2
 
 local PANEL_ID_SEQ         = 0
 local PANEL_ZINDEX         = 0
 
--- os painéis que servem de guia para movimentação e resize
+-- the panels that serve as a guide for moving and resize
 local SNAP_PANELS = {}
-
 local PANEL_BY_ID = {}
 
 local Panel = {}
@@ -29,33 +33,36 @@ Panel.__index = Panel
 
 Panel.MIN_WIDTH = MIN_WIDTH
 
+--[[
+   The basic structure of the GUI. Can be used to create custom dashboards outside of the DAT.GUI framework
+]]
 function Panel.new()
 
    PANEL_ID_SEQ = PANEL_ID_SEQ + 1
 
    local ID = PANEL_ID_SEQ
 
-   local Frame = GUIUtils.CreateFrame()
+   local Frame = GUIUtils.createFrame()
    Frame.Name 			               = 'Panel'
    Frame.Size 			               = UDim2.new(0, 250, 0, 250)
    Frame.BackgroundTransparency     = 0.95
    Frame.ClipsDescendants           = true
    Frame.LayoutOrder                = 0
   
-   local Content = GUIUtils.CreateFrame()
+   local Content = GUIUtils.createFrame()
    Content.Name 			            = 'Content'
    Content.BackgroundTransparency   = 1
    Content.Position 			         = UDim2.new(0, 5, 0, HEADER_HEIGHT)
    Content.Size 			            = UDim2.new(1, -5, 0, -HEADER_HEIGHT)
    Content.Parent = Frame
 
-   local Header = GUIUtils.CreateFrame()
+   local Header = GUIUtils.createFrame()
    Header.Name 			            = 'Header'
    Header.BackgroundColor3          = Constants.FOLDER_COLOR
    Header.Size 			            = UDim2.new(1, 0, 0, HEADER_HEIGHT)
    Header.Parent = Frame
 
-   local Border = GUIUtils.CreateFrame()
+   local Border = GUIUtils.createFrame()
    Border.Name 			            = 'BorderBottom'
    Border.BackgroundColor3          = Constants.BORDER_COLOR
    Border.Position 			         = UDim2.new(0, 0, 1, -1)
@@ -63,13 +70,13 @@ function Panel.new()
    Border.ZIndex                    = 1
    Border.Parent = Header
 
-   local LabelText = GUIUtils.CreateLabel()
+   local LabelText = GUIUtils.createTextLabel()
    LabelText.Name                   = 'Label'
    LabelText.Position 			      = UDim2.new(0, 16, 0, 0)
    LabelText.Size 			         = UDim2.new(1, -16, 1, -1)
    LabelText.Parent = Header
 
-   local OnDestroy = Instance.new('BindableEvent')
+   local onDestroy = Instance.new('BindableEvent')
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
 
@@ -83,16 +90,17 @@ function Panel.new()
    Label.Parent   = Frame
 
    local panel =  setmetatable({
-      ['_id']            = ID,
-      ['_detached']      = false,
-      ['_atached']       = false,
-      ['_onDestroy']     = OnDestroy,
-      ['Closed']         = Closed,
-      ['Label']          = Label,
-      ['LabelText']      = LabelText,
-      ['Frame']          = Frame,
-      ['Content']        = Content,
-      ['Header']         = Header
+      ['_id']        = ID,
+      ['_detached']  = false,
+      ['_atached']   = false,
+      ['_onDestroy'] = onDestroy,
+      ['_actions']   = {},
+      ['Closed']     = Closed,
+      ['Label']      = Label,
+      ['LabelText']  = LabelText,
+      ['Frame']      = Frame,
+      ['Content']    = Content,
+      ['Header']     = Header
    }, Panel)
    
    Frame:SetAttribute('IsPanel', true)
@@ -114,14 +122,14 @@ function Panel.new()
       child:SetAttribute('LayoutOrderOnPanel_'..ID, layoutOrder)
    end))
 
-   table.insert(connections, GuiEvents.OnDown(Header, function(el, input)
+   table.insert(connections, GuiEvents.onDown(Header, function(el, input)
       if panel._detached == true then
          PANEL_ZINDEX = PANEL_ZINDEX + 1
          Frame.ZIndex = PANEL_ZINDEX
       end
    end))
    
-   table.insert(connections, GuiEvents.OnClick(Header, function()
+   table.insert(connections, GuiEvents.onClick(Header, function()
       Closed.Value = not Closed.Value
       return false
    end))
@@ -129,7 +137,7 @@ function Panel.new()
    -- On close/open
    table.insert(connections, Closed.Changed:connect(function()
       Frame:SetAttribute('IsClosed', Closed.Value)
-      panel:UpdateContentSize()
+      panel:updateContentSize()
 	end))
 
    table.insert(connections, Label.Changed:connect(function()
@@ -137,13 +145,13 @@ function Panel.new()
    end))
 
    local function updateContentSize()
-      panel:UpdateContentSize()
+      panel:updateContentSize()
    end
 
    table.insert(connections, Content.ChildAdded:Connect(updateContentSize))
    table.insert(connections, Content.ChildRemoved:Connect(updateContentSize))
 
-   panel._disconnect = Misc.DisconnectFn(connections, function()
+   panel._disconnect = Misc.disconnectFn(connections, function()
       Frame.Parent = nil
    end)
 
@@ -152,29 +160,128 @@ function Panel.new()
    return panel
 end
 
-function Panel:OnDestroy(callback)
-   return self._onDestroy.Event:Connect(callback)
-end
+--[[
+   Add an action button on the right side of the header
 
-function Panel:Destroy()
-   self._disconnect()
-   if self._detached == true then 
-      self._disconnectDetach()
+   @param config.icon         {string}       Required
+   @param config.title        {string}       Optional
+   @param config.color        {Color3}       Optional
+   @param config.colorHover   {Color3}       Optional
+   @param config.onHover      {function()}   Optional
+   @param config.onClick      {function()}   Optional
+
+   @return { frame:Frame, remove: function() }
+]]
+function Panel:addAction(config)
+
+   local frame = GUIUtils.createFrame()
+   frame.Name 			               = 'Action'
+   frame.Position 			         = UDim2.new(0, ACTION_MARGIN, 0, 0)
+   frame.Size 			               = UDim2.new(0,  ACTION_FRAME_SIZE, 0, ACTION_FRAME_SIZE)
+   frame.BackgroundTransparency     = 1
+   frame.Parent = self.Header
+
+   local icon = GUIUtils.createImageLabel(config.icon)
+   icon.Name 			            = 'Icon'
+   icon.Position 			         = UDim2.new(0, ACTION_PADDING, 0, ACTION_PADDING)
+   icon.Size 			            = UDim2.new(0, ACTION_SIZE, 0, ACTION_SIZE)
+   icon.ImageTransparency        = 0.7
+   icon.Parent = frame
+
+   local color = config.color
+   if color == nil then
+      color = Constants.LABEL_COLOR
    end
-   if self._atached == true then 
-      self._disconnectAtach()
+   local colorHover = config.colorHover
+   if colorHover == nil then
+      colorHover = color
+   end
+   icon.ImageColor3 = color
+
+   local connections = {}
+
+   local popover = nil
+   if config.title ~= nil then
+      local text = GUIUtils.createTextLabel()
+      text.BackgroundColor3         = Constants.BACKGROUND_COLOR
+      text.BackgroundTransparency   = 0
+      text.BorderSizePixel 			= 1
+      text.BorderColor3             = Constants.BORDER_COLOR
+      text.Name                     = 'Title'
+      text.TextWrapped              = true
+      text.RichText                 = true
+      text.TextXAlignment           = Enum.TextXAlignment.Center
+      text.Text                     = config.title
+
+      -- to calculate TextBounds
+      text.Parent = Constants.SCREEN_GUI
+      popover = Popover.new(frame, text.TextBounds + Vector2.new(4, 2), 'top', 0)
+      text.Parent = popover.Frame
    end
 
-   self._onDestroy:Fire()
-   PANEL_BY_ID[self._id] = nil
+   table.insert(connections, GuiEvents.onHover(frame, function(hover)
+      if hover then
+         icon.ImageColor3 = colorHover
+         icon.ImageTransparency = 0
+
+         if popover ~= nil then
+            popover:show()
+         end
+      else
+         icon.ImageColor3 = color
+         icon.ImageTransparency = 0.7
+
+         if popover ~= nil then
+            popover:hide()
+         end
+      end
+
+      if config.onHover ~= nil then
+         config.onHover(hover)
+      end
+   end))
+   
+   if config.onClick ~= nil then
+      table.insert(connections, GuiEvents.onClick(frame, function()
+         config.onClick()
+         return false
+      end))
+   end
+
+   local action
+   action = {
+      ['frame'] = frame,
+      ['remove'] = Misc.disconnectFn(connections, function()
+         frame.Parent = nil
+         local idx = table.find(self._actions, action)
+         if idx ~= nil then
+            table.remove(self._actions, idx)
+         end
+
+         if popover ~= nil then
+            popover:destroy()
+            popover = nil
+         end
+
+         self:_updateActions()
+      end)
+   }
+   table.insert(self._actions, action)
+   
+   self:_updateActions()
+
+   return action
 end
 
 --[[
-   Adciona esse panel em outro elemento. 
+   Add this panel to another element.
 
-   Ao fazer isso, o painel perde algumas características como scrollbar, redimensionamento e movimentação
+   When doing this, the panel loses some features like scrollbar, resizing and moving
+
+   @param parent {Frame}
+   @param isFixed {Bool} When true, no longer allow unpin this panel
 ]]
-function Panel:AttachTo(parent)
+function Panel:attachTo(parent, isFixed)
    if self._detached == true then 
       self._disconnectDetach()
    end
@@ -193,22 +300,7 @@ function Panel:AttachTo(parent)
    self.Content.Position               = UDim2.new(0, 5, 0, 0)
    self.LabelText.TextXAlignment       = Enum.TextXAlignment.Left
 
-   local Detach = GUIUtils.CreateFrame()
-   Detach.Name 			               = 'Detach'
-   Detach.Position 			            = UDim2.new(1, -HEADER_HEIGHT, 0, 0)
-   Detach.Size 			               = UDim2.new(0,  HEADER_HEIGHT, 0, HEADER_HEIGHT)
-   Detach.BackgroundTransparency       = 1
-   Detach.Parent = self.Header
-
-   local DetachIcon = GUIUtils.CreateImageLabel(Constants.ICON_PIN)
-   DetachIcon.Name 			            = 'Icon'
-   DetachIcon.Position 			         = UDim2.new(0, 10, 0, 10)
-   DetachIcon.Size 			            = UDim2.new(0, 10, 0, 10)
-   DetachIcon.ImageColor3              = Constants.LABEL_COLOR
-   DetachIcon.ImageTransparency        = 0.95
-   DetachIcon.Parent = Detach
-
-   local ChevronIcon = GUIUtils.CreateImageLabel(Constants.ICON_CHEVRON)
+   local ChevronIcon = GUIUtils.createImageLabel(Constants.ICON_CHEVRON)
    ChevronIcon.Name 			            = 'Chevron'
    ChevronIcon.Position 			      = UDim2.new(0, 6, 0.5, -3)
    ChevronIcon.Size 			            = UDim2.new(0, 5, 0, 5)
@@ -224,30 +316,43 @@ function Panel:AttachTo(parent)
       else
          ChevronIcon.Rotation = 90
       end
-      self:UpdateContentSize()
+      self:updateContentSize()
    end
 
    onCloseChange()
 
    table.insert(connections, self.Closed.Changed:Connect(onCloseChange))
 
-   table.insert(connections, GuiEvents.OnHover(Detach, function(hover)
-      DetachIcon.ImageTransparency = hover and 0 or 0.95
-   end))
+   if isFixed ~= true then
+      self._detachAction = self:addAction({
+         icon = Constants.ICON_PIN,
+         title = "Detach",
+         onClick = function()
+            self:detach()
+         end
+      })
+   end
 
-   table.insert(connections, GuiEvents.OnClick(Detach, function()
-      self:Detach()
-      return false
-   end))
-
-   self._disconnectAtach = Misc.DisconnectFn(connections, function()
+   self._disconnectAtach = Misc.disconnectFn(connections, function()
       self._atached        = false
       ChevronIcon.Parent   = nil
-      Detach.Parent        = nil
+
+      if self._detachAction ~= nil then
+         local action = self._detachAction
+         self._detachAction = nil
+         action.remove()
+      end
+
+      self._hasDetachIcon = false
    end)
 end
 
-function Panel:Detach(closeable)
+--[[
+   Unpin this panel from the parent element
+
+   @param closeable {bool} When true, display panel close button, if false, display panel atach button
+]]
+function Panel:detach(closeable)
    if self._atached == true then
       if closeable  ~= true then
          self._detachedFrom = self.Frame.Parent
@@ -270,7 +375,7 @@ function Panel:Detach(closeable)
    PANEL_ZINDEX = PANEL_ZINDEX + 1
    self.Frame.ZIndex = PANEL_ZINDEX
    
-   local InnerShadow = GUIUtils.CreateImageLabel('rbxassetid://6704730899')
+   local InnerShadow = GUIUtils.createImageLabel('rbxassetid://6704730899')
    InnerShadow.Name 			      = 'Shadow'
    InnerShadow.Position 		   = UDim2.new(0, 0, 1, 0)
    InnerShadow.Size 			      = UDim2.new(1, 0, 0, 20)
@@ -279,7 +384,7 @@ function Panel:Detach(closeable)
    InnerShadow.Parent = self.Header
 
    -- Resizable
-   local ResizeHandle = GUIUtils.CreateFrame()
+   local ResizeHandle = GUIUtils.createFrame()
    ResizeHandle.Name 			         = 'ResizeHandleSE'
    ResizeHandle.BackgroundTransparency = 1
    ResizeHandle.Size 			         = UDim2.new(0, 20, 0, 20)
@@ -287,7 +392,7 @@ function Panel:Detach(closeable)
    ResizeHandle.ZIndex                 = 10
    ResizeHandle.Parent = self.Frame
 
-   local ResizeIcon = GUIUtils.CreateImageLabel(Constants.ICON_RESIZE_SE)
+   local ResizeIcon = GUIUtils.createImageLabel(Constants.ICON_RESIZE_SE)
    ResizeIcon.Size               = UDim2.new(0, 11, 0, 11)
    ResizeIcon.ImageColor3        = Constants.LABEL_COLOR
    ResizeIcon.ImageTransparency  = 0.8
@@ -301,65 +406,31 @@ function Panel:Detach(closeable)
          ResizeHandle.Visible = true
       end
       
-      self:UpdateContentSize()
+      self:updateContentSize()
    end
 
    if closeable  == true then
-      local Close = GUIUtils.CreateFrame()
-      Close.Name 			            = 'Close'
-      Close.Position 			      = UDim2.new(1, -HEADER_HEIGHT, 0, 0)
-      Close.Size 			            = UDim2.new(0,  HEADER_HEIGHT, 0, HEADER_HEIGHT)
-      Close.BackgroundColor3        = Constants.CLOSE_COLOR
-      Close.BackgroundTransparency  = 1
-      Close.ZIndex                  = 2
-      Close.Parent = self.Header
-   
-      local CloseIcon = GUIUtils.CreateImageLabel(Constants.ICON_CLOSE)
-      CloseIcon.Name 			      = 'Icon'
-      CloseIcon.Position 			   = UDim2.new(0, 10, 0, 10)
-      CloseIcon.Size 			      = UDim2.new(0, 10, 0, 10)
-      CloseIcon.ImageColor3        = Constants.LABEL_COLOR
-      CloseIcon.ImageTransparency  = 0.95
-      CloseIcon.Parent = Close
-
-      table.insert(connections, GuiEvents.OnHover(Close, function(hover)
-         Close.BackgroundTransparency = hover and 0 or 1
-         CloseIcon.ImageTransparency  = hover and 0 or 0.95
-      end))
-   
-      table.insert(connections, GuiEvents.OnClick(Close, function()
-         self:Destroy()
-         return false
-      end))
+      self._closeAction = self:addAction({
+         icon  = Constants.ICON_CLOSE,
+         title = "Close",
+         colorHover = Constants.CLOSE_COLOR,
+         onClick = function()
+            self:destroy()
+         end
+      })
    end
 
    -- adiciona habilidade de reconectar-se ao lugar de origem
    local Atach
    if self._detachedFrom ~= nil then 
       local origin = self._detachedFrom
-      Atach = GUIUtils.CreateFrame()
-      Atach.Name 			            = 'Atach'
-      Atach.Position 			      = UDim2.new(1, -HEADER_HEIGHT, 0, 0)
-      Atach.Size 			            = UDim2.new(0,  HEADER_HEIGHT, 0, HEADER_HEIGHT)
-      Atach.BackgroundTransparency  = 1
-      Atach.Parent = self.Header
-   
-      local DetachIcon = GUIUtils.CreateImageLabel(Constants.ICON_PIN)
-      DetachIcon.Name 			      = 'Icon'
-      DetachIcon.Position 			   = UDim2.new(0, 10, 0, 10)
-      DetachIcon.Size 			      = UDim2.new(0, 10, 0, 10)
-      DetachIcon.ImageColor3        = Constants.LABEL_COLOR
-      DetachIcon.ImageTransparency  = 0.95
-      DetachIcon.Parent = Atach
-
-      table.insert(connections, GuiEvents.OnHover(Atach, function(hover)
-         DetachIcon.ImageTransparency = hover and 0 or 0.95
-      end))
-   
-      table.insert(connections, GuiEvents.OnClick(Atach, function()
-         self:AttachTo(origin)
-         return false
-      end))
+      self._atachAction = self:addAction({
+         icon = Constants.ICON_PIN,
+         title = "Atach",
+         onClick = function()
+            self:attachTo(origin)
+         end
+      })
 
       local width  = self.Frame.AbsoluteSize.X
       local height = self.Frame.AbsoluteSize.Y
@@ -370,11 +441,11 @@ function Panel:Detach(closeable)
          left = self.Frame.AbsolutePosition.X + ( width + 10)
       end
 
-      local top    = self.Frame.AbsolutePosition.Y + Constants.GUI_INSET
+      local top = self.Frame.AbsolutePosition.Y + Constants.GUI_INSET
 
       Timer.SetTimeout(function()
-         self:Resize(width, height)
-         self:Move(left, top)
+         self:resize(width, height)
+         self:move(left, top)
          onCloseChange()
       end, 0)
    end
@@ -392,7 +463,7 @@ function Panel:Detach(closeable)
 
    table.insert(connections, self.Closed.Changed:Connect(onCloseChange))
 
-   table.insert(connections, GuiEvents.OnDrag(self.Header, function(event, startPos, position, delta)
+   table.insert(connections, GuiEvents.onDrag(self.Header, function(event, startPos, position, delta)
       if event == 'start' then
          framePosStart = Vector2.new(self.Frame.Position.X.Offset, self.Frame.Position.Y.Offset)
 
@@ -401,7 +472,7 @@ function Panel:Detach(closeable)
 
       elseif event == 'drag' then
          local framePos = framePosStart + delta
-         self:Move(framePos.X, framePos.Y)
+         self:move(framePos.X, framePos.Y)
       end
    end, 10))
 
@@ -418,7 +489,7 @@ function Panel:Detach(closeable)
       end
    end
 
-   table.insert(connections, GuiEvents.OnHover(ResizeHandle, function(hover)
+   table.insert(connections, GuiEvents.onHover(ResizeHandle, function(hover)
       isHover = hover
 
       if hover then 
@@ -427,7 +498,7 @@ function Panel:Detach(closeable)
       updateMouseOnResize()
    end))
 
-   table.insert(connections, GuiEvents.OnDrag(ResizeHandle, function(event, startPos, position, delta)
+   table.insert(connections, GuiEvents.onDrag(ResizeHandle, function(event, startPos, position, delta)
       if event == 'start' then
          isScaling = true
          sizeStart = Vector2.new(self.Frame.Size.X.Offset, self.Frame.Size.Y.Offset)
@@ -440,27 +511,35 @@ function Panel:Detach(closeable)
 
       elseif event == 'drag' then
          local frameSize = sizeStart + delta
-         self:Resize(frameSize.X, frameSize.Y)
+         self:resize(frameSize.X, frameSize.Y)
       end
    end))
 
    table.insert(connections, Constants.SCREEN_GUI.Changed:Connect(function()
       local pos = self.Frame.AbsolutePosition
-      self:Move(pos.X, pos.Y)
+      self:move(pos.X, pos.Y)
    end))
    
    self._scrollbar = Scrollbar.new(self.Frame, self.Content, HEADER_HEIGHT)
    
-   self:UpdateContentSize()
+   self:updateContentSize()
 
-   self._disconnectDetach = Misc.DisconnectFn(connections, function()
-      self._scrollbar:Destroy()
+   self._disconnectDetach = Misc.disconnectFn(connections, function()
+      self._scrollbar:destroy()
 
       ResizeHandle.Parent     = nil
       InnerShadow.Parent      = nil
       
-      if Atach ~= nil then 
-         Atach.Parent = nil
+      if self._atachAction ~= nil then 
+         local action = self._atachAction
+         self._atachAction = nil
+         action.remove()
+      end
+
+      if self._closeAction ~= nil then 
+         local action = self._closeAction
+         self._closeAction = nil
+         action.remove()
       end
       
       if SNAP_PANELS[self] then 
@@ -468,7 +547,6 @@ function Panel:Detach(closeable)
       end
       
       self._openSize          = nil
-      
       self._detached          = false
    end)
 
@@ -476,9 +554,9 @@ function Panel:Detach(closeable)
 end
 
 --[[
-   Só permite redimensionar o painel se ele estiver separado
+   Allows you to resize the panel only if it is separated
 ]]
-function Panel:Resize(width, height)
+function Panel:resize(width, height)
    if self._detached ~= true then 
       return
    end
@@ -555,10 +633,18 @@ function Panel:Resize(width, height)
 
    self:_checkConstraints()
    self:_updateSnapInfo()
-   self:UpdateContentSize()
+   self:updateContentSize()
 end
 
-function Panel:Move(hor, vert)
+--[[
+   Allows the panel to be moved (only when it is not fixed)
+
+   @param hor  {Number|"left"|"right"|"center"} Horizontal position. If negative, consider the position from the 
+      right edge of the screen
+   @param vert {Number|"top"|"bottom"|"center"} Vertical position. If negative, consider the position from the bottom 
+      edge of the screen
+]]
+function Panel:move(hor, vert)
    if self._detached ~= true then 
       return
    end
@@ -586,6 +672,14 @@ function Panel:Move(hor, vert)
 
    local left = hor
    local top  = vert
+
+   if left < 0 then
+      left = screenGUI.AbsoluteSize.X - (width + 15) + left
+   end
+
+   if top < 0 then
+      top = screenGUI.AbsoluteSize.Y - height + top
+   end
 
    local x1 = left
    local x2 = left + width
@@ -685,8 +779,11 @@ function Panel:Move(hor, vert)
    self:_updateSnapInfo()
 end
 
-function Panel:UpdateContentSize()
-
+--[[
+   Force update of content size information. Informs parents about the content
+   update and triggers the scrollbar update
+]]
+function Panel:updateContentSize()
    Timer.Clear(self._updateContentSizeTimeout)
    self._updateContentSizeTimeout = Timer.SetTimeout(function()
       
@@ -750,7 +847,7 @@ function Panel:UpdateContentSize()
             self:_updateSnapInfo()
 
             Timer.SetTimeout(function()
-               self._scrollbar:Update()
+               self._scrollbar:update()
             end, 10)
          else
             self.Frame.Size   = UDim2.new(1, 0, 0, newHeight)
@@ -758,11 +855,73 @@ function Panel:UpdateContentSize()
 
             local parent = self:_getParentPanel()
             if parent ~= nil then 
-               parent:UpdateContentSize()
+               parent:updateContentSize()
             end
          end
       end
    end, 10)
+end
+
+--[[
+   Add a callback to be executed when this panel is destroyed
+
+   @param callback {function}
+   @return RBXScriptConnection
+]]
+function Panel:onDestroy(callback)
+   return self._onDestroy.Event:Connect(callback)
+end
+
+--[[
+   destroy this instance
+]]
+function Panel:destroy()
+   self._disconnect()
+
+   if self._detached == true then 
+      self._disconnectDetach()
+   end
+   if self._atached == true then 
+      self._disconnectAtach()
+   end
+
+   for i,action in ipairs(self._actions) do
+      action.remove()
+   end
+   self._actions = {}
+
+   self._onDestroy:Fire()
+   PANEL_BY_ID[self._id] = nil
+end
+
+--[[
+   Update header action icons
+]]
+function Panel:_updateActions()
+
+   local actions = {}
+   for i,action in ipairs(self._actions) do
+      if action ~= self._detachAction and action ~= self._atachAction and action ~= self._closeAction then
+         table.insert(actions, action)
+      end
+   end
+
+   if self._detachAction ~= nil then
+      table.insert(actions, self._detachAction)
+   elseif self._atachAction ~= nil then
+      table.insert(actions, self._atachAction)
+   end
+
+   if self._closeAction ~= nil then
+      table.insert(actions, self._closeAction)
+   end
+
+   self._actions = actions
+
+   local offset = #self._actions*ACTION_FRAME_SIZE
+   for i,action in ipairs(self._actions) do
+      action.frame.Position = UDim2.new(1, -offset + ((i-1)*ACTION_FRAME_SIZE), 0, ACTION_MARGIN)
+   end
 end
 
 function Panel:_getParentPanel()
@@ -775,9 +934,8 @@ function Panel:_getParentPanel()
    end
 end
 
-
 --[[
-   Quando o painel não está preso, verifica se o mesmo está  dentro da tela, fazendo as movimentações necessárias
+   When the panel is not stuck, it checks if it is inside the screen, making the necessary movements
 ]]
 function Panel:_checkConstraints()
    if self._detached ~= true then 
@@ -811,8 +969,7 @@ function Panel:_checkConstraints()
 end
 
 --[[
-   Para os painéis que estão soltos, atualiza sua dimensão e posição, usado para que o snap aconteça durante o move e
-   resize
+   For panels that are loose, update their dimension and position, used for snapping during move and resize
 ]]
 function Panel:_updateSnapInfo()
    local frame    = self.Frame

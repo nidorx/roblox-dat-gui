@@ -3,12 +3,12 @@ local RunService  = game:GetService("RunService")
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc        = require(Lib:WaitForChild("Misc"))
-local GUIUtils    = require(Lib:WaitForChild("GUI"))
+local GUIUtils    = require(Lib:WaitForChild("GUIUtils"))
 local Constants   = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+   local Controller, Control, DisconnectParent = GUIUtils.createControllerWrapper({
       ['Name']                 = 'NumberController',
       ['Color']                = Constants.NUMBER_COLOR
    })
@@ -40,9 +40,9 @@ local function CreateGUI()
    Step.Parent          = Controller
    Precision.Parent     = Controller
 
-   local RenderText = Misc.CreateTextNumberFn(Precision)
+   local RenderText = Misc.createTextNumberFn(Precision)
 
-   local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText =  GUIUtils.CreateInput({
+   local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText =  GUIUtils.createInput({
       ['Color']      = Constants.NUMBER_COLOR,
       ['Render']     = RenderText,
       ['Readonly']   = Readonly,
@@ -63,7 +63,7 @@ local function CreateGUI()
       end,
    })
 
-   local TextContainer = GUIUtils.CreateFrame()
+   local TextContainer = GUIUtils.createFrame()
    TextContainer.Name 			            = 'TextContainer'
    TextContainer.BackgroundTransparency   = 1
    TextContainer.Position 			         = UDim2.new(0, 0, 0, 3)
@@ -79,7 +79,7 @@ local function CreateGUI()
 
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()	
-      Precision.Value = Misc.CountDecimals(Step.Value)
+      Precision.Value = Misc.countDecimals(Step.Value)
       if Value.Value ~= nil then
          Value.Value = '0'..Value.Value
       end
@@ -97,7 +97,7 @@ local function CreateGUI()
       Value.Value = RenderText(tostring(value))
    end))
    
-   return Controller, Misc.DisconnectFn(connections, DisconnectParent, DisconnectText)
+   return Controller, Misc.disconnectFn(connections, DisconnectParent, DisconnectText)
 end
 
 -- Represents a given property of an object that is a number.

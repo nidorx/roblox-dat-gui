@@ -1,7 +1,7 @@
 
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
-local GUIUtils    = require(Lib:WaitForChild("GUI"))
+local GUIUtils    = require(Lib:WaitForChild("GUIUtils"))
 local Constants   = require(Lib:WaitForChild("Constants"))
 
 local POPOVER_SEQ = 0
@@ -9,8 +9,20 @@ local POPOVER_SEQ = 0
 local Popover = {}
 Popover.__index = Popover
 
+--[[
+
+   Popover is a tooltip-like component that allows displaying content above other screen elements. 
+   
+   Internally used in ColorController and OptionController. There are 4 popover placement options
+   ("left"|"top"|"bottom"|"right")
+
+   @param reference  {Frame} GUI object used for popover positioning reference
+   @param size       {Vector2}
+   @param position   {"left"|"top"|"bottom"|"right"} Preferred popover position.
+   @parm offset      {Number} Allows you to add a margin between the reference object and the popover
+]]
 function Popover.new(reference, size, position, offset)
-   local frame = GUIUtils.CreateFrame()
+   local frame = GUIUtils.createFrame()
    POPOVER_SEQ = POPOVER_SEQ +1
    frame.Name = 'Popover#'..POPOVER_SEQ
 
@@ -36,14 +48,21 @@ function Popover.new(reference, size, position, offset)
    }, Popover)
 end
 
-function Popover:Resize(size)
+--[[
+   @param size {Vector2}
+]]
+function Popover:resize(size)
    self.Frame.Size = UDim2.new(0, size.X, 0, size.Y)
    if self.Frame.Visible then
-      self:Show()
+      self:show()
    end
 end
 
-function Popover:Show(chevron, chevronColor)
+--[[
+   @param chevron {boolean} Show chevron
+   @param chevronColor {Color3}
+]]
+function Popover:show(chevron, chevronColor)
    local refPos = self._reference.AbsolutePosition
    local refSiz = self._reference.AbsoluteSize
    local scrSiz = Vector2.new( Constants.SCREEN_GUI.AbsoluteSize.X,  Constants.SCREEN_GUI.AbsoluteSize.Y)
@@ -117,7 +136,7 @@ function Popover:Show(chevron, chevronColor)
    if chevron == true then
       local SIZE = 10
       if self._chevron == nil then 
-         self._chevron = GUIUtils.CreateImageLabel(Constants.ICON_CHEVRON)
+         self._chevron = GUIUtils.createImageLabel(Constants.ICON_CHEVRON)
          self._chevron.Name 			= 'Chevron'         
          self._chevron.Size 			= UDim2.new(0, SIZE, 0, SIZE)
          self._chevron.ImageColor3  = Constants.LABEL_COLOR
@@ -152,11 +171,11 @@ function Popover:Show(chevron, chevronColor)
    end
 end
 
-function Popover:Hide()
+function Popover:hide()
    self.Frame.Visible = false
 end
 
-function Popover:Destroy()
+function Popover:destroy()
    self.Frame.Parent = nil
    self.Frame = nil
    self._reference = nil

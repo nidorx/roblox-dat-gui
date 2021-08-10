@@ -4,12 +4,12 @@ local UserInputService  = game:GetService("UserInputService")
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
-local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GUIUtils          = require(Lib:WaitForChild("GUIUtils"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, ControllerDisconnect = GUIUtils.CreateControllerWrapper({
+   local Controller, Control, ControllerDisconnect = GUIUtils.createControllerWrapper({
       ['Name']                 = 'NumberSliderController',
       ['Color']                = Constants.NUMBER_COLOR
    })
@@ -30,9 +30,9 @@ local function CreateGUI()
    Precision.Value   = Misc.NUMBER_PRECISION
    Precision.Parent  = Controller
 
-   local RenderText = Misc.CreateTextNumberFn(Precision)
+   local RenderText = Misc.createTextNumberFn(Precision)
 
-   local TextContainer = GUIUtils.CreateFrame()
+   local TextContainer = GUIUtils.createFrame()
    TextContainer.Name 			            = 'TextContainer'
    TextContainer.BackgroundTransparency   = 1
    TextContainer.Position 			         = UDim2.new(0.66, 3, 0, 3)
@@ -41,7 +41,7 @@ local function CreateGUI()
 
    local IsControllerActive = Instance.new('BoolValue')
 
-   local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
+   local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.createInput({
       ['Color']      = Constants.NUMBER_COLOR,
       ['Render']     = RenderText,
       ['Readonly']   = Readonly,
@@ -63,13 +63,13 @@ local function CreateGUI()
    })
    TextFrame.Parent = TextContainer
 
-   local SliderContainer = GUIUtils.CreateFrame()
+   local SliderContainer = GUIUtils.createFrame()
    SliderContainer.BackgroundTransparency = 1
    SliderContainer.Position 			      = UDim2.new(0, 0, 0, 3)
    SliderContainer.Size 			         = UDim2.new(0.66, 0, 1, -6)
    SliderContainer.Parent = Control
 
-   local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.CreateSlider({
+   local SliderFrame, SliderValue, Min, Max, Percent, SliderOnFocus, SliderOnFocusLost, SliderDisconnect = GUIUtils.createSlider({
       ['Readonly'] = Readonly
    })
    SliderFrame.Parent = SliderContainer
@@ -89,7 +89,7 @@ local function CreateGUI()
    
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()
-      Precision.Value = Misc.CountDecimals(Step.Value);
+      Precision.Value = Misc.countDecimals(Step.Value);
       if TextValue.Value ~= nil then
          TextValue.Value = '0'..TextValue.Value
       end
@@ -127,7 +127,7 @@ local function CreateGUI()
    end))
 
    return Controller, SliderValue, ValueIn, Min, Max, Step, 
-      Misc.DisconnectFn(connections, ControllerDisconnect, TextDisconnect, SliderDisconnect)
+      Misc.disconnectFn(connections, ControllerDisconnect, TextDisconnect, SliderDisconnect)
 end
 
 -- Number slider controller

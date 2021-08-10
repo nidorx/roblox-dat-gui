@@ -3,7 +3,7 @@ local RunService  = game:GetService("RunService")
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc        = require(Lib:WaitForChild("Misc"))
-local GUIUtils    = require(Lib:WaitForChild("GUI"))
+local GUIUtils    = require(Lib:WaitForChild("GUIUtils"))
 local Constants   = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI(isMultiline)
@@ -13,20 +13,20 @@ local function CreateGUI(isMultiline)
       Height = 120
    end
 
-   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+   local Controller, Control, DisconnectParent = GUIUtils.createControllerWrapper({
       ['Name']    = 'StringController',
       ['Color']   = Constants.STRING_COLOR,
       ['Height']  = Height
    })
 
-   local TextContainer = GUIUtils.CreateFrame()
+   local TextContainer = GUIUtils.createFrame()
    TextContainer.Name 			            = 'TextContainer'
    TextContainer.BackgroundTransparency   = 1
    TextContainer.Position 			         = UDim2.new(0, 0, 0, 3)
    TextContainer.Size 			            = UDim2.new(1, 0, 1, -6)
    TextContainer.Parent = Control
 
-   local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText = GUIUtils.CreateInput({
+   local Value, TextFrame, OnFocused, OnFocusLost, DisconnectText = GUIUtils.createInput({
       ['Color']       = Constants.STRING_COLOR,
       ['MultiLine']   = isMultiline,
       ['Readonly']    = Controller:WaitForChild('Readonly')
@@ -39,7 +39,7 @@ local function CreateGUI(isMultiline)
 
    local connections = {}
    
-   return Controller, Misc.DisconnectFn(connections, DisconnectParent, DisconnectText)
+   return Controller, Misc.disconnectFn(connections, DisconnectParent, DisconnectText)
 end
 
 -- Provides a text input to alter the string property of an object.

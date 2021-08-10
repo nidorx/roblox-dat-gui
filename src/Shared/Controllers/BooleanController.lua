@@ -5,13 +5,13 @@ local UserInputService  = game:GetService("UserInputService")
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
-local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GUIUtils          = require(Lib:WaitForChild("GUIUtils"))
 local GuiEvents         = require(Lib:WaitForChild("GuiEvents"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+   local Controller, Control, DisconnectParent = GUIUtils.createControllerWrapper({
       ['Name']  = 'BooleanController',
       ['Color'] = Constants.BOOLEAN_COLOR
    })
@@ -23,7 +23,7 @@ local function CreateGUI()
    Value.Value    = false
    Value.Parent   = Controller
 
-   local Checkbox = GUIUtils.CreateFrame()
+   local Checkbox = GUIUtils.createFrame()
    Checkbox.Name 			            = "Checkbox"
    Checkbox.BackgroundColor3        = Constants.CHECKBOX_COLOR_OFF
    Checkbox.BackgroundTransparency  = 0
@@ -31,7 +31,7 @@ local function CreateGUI()
    Checkbox.Size 			            = UDim2.new(0, 23, 1, -6)
    Checkbox.Parent = Control
 
-   local Check = GUIUtils.CreateImageLabel(Constants.ICON_CHECKMARK)
+   local Check = GUIUtils.createImageLabel(Constants.ICON_CHECKMARK)
    Check.Name 			            = "Check"
    Check.ImageColor3             = Constants.CHECKBOX_COLOR_IMAGE
    Check.Parent = Checkbox
@@ -62,17 +62,17 @@ local function CreateGUI()
       updateCheckbox()
    end))
 
-   table.insert(connections, GuiEvents.OnHover(Controller, function(hover)
+   table.insert(connections, GuiEvents.onHover(Controller, function(hover)
       isHover = hover
       updateCheckbox()
    end))
    
-   table.insert(connections, GuiEvents.OnClick(Controller, function(el, input)
+   table.insert(connections, GuiEvents.onClick(Controller, function(el, input)
       Value.Value = not Value.Value
       return false
    end))
 
-   return Controller, Misc.DisconnectFn(connections, DisconnectParent)
+   return Controller, Misc.disconnectFn(connections, DisconnectParent)
 end
 
 -- Provides a checkbox input to alter the boolean property of an object.

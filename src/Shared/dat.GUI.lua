@@ -1,5 +1,5 @@
 --[[
-   Roblox-dat.GUI v1.2.2 [2021-04-10 02:50]
+   Roblox-dat.GUI v1.2.4 [2021-08-10 02:02]
 
    A lightweight graphical user interface and controller library. 
    
@@ -43,7 +43,7 @@ local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Panel          = require(Lib:WaitForChild("Panel"))
 local Popover        = require(Lib:WaitForChild("Popover"))
 local Scrollbar      = require(Lib:WaitForChild("Scrollbar"))
-local GUIUtils       = require(Lib:WaitForChild("GUI"))
+local GUIUtils       = require(Lib:WaitForChild("GUIUtils"))
 local GuiEvents      = require(Lib:WaitForChild("GuiEvents"))
 local Constants      = require(Lib:WaitForChild("Constants"))
 
@@ -60,14 +60,193 @@ local NumberSliderController	= require(Controllers:WaitForChild("NumberSliderCon
 local Vector3Controller			= require(Controllers:WaitForChild("Vector3Controller"))
 local Vector3SliderController	= require(Controllers:WaitForChild("Vector3SliderController"))
 
--- @TODO: create controllers for the most used classes
--- https://developer.roblox.com/en-us/api-reference/data-types
--- https://roblox.fandom.com/wiki/List_of_classes_by_category
-
--- A lightweight controller library for Roblox. It allows you to easily 
--- manipulate variables and fire functions on the fly.
 local DatGUI = {}
 DatGUI.__index = DatGUI
+
+-- expose the lib
+DatGUI.Lib = {
+   Panel       = Panel, 
+   Popover     = Popover,
+   Scrollbar   = Scrollbar,
+   GUIUtils    = GUIUtils,
+   GuiEvents   = GuiEvents,
+   Constants   = Constants
+}
+
+local function configureController(gui, controller, property)
+
+   table.insert(gui.children, controller)
+   
+   local frame       = controller.frame
+   frame.Name 		   = property
+   controller.name   = property
+   
+   local labelText      = frame:WaitForChild("LabelText")
+   local labelVisible   = frame:WaitForChild("LabelVisible")
+
+   local OnRemove = Instance.new('BindableEvent')
+
+   local oldRemoveFn
+
+   -- allows to be informed when the controller is removed
+   controller.onRemove = function(callback)
+      -- changes the behavior of the original remove from the controller
+      if oldRemoveFn == nil then
+         oldRemoveFn = controller.remove
+         controller.remove = function()
+            if controller._is_removing_parent then
+               return
+            end
+            OnRemove:Fire()
+   
+            oldRemoveFn()
+         end
+      end
+
+      return OnRemove.Event:Connect(callback)
+   end
+   
+   -- show/hide label
+   controller.label = function(visible)
+      labelVisible.Value = visible ~= false
+      return controller
+   end
+   
+   -- Sets the name of the controller
+   if type(controller.name) ~= 'function' then  
+      local labelValue 	   = frame:WaitForChild("Label")
+      labelValue.Value     = property
+
+      controller.name  = function(name)
+         labelValue.Value = name
+         return controller
+      end
+   end
+
+   -- Add a help box when the cursor is positioned over the controller
+   local helpPopover
+   local helpText
+   local helpTitle
+   function controller.help(text)
+      if helpPopover == nil then
+         helpPopover = Popover.new(frame, Vector2.new(200, 60), 'left', 3)
+         helpPopover.Frame.BorderColor3      = Constants.LABEL_COLOR
+         helpPopover.Frame.BorderSizePixel   = 1
+         helpPopover.Frame.BackgroundTransparency = 0
+
+         local helpContent = GUIUtils.createFrame()
+         helpContent.Name     = "Content"
+         helpContent.Size 	   = UDim2.new(1, 0, 1, 0)
+         helpContent.ClipsDescendants  = true
+         helpContent.Parent   = helpPopover.Frame
+
+         local helpContentInner = GUIUtils.createFrame()
+         helpContentInner.Name     = "Inner"
+         helpContentInner.Parent   = helpContent
+
+         helpTitle = GUIUtils.createTextLabel()
+         helpTitle.Name       = 'Title'
+         helpTitle.TextColor3 = Constants.NUMBER_COLOR
+         helpTitle.Size 	   = UDim2.new(1, -6, 0, 16)
+         helpTitle.Position   = UDim2.new(0, 3, 0, 0)
+         helpTitle.Parent = helpContentInner
+
+         helpText = GUIUtils.createTextLabel()
+         helpText.Name        = 'Text'
+         helpText.TextWrapped = true
+         helpText.RichText    = true
+         helpText.Size 	      = UDim2.new(1, -6, 1, 0)
+         helpText.Position    = UDim2.new(0, 3, 0, 16)
+         helpText.Parent = helpContentInner
+        
+         local scrollbar  = Scrollbar.new(helpContent, helpContentInner, 0)
+
+         local isPopoverHover = false
+         local isControllerHover = false
+
+         local function updatePopover()
+            if isControllerHover or isPopoverHover then
+               helpContentInner.Size = UDim2.new(1, 0, 0, helpText.TextBounds.Y + 16)
+               helpText.Size = UDim2.new(1, 0, 1, -16)
+
+               helpTitle.Text = labelText.Text
+               scrollbar:update()
+               helpPopover:show(true, Constants.LABEL_COLOR)
+            else
+               helpPopover:hide()
+            end
+         end
+
+         local cancelOnEnter = GuiEvents.onEnter(frame, function(hover)
+            isControllerHover = hover
+            updatePopover()
+         end)
+
+         local cancelOnEnter = GuiEvents.onHover(helpPopover.Frame, function(hover)
+            isPopoverHover = hover
+            updatePopover()
+         end)
+
+         controller.onRemove(function()
+            cancelOnEnter()
+            scrollbar:destroy()
+            helpPopover:destroy()
+         end)
+      end
+
+      helpText.Text = text         
+      
+      return controller
+   end
+   
+   frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
+   
+   local onHoverCancel = GuiEvents.onHover(frame, function(hover)
+      if hover then
+         frame.BackgroundColor3 = Constants.BACKGROUND_COLOR_HOVER
+      else
+         frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
+      end
+   end)
+   controller.onRemove(function()
+      onHoverCancel()
+   end)
+   
+   -- adds readonly/disabled method
+   local Readonly = frame:WaitForChild("Readonly")
+   Readonly.Changed:Connect(function(isReadonly)
+      if labelText ~= nil then
+         if isReadonly then
+            local lineThrough = Instance.new('Frame')
+            lineThrough.Size                    = UDim2.new(0, labelText.TextBounds.X, 0, 1)
+            lineThrough.Position                = UDim2.new(0, 0, 0.5, 0)
+            lineThrough.BackgroundColor3        = Constants.LABEL_COLOR_DISABLED
+            lineThrough.BackgroundTransparency  = 0.4
+            lineThrough.BorderSizePixel         = 0
+            lineThrough.Name                    = "LineThrough"
+            lineThrough.Parent = labelText
+            
+            labelText.TextColor3 = Constants.LABEL_COLOR_DISABLED					
+         else
+            labelText.TextColor3 = Constants.LABEL_COLOR					
+            if labelText:FindFirstChild("LineThrough") ~= nil then
+               labelText:FindFirstChild("LineThrough").Parent = nil
+            end
+         end
+      end
+   end)
+
+   -- Disable editing of values by the controller
+   controller.readonly = function(value)
+      if value == nil then
+         value = true
+      end
+      Readonly.Value = value
+      return controller
+   end
+   
+   return controller
+end
 
 --[[
    Constructor, Example: "local gui = dat.GUI.new({name = 'My GUI'})"
@@ -75,10 +254,11 @@ DatGUI.__index = DatGUI
    Params:
       [params]             Object		
       [params.name]		   String			The name of this GUI.
-      [params.load]		   Object			JSON object representing the saved state of this GUI.
       [params.parent]		dat.gui.GUI		The GUI I'm nested in.
       [params.closed]		Boolean	false	If true, starts closed
-      [params.closeable]	Boolean	false	If false the panel can be moved
+      [params.width]		   Number	      The initial width of the GUI
+      [params.closeable]	Boolean	false	If true, this GUI can be permanently closed
+      [params.fixed]	      Boolean	false	If true, this folder cannot be unpinned from the parent.
 ]]
 function DatGUI.new(params)
 	
@@ -92,7 +272,7 @@ function DatGUI.new(params)
    end
 
 	local gui = {
-		['name'] 		= name,
+		['_name'] 		= name,
 		['isGui'] 		= true,
 		['parent'] 		= params.parent,
 		['children']   = {}
@@ -106,191 +286,22 @@ function DatGUI.new(params)
    local panel = Panel.new()
    gui.Panel      = panel
    gui.Content    = panel.Content
-   panel.Label.Value = gui.name
+   panel.Label.Value = gui._name
 
-   local panelOnDestroy = panel:OnDestroy(function()
+   local guiOnRemove    = Instance.new('BindableEvent')
+   local panelOnDestroy = panel:onDestroy(function()
       gui.remove()
    end)
 	
 	if gui.parent == nil then
-      panel:Detach(params.closeable)
-      panel:Move(Constants.SCREEN_GUI.AbsoluteSize.X-(width + 15), 0)
-      panel:Resize(width, Constants.SCREEN_GUI.AbsoluteSize.Y)
-      panel.Frame.Name = gui.name
+      panel:detach(params.closeable)
+      panel:move(Constants.SCREEN_GUI.AbsoluteSize.X-(width + 15), 0)
+      panel:resize(width, Constants.SCREEN_GUI.AbsoluteSize.Y)
+      panel.Frame.Name = gui._name
 	else	
-		panel.Frame.Name = gui.parent.name.."_"..gui.name
-      panel:AttachTo(gui.parent.Content)
+		panel.Frame.Name = gui.parent._name.."_"..gui._name
+      panel:attachTo(gui.parent.Content, params.fixed)
 	end
-
-   local function configureController(controller, property)
-
-      table.insert(gui.children, controller)
-		
-		local frame       = controller.frame
-		frame.Name 		   = property
-		controller.name   = property
-      
-      local labelText      = frame:WaitForChild("LabelText")
-      local labelVisible   = frame:WaitForChild("LabelVisible")
-      local OnRemove       = Instance.new('BindableEvent')
-
-      local oldRemoveFn
-
-      -- allows to be informed when the controller is removed
-      controller.onRemove = function(callback)
-         -- changes the behavior of the original remove from the controller
-         if oldRemoveFn == nil then
-            oldRemoveFn = controller.remove
-            controller.remove = function()
-               if controller._is_removing_parent then
-                  return
-               end
-               OnRemove:Fire()
-      
-               oldRemoveFn()
-            end
-         end
-
-         return OnRemove.Event:Connect(callback)
-      end
-      
-      -- show/hide label
-      controller.label = function(visible)
-         labelVisible.Value = visible ~= false
-         return controller
-      end
-      
-      -- Sets the name of the controller
-      if type(controller.name) ~= 'function' then  
-         local labelValue 	   = frame:WaitForChild("Label")
-         labelValue.Value     = property
-
-         function controller.name(name)
-            labelValue.Value = name
-            return controller
-         end
-      end
-
-      -- help text
-      local helpPopover
-      local helpText
-      local helpTitle
-      function controller.help(text)
-         if helpPopover == nil then
-            helpPopover = Popover.new(frame, Vector2.new(200, 60), 'left', 3)
-            helpPopover.Frame.BorderColor3      = Constants.LABEL_COLOR
-            helpPopover.Frame.BorderSizePixel   = 1
-            helpPopover.Frame.BackgroundTransparency = 0
-
-            local helpContent = GUIUtils.CreateFrame()
-            helpContent.Name     = "Content"
-            helpContent.Size 	   = UDim2.new(1, 0, 1, 0)
-            helpContent.ClipsDescendants  = true
-            helpContent.Parent   = helpPopover.Frame
-
-            local helpContentInner = GUIUtils.CreateFrame()
-            helpContentInner.Name     = "Inner"
-            helpContentInner.Parent   = helpContent
-
-            helpTitle = GUIUtils.CreateLabel()
-            helpTitle.Name       = 'Title'
-            helpTitle.TextColor3 = Constants.NUMBER_COLOR
-            helpTitle.Size 	   = UDim2.new(1, -6, 0, 16)
-            helpTitle.Position   = UDim2.new(0, 3, 0, 0)
-            helpTitle.Parent = helpContentInner
-
-            helpText = GUIUtils.CreateLabel()
-            helpText.Name        = 'Text'
-            helpText.TextWrapped = true
-            helpText.RichText    = true
-            helpText.Size 	      = UDim2.new(1, -6, 1, 0)
-            helpText.Position    = UDim2.new(0, 3, 0, 16)
-            helpText.Parent = helpContentInner
-           
-            local scrollbar  = Scrollbar.new(helpContent, helpContentInner, 0)
-
-            local isPopoverHover = false
-            local isControllerHover = false
-
-            local function updatePopover()
-               if isControllerHover or isPopoverHover then
-                  helpContentInner.Size = UDim2.new(1, 0, 0, helpText.TextBounds.Y + 16)
-                  helpText.Size = UDim2.new(1, 0, 1, -16)
-
-                  helpTitle.Text = labelText.Text
-                  scrollbar:Update()
-                  helpPopover:Show(true, Constants.LABEL_COLOR)
-               else
-                  helpPopover:Hide()
-               end
-            end
-
-            local cancelOnEnter = GuiEvents.OnEnter(frame, function(hover)
-               isControllerHover = hover
-               updatePopover()
-            end)
-
-            local cancelOnEnter = GuiEvents.OnHover(helpPopover.Frame, function(hover)
-               isPopoverHover = hover
-               updatePopover()
-            end)
-
-            controller.onRemove(function()
-               cancelOnEnter()
-               scrollbar:Destroy()
-               helpPopover:Destroy()
-            end)
-         end
-
-         helpText.Text = text         
-         
-         return controller
-      end
-		
-      frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
-      GuiEvents.OnHover(frame, function(hover)
-         if hover then
-            frame.BackgroundColor3 = Constants.BACKGROUND_COLOR_HOVER
-         else
-            frame.BackgroundColor3 = Constants.BACKGROUND_COLOR
-         end
-      end)
-		
-		-- adds readonly/disabled method
-      local Readonly = frame:WaitForChild("Readonly")
-      
-      Readonly.Changed:Connect(function(isReadonly)
-         if labelText ~= nil then
-				if isReadonly then
-					local lineThrough = Instance.new('Frame')
-					lineThrough.Size                    = UDim2.new(0, labelText.TextBounds.X, 0, 1)
-					lineThrough.Position                = UDim2.new(0, 0, 0.5, 0)
-					lineThrough.BackgroundColor3        = Constants.LABEL_COLOR_DISABLED
-					lineThrough.BackgroundTransparency  = 0.4
-					lineThrough.BorderSizePixel         = 0
-					lineThrough.Name                    = "LineThrough"
-					lineThrough.Parent = labelText
-					
-					labelText.TextColor3 = Constants.LABEL_COLOR_DISABLED					
-				else
-					labelText.TextColor3 = Constants.LABEL_COLOR					
-					if labelText:FindFirstChild("LineThrough") ~= nil then
-						labelText:FindFirstChild("LineThrough").Parent = nil
-					end
-				end
-			end
-      end)
-
-		controller.readonly = function(value)
-			if value == nil then
-				value = true
-			end
-         Readonly.Value = value
-			return controller
-		end
-      
-		return controller
-   end
 
 	--[[
       Adds a new Controller to the GUI. The type of controller created is inferred from the 
@@ -382,35 +393,41 @@ function DatGUI.new(params)
 			return error("It was not possible to identify the controller builder, check the parameters")
 		end
 		
-		return configureController(controller, property)
+		return configureController(gui, controller, property)
 	end
 
    --[[
-      Adiciona um elemento personalizado
+      Allows creation of custom controllers
 
-      @param name (string)    O label do controller
-      @param config (object)  As configurações desse controller
+      @param name {string} The name of the controller
+      @param config {object} The settings of this controller
          {
-            Frame    = Frame,
-            Color    = Color3,
-            OnRemove = function
-            Height   = number,
-            Methods  = { [Name:String] => function }
+            frame    = Frame,       The content that will be presented in the controller
+            color    = Color3,      The color of the controller's side edge
+            height   = number,      the height of the content
+            onRemove = function     Invoked when controller is destroyed
+            methods  = {            Allows you to add custom methods that can be invoked by the instance
+               [Name:String] => function 
+            } 
          }
    ]]
    function gui.addCustom(name, config) 
-      return configureController(CustomController(gui, name, config), name)
+      return configureController(gui, CustomController(gui, name, config), name)
    end
 
    --[[
-      Adiciona uma imagem
+      Add a control that displays an image.
+
+      @param assetId {string}
+      @param height {number}
+      @return Controller
    ]]
    function gui.addLogo(assetId, height) 
       local frame = Instance.new('Frame')
       frame.BorderSizePixel         = 0
       frame.BackgroundTransparency  = 1
 
-      local image = GUIUtils.CreateImageLabel(assetId)
+      local image = GUIUtils.createImageLabel(assetId)
       image.Name 			= 'Logo'
       image.Position 	= UDim2.new(0, 0, 0, 0)
       image.Size 			= UDim2.new(1, 0, 1, 0)
@@ -418,8 +435,8 @@ function DatGUI.new(params)
       image.Parent = frame
 
       local controller = gui.addCustom(assetId, {
-         Frame = frame,
-         Height = height
+         frame = frame,
+         height = height
       }) 
       controller.label(false)
 
@@ -436,29 +453,29 @@ function DatGUI.new(params)
       Error:
          if this GUI already has a folder by the specified name
 	]]
-	function gui.addFolder(name)
-		
-		-- We have to prevent collisions on names in order to have a key 
-		-- by which to remember saved values (@TODO Future implementation, save as JSON)
-		for index = 1, #gui.children do
-			local child = gui.children[index]
-			if child.isGui and child.name == name then
-				error("You already have a folder in this GUI by the name \""..name.."\"");
-			end
-		end
-		
-		local folder = DatGUI.new({
-			name     = name, 
-			parent   = gui
-		})
-		
+	function gui.addFolder(name, params)
+      if params == nil then
+         params = {}
+      end
+      params.name = name
+      params.parent = gui
+
+		local folder = DatGUI.new(params)
 		table.insert(gui.children, folder)
-		
 		return folder
 	end	
+
+   --[[
+      allows to be informed when the gui is removed
+
+      @return RBXScriptConnection
+   ]]
+   function gui.onRemove(callback)
+      return guiOnRemove.Event:Connect(callback)
+   end
 	
 	--[[
-	   Removes the GUI from the game and unbinds all event listeners.
+	   Removes the GUI and unbinds all event listeners.
 	]]
 	function gui.remove()
       
@@ -479,10 +496,12 @@ function DatGUI.new(params)
 		end
 
       panelOnDestroy:Disconnect()
-      gui.Panel:Destroy()
+      gui.Panel:destroy()
 		
 		-- finally
 		gui = nil
+
+      guiOnRemove:Fire()
 	end
 	
 	--[[
@@ -528,20 +547,40 @@ function DatGUI.new(params)
 	end
 	
    --[[
-      Permite redimensionar um root
+      Allows to resize the gui. Only applicable when parent==nil or is unpinned from parent
+
+      @param width {number}
+      @param height {number}
    ]]
 	function gui.resize(width, height)
-		gui.Panel:Resize(width, height)
+		gui.Panel:resize(width, height)
 		return gui
 	end
 
    --[[
-      Atualiza a posição da instancia
+      Updates the position of the instance. Only applicable when parent==nil or is unpinned from parent
+
+      @param hor  {number|"left"|"right"|"center"} If negative, consider the position from the 
+         right edge of the screen
+      @param vert {number|"top"|"bottom"|"center"} If negative, consider the position from the bottom 
+         edge of the screen
    ]]
    function gui.move(hor, vert)
-      gui.Panel:Move(hor, vert)
+      gui.Panel:move(hor, vert)
 		return gui
 	end
+
+   -- Sets the name of the gui
+   function  gui.name(name)
+      panel.Label.Value = name
+      return gui     
+   end
+
+   -- Add a action icon
+   -- @see Panel:addAction
+   function gui.action(config)
+      return panel:addAction(config)
+   end
 
    if params.closed == true then 
       gui.close()

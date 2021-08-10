@@ -5,7 +5,7 @@ local UserInputService  = game:GetService("UserInputService")
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
 local Popover           = require(Lib:WaitForChild("Popover"))
-local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GUIUtils          = require(Lib:WaitForChild("GUIUtils"))
 local GuiEvents         = require(Lib:WaitForChild("GuiEvents"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
@@ -13,7 +13,7 @@ local WHITE = Color3.fromRGB(255, 255, 255)
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+   local Controller, Control, DisconnectParent = GUIUtils.createControllerWrapper({
       ['Name']                 = 'ColorController',
       ['Color']                = Constants.BACKGROUND_COLOR
    })
@@ -47,7 +47,7 @@ local function CreateGUI()
       if string.len(value) == 0 then
          return '#000000'
       else
-         local color = Misc.Color3FromString(value)
+         local color = Misc.color3FromString(value)
          if color == nil then
             -- invalid color
             return '#000000'
@@ -58,7 +58,7 @@ local function CreateGUI()
       end
    end
 
-   local TextValue, TextFrame, OnFocused, OnFocusLost, DisconnectText = GUIUtils.CreateInput({
+   local TextValue, TextFrame, OnFocused, OnFocusLost, DisconnectText = GUIUtils.createInput({
       ['Color']         = Constants.NUMBER_COLOR,
       ['Active']        = IsTextActive,
       ['ChangeColors']  = false,
@@ -79,7 +79,7 @@ local function CreateGUI()
    Text.Size 			            = UDim2.new(1, 0, 1, 0)
    Text.TextXAlignment           = Enum.TextXAlignment.Center
 
-   local Selector = GUIUtils.CreateFrame()
+   local Selector = GUIUtils.createFrame()
    Selector.Name 			            = "Selector"
    Selector.BackgroundColor3        = Constants.BACKGROUND_COLOR_HOVER
    Selector.BorderColor3            = Constants.BACKGROUND_COLOR_HOVER
@@ -87,7 +87,7 @@ local function CreateGUI()
    Selector.Position 			      = UDim2.new(0, 0, 0, 0)
    Selector.Size 			            = UDim2.new(0, 122, 0, 102)
 
-   local HueSelector = GUIUtils.CreateFrame()
+   local HueSelector = GUIUtils.createFrame()
    HueSelector.Name 			            = "Hue"
    HueSelector.BorderColor3            = Constants.BORDER_COLOR_2
    HueSelector.BorderSizePixel 			= 1
@@ -95,7 +95,7 @@ local function CreateGUI()
    HueSelector.Size 			            = UDim2.new(0, 15, 0, 100)
    HueSelector.Parent = Selector
 
-   local HueSaturationContainer = GUIUtils.CreateFrame()
+   local HueSaturationContainer = GUIUtils.createFrame()
    HueSaturationContainer.Name 			      = "SaturationContainer"
    HueSaturationContainer.BackgroundColor3   = WHITE
    HueSaturationContainer.Parent = HueSelector
@@ -119,7 +119,7 @@ local function CreateGUI()
    })  
    HueSelectorSaturation.Parent   = HueSaturationContainer
 
-   local HueKnob = GUIUtils.CreateFrame()
+   local HueKnob = GUIUtils.createFrame()
    HueKnob.Name 			            = "Knob"
    HueKnob.BackgroundColor3         = WHITE
    HueKnob.BorderColor3             = Constants.BORDER_COLOR_2
@@ -129,7 +129,7 @@ local function CreateGUI()
    HueKnob.ZIndex                   = 2
    HueKnob.Parent = HueSelector
 
-   local SatLumSelector = GUIUtils.CreateFrame()
+   local SatLumSelector = GUIUtils.createFrame()
    SatLumSelector.Name 			            = "SatLum"
    SatLumSelector.BackgroundColor3        = WHITE
    SatLumSelector.BorderColor3            = Constants.BORDER_COLOR_2
@@ -139,7 +139,7 @@ local function CreateGUI()
    SatLumSelector.ZIndex                  = 2
    SatLumSelector.Parent = Selector
 
-   local Brightness = GUIUtils.CreateImageLabel('rbxassetid://5787992121')
+   local Brightness = GUIUtils.createImageLabel('rbxassetid://5787992121')
    Brightness.Name 			            = "Brightness"
    Brightness.BackgroundColor3         = WHITE
    Brightness.BorderColor3             = Color3.fromRGB(27, 42, 53)
@@ -150,7 +150,7 @@ local function CreateGUI()
    Brightness.ImageColor3              = WHITE
    Brightness.Parent = SatLumSelector
 
-   local SaturationImage = GUIUtils.CreateImageLabel('rbxassetid://5787998939')
+   local SaturationImage = GUIUtils.createImageLabel('rbxassetid://5787998939')
    SaturationImage.Name 			         = "Saturation"
    SaturationImage.BackgroundColor3       = WHITE
    SaturationImage.BorderColor3           = Color3.fromRGB(27, 42, 53)
@@ -163,7 +163,7 @@ local function CreateGUI()
    SaturationImage.ImageColor3            = Color3.fromRGB(255, 0, 0)
    SaturationImage.Parent = SatLumSelector
 
-   local SatLumKnob = GUIUtils.CreateFrame()
+   local SatLumKnob = GUIUtils.createFrame()
    SatLumKnob.Name 			            = "Knob"
    SatLumKnob.BackgroundColor3         = Color3.fromRGB(255, 3, 7)
    SatLumKnob.BorderColor3             = WHITE
@@ -232,7 +232,7 @@ local function CreateGUI()
       ignoreUpdateColorValue = false
       
       SatLumKnob.Position 			   = UDim2.new(sat, -5, 1-lum , -5)
-      SatLumKnob.BorderColor3 		= Misc.BestContrast(Value.Value)	
+      SatLumKnob.BorderColor3 		= Misc.bestContrast(Value.Value)	
       SatLumKnob.BackgroundColor3 	= Value.Value	
    end
 
@@ -242,16 +242,16 @@ local function CreateGUI()
    -- Checks the selector's visibility
    local function checkVisibility()
       if textFocused or Readonly.Value then
-         popover:Hide()
+         popover:hide()
       elseif controlHover or selectorHover or hueHover or satLumHover or hueMouseDown  or satLumMouseDown then
-         popover:Show()
+         popover:show()
       else
-         popover:Hide()
+         popover:hide()
       end
    end
 
    local function parseHueMouse(input)
-      local posY 		= input.Position.Y
+      local posY 		= input.Position.Y - Constants.GUI_INSET
       local absSizeY = HueSelector.AbsoluteSize.Y		
       local absPosY 	= HueSelector.AbsolutePosition.Y
       
@@ -283,7 +283,7 @@ local function CreateGUI()
       Saturation.Value = math.floor(240 * percentX + 0.5)
       
       -- Luminance
-      local posY 		= input.Position.Y		
+      local posY 		= input.Position.Y - Constants.GUI_INSET
       local absPosY 	= SatLumSelector.AbsolutePosition.Y	
       local absSizeY = SatLumSelector.AbsoluteSize.Y		
       local percentY	= (posY - absPosY)/absSizeY
@@ -300,7 +300,7 @@ local function CreateGUI()
    local function updateTextColor()
       local color = Value.Value
 
-      Text.TextColor3               = Misc.BestContrast(color)
+      Text.TextColor3               = Misc.bestContrast(color)
       TextFake.TextColor3           = Text.TextColor3
       BorderLeft.BackgroundColor3   = color
       TextFrame.BackgroundColor3    = color
@@ -318,7 +318,7 @@ local function CreateGUI()
    end))
 
    table.insert(connections, TextValue.Changed:Connect(function()
-      local color = Misc.Color3FromString(TextValue.Value)
+      local color = Misc.color3FromString(TextValue.Value)
       if color == nil then
          color = Color3.fromRGB(0, 0, 0)
       end
@@ -357,27 +357,27 @@ local function CreateGUI()
       updateColorValue()
    end))
 
-   table.insert(connections, GuiEvents.OnHover(TextFrame, function(hover)
+   table.insert(connections, GuiEvents.onHover(TextFrame, function(hover)
       controlHover = hover
       checkVisibility()
    end))
 
-   table.insert(connections, GuiEvents.OnHover(popover.Frame, function(hover)
+   table.insert(connections, GuiEvents.onHover(popover.Frame, function(hover)
       selectorHover = hover
       checkVisibility()
    end))
 
-   table.insert(connections, GuiEvents.OnHover(SatLumSelector, function(hover)
+   table.insert(connections, GuiEvents.onHover(SatLumSelector, function(hover)
       satLumHover = hover
       checkVisibility()
    end))
 
-   table.insert(connections, GuiEvents.OnHover(HueSelector, function(hover)
+   table.insert(connections, GuiEvents.onHover(HueSelector, function(hover)
       hueHover = hover
       checkVisibility()
    end))
 
-   table.insert(connections, GuiEvents.OnDrag(SatLumSelector, function(event, startPos, position, delta)
+   table.insert(connections, GuiEvents.onDrag(SatLumSelector, function(event, startPos, position, delta)
       if event == 'start' then
          satLumMouseDown = true
          checkVisibility()
@@ -393,7 +393,7 @@ local function CreateGUI()
       end
    end))
 
-   table.insert(connections, GuiEvents.OnDrag(HueSelector, function(event, startPos, position, delta)
+   table.insert(connections, GuiEvents.onDrag(HueSelector, function(event, startPos, position, delta)
       if event == 'start' then
          hueMouseDown = true
          checkVisibility()
@@ -409,8 +409,8 @@ local function CreateGUI()
       end
    end))
 
-   return Controller, Misc.DisconnectFn(connections, DisconnectParent, DisconnectText, function()
-      popover:Destroy()
+   return Controller, Misc.disconnectFn(connections, DisconnectParent, DisconnectText, function()
+      popover:destroy()
    end)
 end
 

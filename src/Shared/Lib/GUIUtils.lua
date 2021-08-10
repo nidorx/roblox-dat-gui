@@ -13,7 +13,13 @@ local GuiEvents            = require(Lib:WaitForChild("GuiEvents"))
 
 local GUIUtils = {}
 
-function GUIUtils.CreateImageLabel(image)
+--[[
+  Create an ImageLabel 
+
+  @param image {String}
+  @return ImageLabel
+]]
+function GUIUtils.createImageLabel(image)
    local Check = Instance.new("ImageLabel")
    Check.Name 			            = "Icon"
    Check.AnchorPoint	            = Vector2.new(0, 0)
@@ -37,8 +43,11 @@ end
 
 --[[
    Instantiating a generic Frame
+
+   @params {Table}
+   @return Frame
 ]]
-function GUIUtils.CreateFrame(params)
+function GUIUtils.createFrame(params)
    local frame = Instance.new('Frame')
    frame.AnchorPoint	            = Vector2.new(0, 0)
    frame.Position 			      = UDim2.new(0, 0, 0, 0)
@@ -66,8 +75,11 @@ end
 
 --[[
    Instantiating a generic TextLabel
+
+   @params {Table}
+   @return TextLabel
 ]]
-function GUIUtils.CreateLabel(params)
+function GUIUtils.createTextLabel(params)
    local label = Instance.new('TextLabel')
    label.Name 			            = "LabelText"
    label.AnchorPoint	            = Vector2.new(0, 0)
@@ -96,6 +108,8 @@ function GUIUtils.CreateLabel(params)
    label.TextXAlignment          = Enum.TextXAlignment.Left
    label.TextYAlignment          = Enum.TextYAlignment.Center
 
+   
+
    if params ~= nil then
       for key, value in pairs(params) do
          label[key] = value
@@ -119,7 +133,7 @@ end
       Control        = Frame
       Disconnect     = Function Need to be called to Disconnect all events
 ]]
-function GUIUtils.CreateControllerWrapper(config)
+function GUIUtils.createControllerWrapper(config)
 
    if config.Height == nil then
       config.Height = 30
@@ -129,7 +143,7 @@ function GUIUtils.CreateControllerWrapper(config)
       config.Color = Color3.fromRGB(27, 42, 53)
    end
 
-   local Controller = GUIUtils.CreateFrame()   
+   local Controller = GUIUtils.createFrame()   
    Controller.Name   = config.Name
    Controller.Size 	= UDim2.new(1, 0, 0, config.Height)
 
@@ -147,26 +161,26 @@ function GUIUtils.CreateControllerWrapper(config)
    LabelValue.Name   = 'Label'
    LabelValue.Parent = Controller
 
-   local LabelText = GUIUtils.CreateLabel()
+   local LabelText = GUIUtils.createTextLabel()
    LabelText.Position   = UDim2.new(0, 6, 0, 0)
    LabelText.Size 		= UDim2.new(0.4, -6, 1, -1)
    LabelText.Parent = Controller
 
-   local borderBottom = GUIUtils.CreateFrame()
+   local borderBottom = GUIUtils.createFrame()
    borderBottom.Name 			   = "BorderBottom"
    borderBottom.BackgroundColor3 = Constants.BORDER_COLOR
    borderBottom.Position 			= UDim2.new(0, 0, 1, -1)
    borderBottom.Size 			   = UDim2.new(1, 0, 0, 1)
    borderBottom.Parent = Controller
 
-   local borderLeft = GUIUtils.CreateFrame()
+   local borderLeft = GUIUtils.createFrame()
    borderLeft.Name 			      = "BorderLeft"
    borderLeft.BackgroundColor3   = config.Color
    borderLeft.Size 			      = UDim2.new(0, 3, 1, 0)
    borderLeft.ZIndex             = 2
    borderLeft.Parent = Controller
 
-   local Control = GUIUtils.CreateFrame()
+   local Control = GUIUtils.createFrame()
    Control.Name 			            = "Control"
    Control.BackgroundTransparency   = 1
    Control.Position 			         = UDim2.new(0.4, 0, 0, 0)
@@ -193,7 +207,7 @@ function GUIUtils.CreateControllerWrapper(config)
    end))
 
 
-   return Controller, Control, Misc.DisconnectFn(connections)
+   return Controller, Control, Misc.disconnectFn(connections)
 end
 
 local RenderDummy = function(text)
@@ -221,7 +235,7 @@ local ParseDummy = RenderDummy
       OnFocusLost    = BindableEvent
       Disconnect     = Function Need to be called to Disconnect all events
 ]]
-function GUIUtils.CreateInput(config)
+function GUIUtils.createInput(config)
 
    if config.Color == nil then
       config.Color = Constants.NUMBER_COLOR
@@ -246,7 +260,7 @@ function GUIUtils.CreateInput(config)
    local Value = Instance.new('StringValue')
    Value.Name     = 'Value'
 
-   local TextFrame = GUIUtils.CreateFrame()
+   local TextFrame = GUIUtils.createFrame()
    TextFrame.Name 			         = 'TextFrame'
    TextFrame.BackgroundColor3       = Constants.INPUT_COLOR
    TextFrame.Size 			         = UDim2.new(1, 0, 1, 0)
@@ -289,7 +303,7 @@ function GUIUtils.CreateInput(config)
    end
    Text.Parent = TextFrame
 
-   local TextFake = GUIUtils.CreateLabel()
+   local TextFake = GUIUtils.createTextLabel()
    TextFake.Name              = 'TextBoxFake'
    TextFake.Position          = Text.Position
    TextFake.TextXAlignment    = Text.TextXAlignment
@@ -365,12 +379,12 @@ function GUIUtils.CreateInput(config)
       OnFocusLost:Fire()
    end))
 
-   table.insert(connections, GuiEvents.OnHover(TextFrame, function(hover)
+   table.insert(connections, GuiEvents.onHover(TextFrame, function(hover)
       isHover = hover
       updateVisibility()
    end))
    
-   return Value, TextFrame, OnFocused.Event, OnFocusLost.Event, Misc.DisconnectFn(connections)
+   return Value, TextFrame, OnFocused.Event, OnFocusLost.Event, Misc.disconnectFn(connections)
 end
 
 --[[
@@ -394,7 +408,7 @@ end
       OnFocusLost    = BindableEvent
       Disconnect     = Function Need to be called to Disconnect all events
 ]]
-function GUIUtils.CreateSlider(config)
+function GUIUtils.createSlider(config)
 
    if config.Min == nil then
       config.Min = -math.huge
@@ -419,13 +433,13 @@ function GUIUtils.CreateSlider(config)
    Percent.Name    = 'Percent'
    Percent.Value   = 0
 
-   local Slider = GUIUtils.CreateFrame()
+   local Slider = GUIUtils.createFrame()
    Slider.Name 			         = 'Slider'
    Slider.BackgroundColor3       = Color3.fromRGB(60, 60, 60)
    Slider.BackgroundTransparency = 0
    Slider.BorderMode 			   = Enum.BorderMode.Outline
 
-   local SliderFG = GUIUtils.CreateFrame()
+   local SliderFG = GUIUtils.createFrame()
    SliderFG.Name 			            = 'SliderFG'
    SliderFG.BackgroundColor3        = Constants.NUMBER_COLOR
    SliderFG.BackgroundTransparency  = 0
@@ -453,12 +467,12 @@ function GUIUtils.CreateSlider(config)
       end
    end
 
-   table.insert(connections, GuiEvents.OnHover(Slider, function(hover)
+   table.insert(connections, GuiEvents.onHover(Slider, function(hover)
       isHover = hover
       updateColors()
    end))
 
-   table.insert(connections, GuiEvents.OnDrag(Slider, function(event, startPos, position, delta)
+   table.insert(connections, GuiEvents.onDrag(Slider, function(event, startPos, position, delta)
       if config.Readonly.Value then 
          return
       end
@@ -499,7 +513,7 @@ function GUIUtils.CreateSlider(config)
       SliderFG.Size = UDim2.new(Percent.Value, 0, 1, 0)
 
       spawn(function()
-         Value.Value = Misc.MapRange(Percent.Value, 0, 1, Min.Value, Max.Value)
+         Value.Value = Misc.mapRange(Percent.Value, 0, 1, Min.Value, Max.Value)
       end)
    end))
 
@@ -513,7 +527,7 @@ function GUIUtils.CreateSlider(config)
          end)
       else
          spawn(function()
-            Percent.Value = Misc.MapRange(Value.Value, Min.Value, Max.Value, 0, 1)
+            Percent.Value = Misc.mapRange(Value.Value, Min.Value, Max.Value, 0, 1)
          end)
       end
    end))
@@ -521,14 +535,14 @@ function GUIUtils.CreateSlider(config)
    table.insert(connections, Min.Changed:Connect(function()
       Value.Value = math.clamp(Value.Value, Min.Value, Max.Value)
       spawn(function()
-         Percent.Value = Misc.MapRange(Value.Value, Min.Value, Max.Value, 0, 1)
+         Percent.Value = Misc.mapRange(Value.Value, Min.Value, Max.Value, 0, 1)
       end)
    end))
 
    table.insert(connections, Max.Changed:Connect(function()
       Value.Value = math.clamp(Value.Value, Min.Value, Max.Value)
       spawn(function()
-         Percent.Value = Misc.MapRange(Value.Value, Min.Value, Max.Value, 0, 1)
+         Percent.Value = Misc.mapRange(Value.Value, Min.Value, Max.Value, 0, 1)
       end)
    end))
 
@@ -537,7 +551,7 @@ function GUIUtils.CreateSlider(config)
    Max.Value   = config.Max
    Value.Value = config.Value
 
-   return Slider, Value, Min, Max, Percent, OnFocused.Event, OnFocusLost.Event, Misc.DisconnectFn(connections)
+   return Slider, Value, Min, Max, Percent, OnFocused.Event, OnFocusLost.Event, Misc.disconnectFn(connections)
 end
 
 return GUIUtils

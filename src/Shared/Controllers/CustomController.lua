@@ -1,19 +1,21 @@
 
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
-local GUIUtils          = require(Lib:WaitForChild("GUI"))
-local Constants         = require(Lib:WaitForChild("Constants"))
+local GUIUtils    = require(Lib:WaitForChild("GUIUtils"))
+local Constants   = require(Lib:WaitForChild("Constants"))
 
 
 --[[
-   Permite a criação de controladores parsonalizadas
+   Allows creation of custom controllers
 
    @param config {
-      Frame    = Frame,
-      Color    = Color3,
-      OnRemove = function
-      Height   = number,
-      Methods  = { [Name:String] => function }
+      frame    = Frame,       The content that will be presented in the controller
+      color    = Color3,      The color of the controller's side edge
+      height   = number,      the height of the content
+      onRemove = function     Invoked when controller is destroyed
+      methods  = {            Allows you to add custom methods that can be invoked by the instance
+         [Name:String] => function 
+      } 
    }
 
 ]]
@@ -23,17 +25,16 @@ local CustomController = function(gui, name, config)
       config = {} 
    end
 
-   local frame, Control, DisconnectGUI = GUIUtils.CreateControllerWrapper({
+   local frame, Control, DisconnectGUI = GUIUtils.createControllerWrapper({
       ['Name']     = name,
-      ['Color']    = config.Color or Constants.CUSTOM_COLOR,
-      ['Height']   = config.Height
+      ['Color']    = config.color or Constants.CUSTOM_COLOR,
+      ['Height']   = config.height
    })
 	frame.Parent = gui.Content
 
-	config.Frame.Parent = Control
-
-   config.Frame.Position   = UDim2.new(0, 0, 0, 3)
-   config.Frame.Size       = UDim2.new(1, 0, 1, -6)
+	config.frame.Parent = Control
+   config.frame.Position   = UDim2.new(0, 0, 0, 3)
+   config.frame.Size       = UDim2.new(1, 0, 1, -6)
 	
 	local controller = {
 		['frame'] = frame,
@@ -44,8 +45,8 @@ local CustomController = function(gui, name, config)
 	-- Public functions
 	------------------------------------------------------------------
 
-   if config.Methods ~= nil then 
-      for method, func in pairs(config.Methods) do
+   if config.methods ~= nil then 
+      for method, func in pairs(config.methods) do
          controller[method] = func
       end
    end
@@ -68,8 +69,8 @@ local CustomController = function(gui, name, config)
 			controller.frame = nil
 		end		
       
-      if type(config.OnRemove) == 'function' then
-			return config.OnRemove()
+      if type(config.onRemove) == 'function' then
+			return config.onRemove()
 		end
 	end
 	

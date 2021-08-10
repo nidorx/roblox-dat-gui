@@ -3,7 +3,7 @@ local TweenService 		   = game:GetService("TweenService")
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc                 = require(Lib:WaitForChild("Misc"))
-local GUIUtils             = require(Lib:WaitForChild("GUI"))
+local GUIUtils             = require(Lib:WaitForChild("GUIUtils"))
 local GuiEvents            = require(Lib:WaitForChild("GuiEvents"))
 local Constants            = require(Lib:WaitForChild("Constants"))
 
@@ -14,20 +14,28 @@ local SCROLL_WIDTH   = 5
 
 local TWEEN_INFO = TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
+--[[
+   Create a new Scrollbar
+
+   @param parent        {Frame}
+   @param content       {Frame}
+   @param contentOffset {Number} Optional Allows to add a superior spacing that is not considered on the scroll. 
+      Ex. Panel Header
+]]
 function Scrollbar.new(parent, content, contentOffset)
 
    if contentOffset == nil then 
       contentOffset = 0
    end
 
-   local Frame = GUIUtils.CreateFrame()
+   local Frame = GUIUtils.createFrame()
    Frame.Name 			            = "Scrollbar"
    Frame.BackgroundColor3        = Constants.BACKGROUND_COLOR
    Frame.BackgroundTransparency  = 0
    Frame.Position 			      = UDim2.new(1, -SCROLL_WIDTH, 0, contentOffset)
    Frame.Parent = parent
 
-   local Thumb = GUIUtils.CreateFrame()
+   local Thumb = GUIUtils.createFrame()
    Thumb.Name 			            = "Thumb"
    Thumb.BackgroundColor3        = Constants.SCROLLBAR_COLOR
    Thumb.BackgroundTransparency  = 0
@@ -102,7 +110,6 @@ function Scrollbar.new(parent, content, contentOffset)
    table.insert(connections, contentHeight.Changed:connect(updateSize))
    table.insert(connections, contentPosition.Changed:connect(updatePosition))
 
-
    local self = setmetatable({
       ['_parent']           = parent, 
       ['_content']          = content,
@@ -112,7 +119,7 @@ function Scrollbar.new(parent, content, contentOffset)
       ['_contentOffset']    = contentOffset     
    }, Scrollbar)
 
-   self._disconnect = Misc.DisconnectFn(connections, function()
+   self._disconnect = Misc.disconnectFn(connections, function()
       if self._cancelOnScroll ~= nil then 
          self._cancelOnScroll()
       end
@@ -135,11 +142,17 @@ function Scrollbar.new(parent, content, contentOffset)
    return self
 end
 
-function Scrollbar:Destroy()
+--[[
+   destroy this instance
+]]
+function Scrollbar:destroy()
    self._disconnect()
 end
 
-function Scrollbar:Update()
+--[[
+   Update scrollbar. Must be invoked when content undergoes size update
+]]
+function Scrollbar:update()
 
    -- remove events
    if self._cancelOnScroll ~= nil then 
@@ -175,7 +188,7 @@ function Scrollbar:Update()
 			self._contentPosition.Value = -newPosition
 		end
 
-      self._cancelOnScroll = GuiEvents.OnScroll(self._parent, function(z)
+      self._cancelOnScroll = GuiEvents.onScroll(self._parent, function(z)
 
          local newPosition = math.min(math.max(self._content.Position.Y.Offset + (z), maxPosition), 0)
 				

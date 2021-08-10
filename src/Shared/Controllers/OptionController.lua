@@ -6,14 +6,14 @@ local UserInputService  = game:GetService("UserInputService")
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
 local Popover           = require(Lib:WaitForChild("Popover"))
-local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GUIUtils          = require(Lib:WaitForChild("GUIUtils"))
 local GuiEvents         = require(Lib:WaitForChild("GuiEvents"))
 local Scrollbar         = require(Lib:WaitForChild("Scrollbar"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+   local Controller, Control, DisconnectParent = GUIUtils.createControllerWrapper({
       ['Name']  = 'OptionController',
       ['Color'] = Constants.STRING_COLOR
    })
@@ -27,7 +27,7 @@ local function CreateGUI()
    Options.Name     = 'Options'
    Options.Parent   = Controller
 
-   local SelectContainer = GUIUtils.CreateFrame()
+   local SelectContainer = GUIUtils.createFrame()
    SelectContainer.Name 			         = "Select"
    SelectContainer.BackgroundTransparency = 1
    SelectContainer.Position 			      = UDim2.new(0, 0, 0, 3)
@@ -39,7 +39,7 @@ local function CreateGUI()
 
    local popover = Popover.new(SelectContainer, Vector2.new(122, itemHeight), 'bottom', -itemHeight)
    
-   local List = GUIUtils.CreateFrame()
+   local List = GUIUtils.createFrame()
    List.Name 			            = "List"
    List.BackgroundTransparency   = 1
    List.Parent = popover.Frame
@@ -56,7 +56,7 @@ local function CreateGUI()
    ListLayout.VerticalAlignment           = Enum.VerticalAlignment.Top
    ListLayout.Parent = List
 
-   local DefaultOption = GUIUtils.CreateFrame()
+   local DefaultOption = GUIUtils.createFrame()
    DefaultOption.Name 			            = "Item"
    DefaultOption.BackgroundColor3         = Constants.INPUT_COLOR
    DefaultOption.BackgroundTransparency   = 0
@@ -64,7 +64,7 @@ local function CreateGUI()
    DefaultOption.Visible                  = true
    DefaultOption.Parent = SelectContainer
 
-   local DefaultLabel = GUIUtils.CreateLabel()
+   local DefaultLabel = GUIUtils.createTextLabel()
    DefaultLabel.Name 			            = "Label"
    DefaultLabel.Position 			         = UDim2.new(0, 2, 0, 0)
    DefaultLabel.Size 			            = UDim2.new(1, -4, 1, 0)
@@ -85,15 +85,15 @@ local function CreateGUI()
 
    local function checkVisibility()      
       if listCanBeOpen and (isListHover or isPopoverHover) then
-         popover:Resize(Vector2.new(SelectContainer.AbsoluteSize.X, math.min(itemHeight*numItems, itemHeight*4)))
-         scrollbar:Update()
-         popover:Show()
+         popover:resize(Vector2.new(SelectContainer.AbsoluteSize.X, math.min(itemHeight*numItems, itemHeight*4)))
+         scrollbar:update()
+         popover:show()
       else
-         popover:Hide()
+         popover:hide()
       end
    end
 
-   table.insert(connections, GuiEvents.OnEnter(List, function(enter)
+   table.insert(connections, GuiEvents.onEnter(List, function(enter)
       isPopoverHover = enter
       if enter then 
          listCanBeOpen = true
@@ -101,7 +101,7 @@ local function CreateGUI()
       checkVisibility()
    end))
 
-   table.insert(connections, GuiEvents.OnHover(SelectContainer, function(hover)
+   table.insert(connections, GuiEvents.onHover(SelectContainer, function(hover)
       isListHover = hover
       if hover then 
          listCanBeOpen = true
@@ -173,7 +173,7 @@ local function CreateGUI()
             DefaultLabel.Text = label
          end
          
-         table.insert(connectionsItems, GuiEvents.OnHover(item, function(hover)
+         table.insert(connectionsItems, GuiEvents.onHover(item, function(hover)
             if hover then 
                itemLabel.TextColor3    = Constants.INPUT_COLOR_HOVER
                item.BackgroundColor3   = Constants.INPUT_COLOR_PLACEHOLDER
@@ -182,7 +182,7 @@ local function CreateGUI()
             end
          end))
 
-         table.insert(connectionsItems, GuiEvents.OnClick(item, function()
+         table.insert(connectionsItems, GuiEvents.onClick(item, function()
             Selected.Value    = index
             DefaultLabel.Text = label
             listCanBeOpen     = false
@@ -195,9 +195,9 @@ local function CreateGUI()
       checkVisibility()
    end))
    
-   return Controller, Misc.DisconnectFn(connections, Misc.DisconnectFn(connectionsItems), function()
-      popover:Destroy()
-      scrollbar:Destroy()
+   return Controller, Misc.disconnectFn(connections, Misc.disconnectFn(connectionsItems), function()
+      popover:destroy()
+      scrollbar:destroy()
    end)
 end
 

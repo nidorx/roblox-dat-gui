@@ -4,13 +4,13 @@ local UserInputService  = game:GetService("UserInputService")
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc              = require(Lib:WaitForChild("Misc"))
-local GUIUtils          = require(Lib:WaitForChild("GUI"))
+local GUIUtils          = require(Lib:WaitForChild("GUIUtils"))
 local GuiEvents         = require(Lib:WaitForChild("GuiEvents"))
 local Constants         = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+   local Controller, Control, DisconnectParent = GUIUtils.createControllerWrapper({
       ['Name']  = 'FunctionController',
       ['Color'] = Constants.FUNCTION_COLOR
    })
@@ -28,12 +28,12 @@ local function CreateGUI()
 
    local connections = {}
 
-   table.insert(connections, GuiEvents.OnClick(Controller, function()
+   table.insert(connections, GuiEvents.onClick(Controller, function()
       OnClickEvent:Fire()
       return false
    end))
 
-   return Controller, Misc.DisconnectFn(connections, DisconnectParent)
+   return Controller, Misc.disconnectFn(connections, DisconnectParent)
 end
 
 -- Provides a GUI interface to fire a specified method, a property of an object.

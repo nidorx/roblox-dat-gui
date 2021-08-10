@@ -3,12 +3,12 @@ local RunService = game:GetService("RunService")
 -- lib
 local Lib = game.ReplicatedStorage:WaitForChild('Lib')
 local Misc        = require(Lib:WaitForChild("Misc"))
-local GUIUtils    = require(Lib:WaitForChild("GUI"))
+local GUIUtils    = require(Lib:WaitForChild("GUIUtils"))
 local Constants   = require(Lib:WaitForChild("Constants"))
 
 local function CreateGUI()
 
-   local Controller, Control, DisconnectParent = GUIUtils.CreateControllerWrapper({
+   local Controller, Control, DisconnectParent = GUIUtils.createControllerWrapper({
       ['Name']    = 'Vector3Controller',
       ['Color']   = Constants.NUMBER_COLOR,
       ['Height']  = 50
@@ -49,14 +49,14 @@ local function CreateGUI()
 
       local connections = {}
 
-      local TextContainer = GUIUtils.CreateFrame()
+      local TextContainer = GUIUtils.createFrame()
       TextContainer.Name 			            = axis
       TextContainer.BackgroundTransparency   = 1
       TextContainer.Position 			         = position
       TextContainer.Size 			            = UDim2.new(0.333, 0, 1, -28)
       TextContainer.Parent = Control
 
-      local Label = GUIUtils.CreateLabel()
+      local Label = GUIUtils.createTextLabel()
       Label.Position 			      = UDim2.new(0, 0, 1, 0)
       Label.Text                    = axis:lower()
       Label.TextColor3 			      = Constants.INPUT_COLOR_PLACEHOLDER
@@ -67,9 +67,9 @@ local function CreateGUI()
       AxisPrecision.Name    = 'Precision'
       AxisPrecision.Value   = Misc.NUMBER_PRECISION
 
-      local  RenderText = Misc.CreateTextNumberFn(AxisPrecision)
+      local  RenderText = Misc.createTextNumberFn(AxisPrecision)
    
-      local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.CreateInput({
+      local TextValue, TextFrame, TextOnFocus, TextOnFocusLost, TextDisconnect =  GUIUtils.createInput({
          ['Color']    = Constants.NUMBER_COLOR,
          ['Render']   = RenderText,
          ['Readonly']   = Controller:WaitForChild('Readonly'),
@@ -97,7 +97,7 @@ local function CreateGUI()
          AxisPrecision.Value = Precision.Value[axis]
       end))
 
-      return TextValue, RenderText, Misc.DisconnectFn(connections, TextDisconnect) 
+      return TextValue, RenderText, Misc.disconnectFn(connections, TextDisconnect) 
    end
 
    -- SCRIPTS ----------------------------------------------------------------------------------------------------------
@@ -132,9 +132,9 @@ local function CreateGUI()
    -- On change steps
    table.insert(connections, Step.Changed:connect(function()	
       Precision.Value = Vector3.new(
-         Misc.CountDecimals(Step.Value.X), 
-         Misc.CountDecimals(Step.Value.Y), 
-         Misc.CountDecimals(Step.Value.Z)
+         Misc.countDecimals(Step.Value.X), 
+         Misc.countDecimals(Step.Value.Y), 
+         Misc.countDecimals(Step.Value.Z)
       )
       for _, axis in ipairs(Misc.AXES) do
          local TextValue = Axes[axis].TextValue
@@ -160,7 +160,7 @@ local function CreateGUI()
       end
    end))
    
-   return Controller, Misc.DisconnectFn(
+   return Controller, Misc.disconnectFn(
       connections, 
       DisconnectParent, 
       Axes.X.Disconnect, 
