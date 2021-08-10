@@ -918,7 +918,7 @@ function Panel:_updateActions()
 
    self._actions = actions
 
-   local offset = #self._actions*ACTION_FRAME_SIZE
+   local offset = #self._actions*ACTION_FRAME_SIZE+ACTION_MARGIN
    for i,action in ipairs(self._actions) do
       action.frame.Position = UDim2.new(1, -offset + ((i-1)*ACTION_FRAME_SIZE), 0, ACTION_MARGIN)
    end

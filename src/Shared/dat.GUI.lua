@@ -130,7 +130,7 @@ local function configureController(gui, controller, property)
    function controller.help(text)
       if helpPopover == nil then
          helpPopover = Popover.new(frame, Vector2.new(200, 60), 'left', 3)
-         helpPopover.Frame.BorderColor3      = Constants.LABEL_COLOR
+         helpPopover.Frame.BorderColor3      = Constants.BORDER_COLOR
          helpPopover.Frame.BorderSizePixel   = 1
          helpPopover.Frame.BackgroundTransparency = 0
 
