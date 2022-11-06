@@ -5,7 +5,7 @@
         dat.GUI - A lightweight graphical user interface and controller library that allows you to easily manipulate variables and fire functions on the fly, inspired by the venerable dat-gui js.
     </p>    
     <p>
-        <a href="https://badge.fury.io/js/react-native-ui-blueprint">
+        <a href="https://www.roblox.com/library/5802329341/dat-GUI">
             https://www.roblox.com/library/5802329341/dat-GUI
         </a>
     </p>
